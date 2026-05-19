@@ -31,8 +31,8 @@ export default function Shop({ onProductClick }: ShopProps) {
 
   // Derive unique categories
   const categories = useMemo(() => {
-    const cats = new Set(products.map(p => p.category));
-    return ['all', ...Array.from(cats)];
+    const cats = new Set(products.map(p => p.category || 'all'));
+    return ['all', ...Array.from(cats).filter(c => c !== 'all')];
   }, [products]);
 
   const categoryLabel = (cat: string) => {
@@ -41,24 +41,29 @@ export default function Shop({ onProductClick }: ShopProps) {
     return ar ? (p?.categoryAr ?? cat) : cat;
   };
 
-  const maxPrice = useMemo(() => Math.max(...products.map(p => p.retailPrice), 1000), [products]);
+  const maxPrice = useMemo(() => Math.max(...products.map(p => p.retailPrice || 0), 1000), [products]);
 
   // Filter + sort
   const filtered = useMemo(() => {
     let list = products.filter(p => {
+      const pName = p.name || '';
+      const pNameAr = p.nameAr || '';
+      const pCategory = p.category || 'all';
+      const pPrice = p.retailPrice || 0;
+
       const matchSearch =
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.nameAr.includes(search);
-      const matchCat = selectedCategory === 'all' || p.category === selectedCategory;
-      const matchPrice = p.retailPrice >= priceRange[0] && p.retailPrice <= priceRange[1];
+        pName.toLowerCase().includes(search.toLowerCase()) ||
+        pNameAr.includes(search);
+      const matchCat = selectedCategory === 'all' || pCategory === selectedCategory;
+      const matchPrice = pPrice >= priceRange[0] && pPrice <= priceRange[1];
       return matchSearch && matchCat && matchPrice;
     });
 
     switch (sortIndex) {
-      case 1: list = [...list].sort((a, b) => a.retailPrice - b.retailPrice); break;
-      case 2: list = [...list].sort((a, b) => b.retailPrice - a.retailPrice); break;
-      case 3: list = [...list].sort((a, b) => a.name.localeCompare(b.name)); break;
-      default: list = [...list].sort((a, b) => b.id - a.id); // newest = highest id
+      case 1: list = [...list].sort((a, b) => (a.retailPrice || 0) - (b.retailPrice || 0)); break;
+      case 2: list = [...list].sort((a, b) => (b.retailPrice || 0) - (a.retailPrice || 0)); break;
+      case 3: list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '')); break;
+      default: list = [...list].sort((a, b) => (b.id || 0) - (a.id || 0)); // newest = highest id
     }
     return list;
   }, [products, search, selectedCategory, priceRange, sortIndex]);

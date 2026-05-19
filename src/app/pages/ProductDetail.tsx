@@ -15,6 +15,7 @@ interface ProductDetailProps {
     retailPrice: number;
     wholesalePrice: number;
     image: string;
+    additionalImages?: string[];
   };
 }
 
@@ -33,9 +34,7 @@ export default function ProductDetail({ onBack, product }: ProductDetailProps) {
 
   const images = [
     product.image,
-    'https://images.unsplash.com/photo-1617019114583-affb34d1b3cd?w=800&q=80',
-    'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80',
-    'https://images.unsplash.com/photo-1591085686350-798c0f9faa7f?w=800&q=80',
+    ...(product.additionalImages || []),
   ];
 
   const handleAddToCart = () => {

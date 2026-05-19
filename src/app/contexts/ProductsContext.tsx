@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+import { supabase } from '../../utils/supabase';
+
 export interface Product {
   id: number;
   name: string;
@@ -8,7 +10,10 @@ export interface Product {
   categoryAr: string;
   retailPrice: number;
   wholesalePrice: number;
+  costPrice?: number;
+  discountPercentage?: number;
   image: string;
+  additionalImages?: string[];
   description?: string;
   descriptionAr?: string;
   stock?: number;
@@ -96,38 +101,61 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    // Load products from localStorage or use initial products
-    const savedProducts = localStorage.getItem('products');
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    } else {
-      setProducts(initialProducts);
-      localStorage.setItem('products', JSON.stringify(initialProducts));
-    }
+    fetchProducts();
   }, []);
 
-  const addProduct = (product: Omit<Product, 'id'>) => {
-    const newProduct = {
-      ...product,
-      id: Date.now(),
-    };
-    const updatedProducts = [...products, newProduct];
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
+  const fetchProducts = async () => {
+    const { data, error } = await supabase.from('products').select('*').order('id', { ascending: true });
+    if (error) {
+      console.error('Error fetching products:', error);
+    } else if (data) {
+      // Map potential lowercase column names to camelCase for the frontend
+      const mappedData = data.map((item: any) => ({
+        ...item,
+        nameAr: item.nameAr || item.namear,
+        categoryAr: item.categoryAr || item.categoryar,
+        retailPrice: item.retailPrice || item.retailprice,
+        wholesalePrice: item.wholesalePrice || item.wholesaleprice,
+        costPrice: item.costPrice || item.costprice,
+        discountPercentage: item.discountPercentage || item.discountpercentage,
+        additionalImages: item.additionalImages || item.additionalimages,
+        descriptionAr: item.descriptionAr || item.descriptionar,
+      }));
+      setProducts(mappedData as Product[]);
+    }
   };
 
-  const updateProduct = (id: number, productData: Partial<Product>) => {
-    const updatedProducts = products.map(p =>
-      p.id === id ? { ...p, ...productData } : p
-    );
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
+  const addProduct = async (product: Omit<Product, 'id'>) => {
+    const { data, error } = await supabase.from('products').insert([product]).select();
+    if (error) {
+      console.error('Error adding product:', error);
+      alert('خطأ في إضافة المنتج: ' + error.message + '\n' + error.details);
+    } else if (data) {
+      setProducts([...products, data[0] as Product]);
+    }
   };
 
-  const deleteProduct = (id: number) => {
-    const updatedProducts = products.filter(p => p.id !== id);
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
+  const updateProduct = async (id: number, productData: Partial<Product>) => {
+    const { data, error } = await supabase
+      .from('products')
+      .update(productData)
+      .eq('id', id)
+      .select();
+      
+    if (error) {
+      console.error('Error updating product:', error);
+    } else if (data) {
+      setProducts(products.map(p => p.id === id ? { ...p, ...data[0] } : p));
+    }
+  };
+
+  const deleteProduct = async (id: number) => {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting product:', error);
+    } else {
+      setProducts(products.filter(p => p.id !== id));
+    }
   };
 
   return (

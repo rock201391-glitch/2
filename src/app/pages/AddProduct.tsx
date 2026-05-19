@@ -13,23 +13,25 @@ export default function AddProduct({ onClose, editProduct }: AddProductProps) {
   const { language } = useLanguage();
   const { addProduct, updateProduct } = useProducts();
   const [imagePreview, setImagePreview] = useState<string>(editProduct?.image || '');
+  const [additionalImagesPreview, setAdditionalImagesPreview] = useState<string[]>(editProduct?.additionalImages || []);
   const [formData, setFormData] = useState({
     name: editProduct?.name || '',
     nameAr: editProduct?.nameAr || '',
-    category: editProduct?.category || 'Classic',
-    categoryAr: editProduct?.categoryAr || 'كلاسيكي',
+    category: editProduct?.category || 'Plain',
+    categoryAr: editProduct?.categoryAr || 'سادة',
     retailPrice: editProduct?.retailPrice || '',
     wholesalePrice: editProduct?.wholesalePrice || '',
+    costPrice: editProduct?.costPrice || '',
+    discountPercentage: editProduct?.discountPercentage || '',
     stock: editProduct?.stock || '',
     description: editProduct?.description || '',
     descriptionAr: editProduct?.descriptionAr || '',
   });
 
   const categories = [
-    { en: 'Classic', ar: 'كلاسيكي' },
-    { en: 'Modern', ar: 'عصري' },
-    { en: 'Elegant', ar: 'أنيق' },
-    { en: 'Casual', ar: 'يومي' },
+    { en: 'Plain', ar: 'سادة' },
+    { en: 'Embroidered', ar: 'مطرز' },
+    { en: 'Colored', ar: 'ملون' },
   ];
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +45,23 @@ export default function AddProduct({ onClose, editProduct }: AddProductProps) {
     }
   };
 
+  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAdditionalImagesPreview(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImagesPreview(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -53,10 +72,13 @@ export default function AddProduct({ onClose, editProduct }: AddProductProps) {
       categoryAr: formData.categoryAr,
       retailPrice: Number(formData.retailPrice),
       wholesalePrice: Number(formData.wholesalePrice),
+      costPrice: formData.costPrice ? Number(formData.costPrice) : undefined,
+      discountPercentage: formData.discountPercentage ? Number(formData.discountPercentage) : undefined,
       stock: Number(formData.stock),
       description: formData.description,
       descriptionAr: formData.descriptionAr,
       image: imagePreview || 'https://images.unsplash.com/photo-1583391265574-e7af45a9f9c6?w=800&q=80',
+      additionalImages: additionalImagesPreview,
     };
 
     if (editProduct) {
@@ -102,36 +124,72 @@ export default function AddProduct({ onClose, editProduct }: AddProductProps) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Image Upload */}
-            <div>
-              <label className="block text-sm font-semibold mb-3">
-                {language === 'ar' ? 'صورة المنتج' : 'Product Image'}
-              </label>
-              <div className="relative">
-                {imagePreview ? (
-                  <div className="relative aspect-[3/4] max-w-xs rounded-2xl overflow-hidden">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setImagePreview('')}
-                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full max-w-xs aspect-[3/4] border-2 border-dashed border-black/20 dark:border-white/20 rounded-2xl cursor-pointer hover:border-black dark:hover:border-white transition-colors">
-                    <Upload className="w-12 h-12 mb-4 text-gray-400" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {language === 'ar' ? 'انقر لرفع الصورة' : 'Click to upload image'}
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold mb-3">
+                  {language === 'ar' ? 'الصورة الأساسية للمنتج' : 'Main Product Image'}
+                </label>
+                <div className="relative">
+                  {imagePreview ? (
+                    <div className="relative aspect-[3/4] max-w-xs rounded-2xl overflow-hidden">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setImagePreview('')}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full max-w-xs aspect-[3/4] border-2 border-dashed border-black/20 dark:border-white/20 rounded-2xl cursor-pointer hover:border-black dark:hover:border-white transition-colors">
+                      <Upload className="w-12 h-12 mb-4 text-gray-400" />
+                      <span className="text-sm text-gray-600 dark:text-gray-400 text-center px-4">
+                        {language === 'ar' ? 'انقر لرفع الصورة الأساسية' : 'Click to upload main image'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-3">
+                  {language === 'ar' ? 'صور إضافية للمنتج' : 'Additional Product Images'}
+                </label>
+                <div className="flex gap-4 overflow-x-auto pb-4 items-center">
+                  {additionalImagesPreview.map((img, idx) => (
+                    <div key={idx} className="relative aspect-[3/4] w-32 shrink-0 rounded-2xl overflow-hidden">
+                      <img src={img} alt={`Additional Preview ${idx}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeAdditionalImage(idx)}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  
+                  <label className="flex flex-col items-center justify-center w-32 shrink-0 aspect-[3/4] border-2 border-dashed border-black/20 dark:border-white/20 rounded-2xl cursor-pointer hover:border-black dark:hover:border-white transition-colors">
+                    <Upload className="w-6 h-6 mb-2 text-gray-400" />
+                    <span className="text-xs text-gray-600 dark:text-gray-400 text-center px-2">
+                      {language === 'ar' ? 'إضافة صور' : 'Add Images'}
                     </span>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleImageChange}
+                      multiple
+                      onChange={handleAdditionalImagesChange}
                       className="hidden"
                     />
                   </label>
-                )}
+                </div>
               </div>
             </div>
 
@@ -192,7 +250,7 @@ export default function AddProduct({ onClose, editProduct }: AddProductProps) {
             </div>
 
             {/* Prices and Stock */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
                 <label className="block text-sm font-semibold mb-2">
                   {language === 'ar' ? 'سعر القطاعي' : 'Retail Price'}
@@ -220,6 +278,35 @@ export default function AddProduct({ onClose, editProduct }: AddProductProps) {
                   min="0"
                   step="0.01"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  {language === 'ar' ? 'سعر التكلفة' : 'Cost Price'}
+                </label>
+                <input
+                  type="number"
+                  value={formData.costPrice}
+                  onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                  className="w-full px-6 py-4 rounded-2xl bg-white/50 dark:bg-black/50 border border-black/10 dark:border-white/10 focus:border-black dark:focus:border-white outline-none transition-colors"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  {language === 'ar' ? 'نسبة الخصم (%)' : 'Discount (%)'}
+                </label>
+                <input
+                  type="number"
+                  value={formData.discountPercentage}
+                  onChange={(e) => setFormData({ ...formData, discountPercentage: e.target.value })}
+                  className="w-full px-6 py-4 rounded-2xl bg-white/50 dark:bg-black/50 border border-black/10 dark:border-white/10 focus:border-black dark:focus:border-white outline-none transition-colors"
+                  min="0"
+                  max="100"
+                  step="1"
                 />
               </div>
 

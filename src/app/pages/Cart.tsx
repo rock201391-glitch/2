@@ -2,6 +2,9 @@ import { motion } from 'motion/react';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../../utils/supabase';
+import { useState } from 'react';
 
 interface CartProps {
   onNavigate: (page: string) => void;
@@ -9,9 +12,70 @@ interface CartProps {
 
 export default function Cart({ onNavigate }: CartProps) {
   const { language, t } = useLanguage();
-  const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
+  const { items, removeFromCart, updateQuantity, totalPrice, totalItems, clearCart } = useCart();
+  const { user } = useAuth();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutMessage, setCheckoutMessage] = useState('');
 
-  if (items.length === 0) {
+  const handleCheckout = async () => {
+    if (!user) {
+      alert(language === 'ar' ? 'الرجاء تسجيل الدخول لإتمام الطلب' : 'Please login to checkout');
+      onNavigate('login');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    setCheckoutMessage('');
+
+    try {
+      const finalPrice = totalPrice * 1.15; // Including tax
+
+      // 1. Create the order
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          total_price: finalPrice,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 2. Create the order items
+      const orderItemsData = items.map(item => ({
+        order_id: orderData.id,
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        type: item.type,
+        size: item.size || null,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItemsData);
+
+      if (itemsError) throw itemsError;
+
+      // 3. Clear cart and show success
+      clearCart();
+      setCheckoutMessage(language === 'ar' ? 'تم إتمام الطلب بنجاح!' : 'Order placed successfully!');
+      
+      setTimeout(() => {
+        onNavigate('home');
+      }, 3000);
+
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setCheckoutMessage(language === 'ar' ? 'حدث خطأ أثناء إتمام الطلب' : 'Error placing order');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+  if (items.length === 0 && !checkoutMessage) {
     return (
       <div className="min-h-screen pt-24 pb-16 px-6 flex items-center justify-center">
         <motion.div
@@ -38,6 +102,25 @@ export default function Cart({ onNavigate }: CartProps) {
             {language === 'ar' ? 'تسوق الآن' : 'Shop Now'}
             <ArrowRight className="w-5 h-5" />
           </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (items.length === 0 && checkoutMessage) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 px-6 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="w-24 h-24 mx-auto mb-6 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center">
+            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold mb-4">{checkoutMessage}</h2>
         </motion.div>
       </div>
     );
@@ -207,13 +290,23 @@ export default function Cart({ onNavigate }: CartProps) {
 
               <motion.button
                 type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center gap-2 text-lg font-semibold"
+                onClick={handleCheckout}
+                disabled={isCheckingOut}
+                whileHover={{ scale: isCheckingOut ? 1 : 1.02 }}
+                whileTap={{ scale: isCheckingOut ? 1 : 0.98 }}
+                className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center gap-2 text-lg font-semibold disabled:opacity-50"
               >
-                {language === 'ar' ? 'إتمام الطلب' : 'Checkout'}
-                <ArrowRight className="w-5 h-5" />
+                {isCheckingOut 
+                  ? (language === 'ar' ? 'جاري التنفيذ...' : 'Processing...')
+                  : (language === 'ar' ? 'إتمام الطلب' : 'Checkout')}
+                {!isCheckingOut && <ArrowRight className="w-5 h-5" />}
               </motion.button>
+              
+              {checkoutMessage && !isCheckingOut && (
+                <p className="mt-4 text-center text-red-500 font-semibold text-sm">
+                  {checkoutMessage}
+                </p>
+              )}
 
               <motion.button
                 type="button"
