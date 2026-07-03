@@ -96,26 +96,26 @@ className="absolute inset-0 bg-black/30 backdrop-blur-sm"
 onClick={() => setMobileMenuOpen(false)}
 />
 
-<div className="absolute top-0 right-0 h-screen w-[80%] bg-[#F8F7F2] shadow-2xl p-8">
-
-<div className="flex items-center justify-between mb-12">
+<div className="absolute top-0 right-0 h-screen w-[78%] bg-[#F8F7F2] shadow-2xl border-l border-[#E5E1D8] px-8 py-10 overflow-y-auto">
+  
+<div className="flex justify-end mb-10">
 
 <button
-onClick={() => setMobileMenuOpen(false)}
-className="text-3xl"
-style={{ color:'#0F3A2B' }}
->
-×
-</button>
+onClick={()=>setMobileMenuOpen(false)}
+className="text-4xl"
 
-<img
-src="/merqab.png"
-className="h-10"
-/>
+style={{
+color:'#0F3A2B'
+}}
+>
+
+×
+
+</button>
 
 </div>
 
-<nav className="flex flex-col gap-6">
+<nav className="flex flex-col gap-7 mt-10">
 
 {navItems.map((item)=>(
 
@@ -126,7 +126,7 @@ onNavigate(item.id);
 setMobileMenuOpen(false);
 }}
 
-className="text-right text-2xl font-bold py-4"
+className="text-right text-[30px] font-bold py-5 px-8"
 
 style={{
 color:item.id===currentPage
@@ -137,7 +137,8 @@ backgroundColor:item.id===currentPage
 ?'#0F3A2B'
 :'transparent',
 
-borderRadius:'999px'
+borderRadius:'999px',
+minHeight:'82px'
 }}
 
 >
@@ -149,7 +150,22 @@ borderRadius:'999px'
 ))}
 
 </nav>
+<div
+style={{
+position:'absolute',
+bottom:'30px',
+left:'0',
+right:'0',
+textAlign:'center',
+color:'#B6BDB4',
+fontSize:'14px',
+fontWeight:'700'
+}}
+>
 
+MERGAB STORE 2026 ©
+
+</div>
 </div>
 
 </div>
