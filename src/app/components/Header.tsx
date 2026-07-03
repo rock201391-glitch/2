@@ -54,14 +54,16 @@ export default function Header({ onNavigate, onCartClick }: HeaderProps) {
             ))}
           </nav>
 
-          {/* Logo - Right */}
-          <button
-            onClick={() => onNavigate('home')}
-            className="text-2xl font-bold"
-            style={{ color: '#0F3A2B' }}
-          >
-            مرقاب
-          </button>
+      {/* Logo - Right */}
+<button
+  onClick={() => onNavigate('home')}
+>
+  <img
+    src="/merqab.png"
+    alt="مرقاب"
+    className="h-12 w-auto"
+  />
+</button>  
 
           {/* Mobile Menu Button */}
           <button
