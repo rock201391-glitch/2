@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useCart } from '../contexts/CartContext';
 
 interface ShopProps {
   onProductClick: (product: any) => void;
@@ -73,12 +73,34 @@ const DJI_PRODUCTS = [
 ];
 
 export default function Shop({ onProductClick }: ShopProps) {
+  const { addItem } = useCart();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [addedProducts, setAddedProducts] = useState<Set<number>>(new Set());
 
   const categories = Array.from(new Set(DJI_PRODUCTS.map(p => p.category)));
   const filteredProducts = selectedCategory
     ? DJI_PRODUCTS.filter(p => p.category === selectedCategory)
     : DJI_PRODUCTS;
+
+  const handleAddToCart = (e: React.MouseEvent, product: any) => {
+    e.stopPropagation();
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.image,
+    });
+    
+    setAddedProducts(prev => new Set(prev).add(product.id));
+    setTimeout(() => {
+      setAddedProducts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(product.id);
+        return newSet;
+      });
+    }, 2000);
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F7F2] py-8 px-4">
@@ -121,20 +143,47 @@ export default function Shop({ onProductClick }: ShopProps) {
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              onClick={() => onProductClick(product)}
-              className="bg-white rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:shadow-lg"
+              className="bg-white rounded-3xl p-6 transition-all duration-300 hover:shadow-lg flex flex-col"
             >
-              <div className="flex items-center justify-center h-32 text-5xl mb-4 rounded-2xl" style={{ backgroundColor: '#FBF7EF' }}>
+              <div 
+                className="flex items-center justify-center h-32 text-5xl mb-4 rounded-2xl cursor-pointer hover:scale-105 transition-transform"
+                style={{ backgroundColor: '#FBF7EF' }}
+                onClick={() => onProductClick(product)}
+              >
                 {product.image}
               </div>
-              <h3 className="text-lg font-bold mb-2" style={{ color: '#0F3A2B' }}>
+              <h3 
+                className="text-lg font-bold mb-2 cursor-pointer hover:underline"
+                style={{ color: '#0F3A2B' }}
+                onClick={() => onProductClick(product)}
+              >
                 {product.name}
               </h3>
-              <p className="text-sm text-gray-600 mb-4">{product.description}</p>
-              <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600 mb-4 flex-1">{product.description}</p>
+              <div className="flex items-center justify-between mb-4">
                 <span className="text-2xl font-bold" style={{ color: '#0F3A2B' }}>
                   {product.price}ر.ع
                 </span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => handleAddToCart(e, product)}
+                  className="flex-1 px-4 py-3 rounded-full text-white font-semibold transition-all hover:shadow-lg"
+                  style={{ backgroundColor: '#0F3A2B' }}
+                >
+                  {addedProducts.has(product.id) ? '✓ تمت الإضافة' : 'إضافة للسلة'}
+                </button>
+                <button
+                  onClick={() => onProductClick(product)}
+                  className="px-4 py-3 rounded-full font-semibold transition-all border-2"
+                  style={{
+                    borderColor: '#0F3A2B',
+                    color: '#0F3A2B',
+                    backgroundColor: 'transparent'
+                  }}
+                >
+                  التفاصيل
+                </button>
               </div>
             </div>
           ))}
