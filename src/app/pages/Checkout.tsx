@@ -113,7 +113,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B]"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B] text-[#0F3A2B] placeholder:text-[#0F3A2B] placeholder:opacity-100"
                     placeholder="أدخل اسمك الكامل"
                     required
                   />
