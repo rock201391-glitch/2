@@ -82,45 +82,28 @@ export default function HomePage({ onNavigate, onProductClick }: HomePageProps) 
 
   <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
     
-    {/* Left Animation */}
-    <div className="order-1 lg:order-1 flex justify-center">
-      <div className="relative w-full max-w-xl h-[430px] rounded-[36px] bg-[#FBF7EF] border border-[#E8E3D9] shadow-sm overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FBF7EF] via-[#F8F7F2] to-[#EFE9DD]" />
+    {/* Left Video */}
+<div className="order-1 lg:order-1 flex justify-center">
 
-        {/* Drone */}
-        <div className="absolute top-20 left-1/2" style={{ animation: 'droneFloat 3s ease-in-out infinite' }}>
-          <div className="relative w-44 h-20 -translate-x-1/2">
-            <div className="absolute top-7 left-16 w-12 h-8 rounded-xl bg-[#0F3A2B]" />
-            <div className="absolute top-9 left-[78px] w-4 h-3 rounded bg-[#D8CDBB]" />
-            <div className="absolute top-10 left-2 w-40 h-1.5 bg-[#0F3A2B] rounded-full" />
-            <div className="absolute top-0 left-0 w-12 h-12 border-2 border-[#0F3A2B] rounded-full opacity-40" style={{ animation: 'propellerSpin 1.2s linear infinite' }} />
-            <div className="absolute top-0 right-0 w-12 h-12 border-2 border-[#0F3A2B] rounded-full opacity-40" style={{ animation: 'propellerSpin 1.2s linear infinite' }} />
-            <div className="absolute bottom-0 left-0 w-12 h-12 border-2 border-[#0F3A2B] rounded-full opacity-40" style={{ animation: 'propellerSpin 1.2s linear infinite' }} />
-            <div className="absolute bottom-0 right-0 w-12 h-12 border-2 border-[#0F3A2B] rounded-full opacity-40" style={{ animation: 'propellerSpin 1.2s linear infinite' }} />
-          </div>
-        </div>
+  <div className="relative w-full max-w-xl h-[430px]
+                  rounded-[36px]
+                  bg-[#FBF7EF]
+                  border border-[#E8E3D9]
+                  shadow-sm
+                  overflow-hidden">
 
-        {/* Omani Person */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-72" style={{ animation: 'personFloat 4s ease-in-out infinite' }}>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-14 rounded-full bg-[#F1E5D3] border-4 border-[#C8B68E]" />
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-[#D9B58C]" />
-          <div className="absolute top-28 left-1/2 -translate-x-1/2 w-40 h-44 rounded-t-[55px] bg-white border border-[#E8E3D9] shadow-sm" />
-          
-          {/* Controller */}
-          <div className="absolute top-44 left-1/2 -translate-x-1/2 w-32 h-16 rounded-2xl bg-[#0F3A2B] shadow-lg">
-            <div className="absolute top-6 left-6 w-4 h-4 rounded-full bg-[#FBF7EF]" />
-            <div className="absolute top-6 right-6 w-4 h-4 rounded-full bg-[#FBF7EF]" />
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-8 h-5 rounded bg-[#D8CDBB]" />
-            <div className="absolute -top-6 left-9 w-1 h-8 bg-[#0F3A2B] rotate-[-25deg]" />
-            <div className="absolute -top-6 right-9 w-1 h-8 bg-[#0F3A2B] rotate-[25deg]" />
-          </div>
-        </div>
+      <video
+        src="/omani-drone.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="w-full h-full object-contain"
+      />
 
-        <div className="absolute bottom-6 right-6 text-[#0F3A2B] font-bold opacity-10 text-7xl">
-          مرقاب
-        </div>
-      </div>
-    </div>
+  </div>
+
+</div>
 
     {/* Right Text */}
     <div className="order-2 lg:order-2 text-right">
