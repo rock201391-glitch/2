@@ -85,11 +85,11 @@ export default function HomePage({ onNavigate, onProductClick }: HomePageProps) 
     {/* Left Video */}
 <div className="order-1 lg:order-1 flex justify-center">
 
-  <div className="relative w-full max-w-xl h-[430px]
+ <div className="relative w-full max-w-2xl h-[480px]
                   rounded-[36px]
                   bg-[#FBF7EF]
                   border border-[#E8E3D9]
-                  shadow-sm
+                 shadow-[0_15px_50px_rgba(15,58,43,0.12)]
                   overflow-hidden">
 
       <video
@@ -98,7 +98,7 @@ export default function HomePage({ onNavigate, onProductClick }: HomePageProps) 
         muted
         loop
         playsInline
-        className="w-full h-full object-contain"
+        className="w-full h-full object-cover rounded-[36px]"
       />
 
   </div>
