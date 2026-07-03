@@ -17,7 +17,7 @@ type Page = 'home' | 'shop' | 'product-detail' | 'cart' | 'checkout' | 'track-or
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-
+const [isCartOpen, setIsCartOpen] = useState(false);
   const handleNavigate = (page: string) => {
     setCurrentPage(page as Page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -104,9 +104,30 @@ export default function App() {
           <div className="min-h-screen bg-[#F8F7F2] transition-colors duration-500" dir="rtl" lang="ar">
             <Header
               onNavigate={handleNavigate}
-              onCartClick={() => handleNavigate('cart')}
+              onCartClick={() => setIsCartOpen(true)}
             />
             <main>{renderPage()}</main>
+            {isCartOpen && (
+  <div className="fixed inset-0 z-[9999]">
+    <div
+      className="absolute inset-0 bg-black/35"
+      onClick={() => setIsCartOpen(false)}
+    />
+
+    <div className="absolute top-0 right-0 h-screen w-full max-w-md bg-[#F8F7F2] shadow-2xl overflow-y-auto">
+     <Cart
+  onNavigate={(page) => {
+    setIsCartOpen(false);
+    handleNavigate(page);
+  }}
+  onCheckout={() => {
+    setIsCartOpen(false);
+    setCurrentPage('checkout');
+  }}
+/>
+    </div>
+  </div>
+)}
           </div>
         </ThemeProvider>
       </CartProvider>
