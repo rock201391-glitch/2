@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShoppingBag, Menu, X } from 'lucide-react';
+import { ShoppingBag, Menu, X, Home, Box, MapPin, ChevronLeft } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 
 interface HeaderProps {
