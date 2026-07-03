@@ -5,9 +5,14 @@ import { useCart } from '../contexts/CartContext';
 interface HeaderProps {
   onNavigate: (page: string) => void;
   onCartClick: () => void;
+  currentPage: string;
 }
 
-export default function Header({ onNavigate, onCartClick }: HeaderProps) {
+export default function Header({
+  onNavigate,
+  onCartClick,
+  currentPage
+}: HeaderProps) {
   const { items } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -47,7 +52,7 @@ export default function Header({ onNavigate, onCartClick }: HeaderProps) {
     setMobileMenuOpen(false);
   }}
  className={`px-7 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
-  item.id === 'home'
+item.id === currentPage
     ? 'bg-white shadow-md'
     : 'hover:bg-white hover:shadow-sm'
 }`}
