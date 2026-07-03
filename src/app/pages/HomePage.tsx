@@ -80,28 +80,24 @@ export default function HomePage({ onNavigate, onProductClick }: HomePageProps) 
     }
   `}</style>
 
-  <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-    
-    {/* Left Video */}
-<div className="order-1 lg:order-1 flex justify-center">
+<div className="relative w-full max-w-2xl h-[480px]
+rounded-[36px]
+bg-gradient-to-br from-[#FFFDF7] via-[#F8F5EA] to-[#EDE7D8]
+border border-[#D8CFB8]
+shadow-[0_25px_70px_rgba(15,58,43,0.18)]
+overflow-hidden">
 
- <div className="relative w-full max-w-2xl h-[480px]
-                  rounded-[36px]
-                  bg-[#FBF7EF]
-                  border border-[#E8E3D9]
-                 shadow-[0_15px_50px_rgba(15,58,43,0.12)]
-                  overflow-hidden">
-
-      <video
-        src="/omani-drone.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="w-full h-full object-cover rounded-[36px]"
-      />
-
-  </div>
+<div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(15,58,43,0.14),transparent_40%)]" />
+<div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#0F3A2B]/15 to-transparent" />
+  
+<video
+  src="/omani-drone.mp4"
+  autoPlay
+  muted
+  loop
+  playsInline
+  className="relative z-10 w-full h-full object-cover rounded-[36px]"
+/>
 
 </div>
 
