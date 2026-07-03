@@ -261,23 +261,23 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 طريقة الدفع
               </h2>
               <div className="bg-[#FBF7EF] rounded-2xl p-6 mb-6">
-                <p className="text-sm text-gray-700 mb-4 font-semibold">يرجى تحويل المبلغ الإجمالي إلى الحساب التالي:</p>
+                <p className="text-sm mb-6 font-semibold" style={{ color: '#0F3A2B' }}>يرجى تحويل المبلغ الإجمالي إلى الحساب التالي:</p>
                 <div className="space-y-4 text-sm">
-                  <div className="flex justify-between border-b border-[#E8E3D9] pb-3">
-                    <span className="text-gray-600">اسم الحساب:</span>
-                    <span className="font-semibold">HAMAD################BAL</span>
+                  <div className="flex justify-between items-center border-b border-[#E8E3D9] pb-4">
+                    <span className="font-semibold" style={{ color: '#0F3A2B' }}>اسم الحساب:</span>
+                    <span className="font-bold text-base" style={{ color: '#122D22' }}>HAMAD################BAL</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#E8E3D9] pb-3">
-                    <span className="text-gray-600">رقم الحساب:</span>
-                    <span className="font-semibold">0401063526560013</span>
+                  <div className="flex justify-between items-center border-b border-[#E8E3D9] pb-4">
+                    <span className="font-semibold" style={{ color: '#0F3A2B' }}>رقم الحساب:</span>
+                    <span className="font-bold text-base" style={{ color: '#122D22' }}>0401063526560013</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#E8E3D9] pb-3">
-                    <span className="text-gray-600">رقم التحويل:</span>
-                    <span className="font-semibold">90977867</span>
+                  <div className="flex justify-between items-center border-b border-[#E8E3D9] pb-4">
+                    <span className="font-semibold" style={{ color: '#0F3A2B' }}>رقم التحويل:</span>
+                    <span className="font-bold text-base" style={{ color: '#122D22' }}>90977867</span>
                   </div>
-                  <div className="flex justify-between pt-3">
-                    <span className="font-semibold" style={{ color: '#0F3A2B' }}>المبلغ المطلوب:</span>
-                    <span className="text-lg font-bold" style={{ color: '#0F3A2B' }}>{total} ر.ع</span>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="font-bold" style={{ color: '#0F3A2B' }}>المبلغ المطلوب:</span>
+                    <span className="text-lg font-bold" style={{ color: '#122D22' }}>{total} ر.ع</span>
                   </div>
                 </div>
               </div>
