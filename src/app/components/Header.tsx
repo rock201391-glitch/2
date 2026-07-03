@@ -61,7 +61,7 @@ export default function Header({ onNavigate, onCartClick }: HeaderProps) {
   <img
     src="/merqab.png"
     alt="مرقاب"
-    className="h-12 w-auto"
+    className="h-24 md:h-28 w-auto object-contain"
   />
 </button>  
 
