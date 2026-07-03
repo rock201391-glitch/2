@@ -89,87 +89,91 @@ style={{ color: item.id === currentPage ? '#0F3A2B' : '#F7F5EF' }}
 
 {/* Mobile Side Menu */}
 {mobileMenuOpen && (
-<div className="fixed inset-0 z-[9999] md:hidden">
+  <div className="fixed inset-0 z-[9999] md:hidden">
+    <div
+      className="absolute inset-0 bg-black/35 backdrop-blur-md"
+      onClick={() => setMobileMenuOpen(false)}
+    />
 
-<div
-className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-onClick={() => setMobileMenuOpen(false)}
-/>
+    <div className="absolute top-0 right-0 h-screen w-[75%] bg-[#F8F7F2] shadow-2xl border-l border-[#E5E1D8] overflow-hidden">
+      
+      <button
+        onClick={() => setMobileMenuOpen(false)}
+        className="absolute top-7 right-7 text-3xl z-10"
+        style={{ color: '#0F3A2B' }}
+      >
+        ×
+      </button>
 
-<div className="absolute top-0 right-0 h-screen w-[78%] bg-[#F8F7F2] shadow-2xl border-l border-[#E5E1D8] px-8 py-10 overflow-y-auto">
-  
-<div className="flex justify-end mb-10">
+      <div className="pt-20 pb-8 text-center border-b border-[#E5E1D8]">
+        <img
+          src="/merqab.png"
+          alt="مرقاب"
+          className="h-16 mx-auto object-contain"
+        />
+        <h2 className="mt-4 text-3xl font-bold" style={{ color: '#0F3A2B' }}>
+          مرقاب
+        </h2>
+        <p className="mt-2 text-sm tracking-widest text-[#9AA69F]">
+          متجر الدرونات الاحترافية
+        </p>
+      </div>
 
-<button
-onClick={()=>setMobileMenuOpen(false)}
-className="text-4xl"
+      <div className="px-7 pt-12">
+        <h3 className="text-xl font-bold mb-7 text-right" style={{ color: '#0F3A2B' }}>
+          التنقل
+        </h3>
 
-style={{
-color:'#0F3A2B'
-}}
->
+        <nav className="flex flex-col gap-5">
+          {navItems.map((item) => {
+            const Icon =
+              item.id === 'home'
+                ? Home
+                : item.id === 'shop'
+                ? Box
+                : item.id === 'my-orders'
+                ? ShoppingBag
+                : MapPin;
 
-×
+            const active = item.id === currentPage;
 
-</button>
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onNavigate(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`flex items-center justify-between w-full px-7 py-5 rounded-full text-2xl font-bold transition-all ${
+                  active ? 'shadow-xl' : ''
+                }`}
+                style={{
+                  backgroundColor: active ? '#0F3A2B' : 'transparent',
+                  color: active ? '#F8F7F2' : '#0F3A2B'
+                }}
+              >
+                <ChevronLeft
+                  className="w-6 h-6"
+                  style={{ color: active ? '#D8C99B' : '#B8C0BA' }}
+                />
 
-</div>
+                <span>{item.label}</span>
 
-<nav className="flex flex-col gap-7 mt-10">
+                <Icon
+                  className="w-7 h-7"
+                  style={{ color: active ? '#D8C99B' : '#6E7F76' }}
+                />
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
-{navItems.map((item)=>(
-
-<button
-key={item.id}
-onClick={()=>{
-onNavigate(item.id);
-setMobileMenuOpen(false);
-}}
-
-className="text-right text-[30px] font-bold py-5 px-8"
-
-style={{
-color:item.id===currentPage
-?'#F8F7F2'
-:'#0F3A2B',
-
-backgroundColor:item.id===currentPage
-?'#0F3A2B'
-:'transparent',
-
-borderRadius:'999px',
-minHeight:'82px'
-}}
-
->
-
-{item.label}
-
-</button>
-
-))}
-
-</nav>
-<div
-style={{
-position:'absolute',
-bottom:'30px',
-left:'0',
-right:'0',
-textAlign:'center',
-color:'#B6BDB4',
-fontSize:'14px',
-fontWeight:'700'
-}}
->
-
-MERGAB STORE 2026 ©
-
-</div>
-</div>
-
-</div>
-
+      <div className="absolute bottom-10 left-0 right-0 text-center text-sm tracking-widest text-[#B6BDB4] font-bold">
+        MERGAB STORE 2026 ©
+      </div>
+    </div>
+  </div>
 )}
       </div>
     </header>
