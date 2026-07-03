@@ -38,19 +38,23 @@ export default function Header({ onNavigate, onCartClick }: HeaderProps) {
           </button>
 
           {/* Navigation Menu - Center */}
-          <nav className="hidden md:flex items-center gap-1 bg-[#FBF7EF] rounded-full px-6 py-3">
+         <nav className="hidden md:flex items-center gap-1 bg-[#F7F5EF] rounded-[22px] p-2 shadow-md border border-[#ECE7DA]">
             {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onNavigate(item.id);
-                  setMobileMenuOpen(false);
-                }}
-                className="px-4 py-2 rounded-full text-sm font-medium transition-all hover:bg-white"
-                style={{ color: '#0F3A2B' }}
-              >
-                {item.label}
-              </button>
+          <button
+  key={item.id}
+  onClick={() => {
+    onNavigate(item.id);
+    setMobileMenuOpen(false);
+  }}
+ className={`px-7 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
+  item.id === 'home'
+    ? 'bg-white shadow-md'
+    : 'hover:bg-white hover:shadow-sm'
+}`}
+  style={{ color: '#0F3A2B' }}
+>
+  {item.label}
+</button>
             ))}
           </nav>
 
