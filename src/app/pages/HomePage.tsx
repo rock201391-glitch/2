@@ -64,42 +64,29 @@ export default function HomePage({ onNavigate, onProductClick }: HomePageProps) 
     <div className="min-h-screen bg-[#F8F7F2]">
     
 {/* Hero Section */}
-<section className="w-full px-4 py-16 md:py-24 bg-gradient-to-b from-[#F8F7F2] to-[#F1F0E8] overflow-hidden">
-  <style>{`
-    @keyframes droneFloat {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-18px) rotate(2deg); }
-    }
-    @keyframes personFloat {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-7px); }
-    }
-    @keyframes propellerSpin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-  `}</style>
+<section className="w-full px-4 py-16 md:py-24 overflow-hidden" style={{ background: 'linear-gradient(to bottom, #F8F7F2, #F1F0E8)' }}>
+  <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-<div className="relative w-full max-w-2xl h-[480px]
-rounded-[36px]
-bg-gradient-to-br from-[#FFFDF7] via-[#F8F5EA] to-[#EDE7D8]
-border border-[#D8CFB8]
-shadow-[0_25px_70px_rgba(15,58,43,0.18)]
-overflow-hidden">
-
-<div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(15,58,43,0.14),transparent_40%)]" />
-<div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#0F3A2B]/15 to-transparent" />
-  
-<video
-  src="/omani-drone.mp4"
-  autoPlay
-  muted
-  loop
-  playsInline
-  className="relative z-10 w-full h-full object-cover rounded-[36px]"
-/>
-
-</div>
+    {/* Left Video */}
+    <div className="order-1 lg:order-1 flex justify-center">
+      <div
+        className="relative w-full max-w-2xl h-[480px] rounded-[42px] overflow-hidden border"
+        style={{
+          background: 'linear-gradient(135deg, #FFFDF7 0%, #F8F5EA 50%, #EDE7D8 100%)',
+          borderColor: '#D8CFB8',
+          boxShadow: '0 30px 80px rgba(15,58,43,0.18)',
+        }}
+      >
+        <video
+          src="/omani-drone.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover rounded-[42px]"
+        />
+      </div>
+    </div>
 
     {/* Right Text */}
     <div className="order-2 lg:order-2 text-right">
@@ -120,6 +107,7 @@ overflow-hidden">
         <ChevronLeft className="w-5 h-5" />
       </button>
     </div>
+
   </div>
 </section>
       {/* Featured Products */}
