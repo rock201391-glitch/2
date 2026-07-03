@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
 
 interface MyOrdersProps {
@@ -5,7 +6,12 @@ interface MyOrdersProps {
 }
 
 export default function MyOrders({ onNavigate }: MyOrdersProps) {
- const orders = [];
+const [orders, setOrders] = useState<any[]>([]);
+
+useEffect(() => {
+  const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+  setOrders(savedOrders);
+}, []);
 
   return (
     <div className="min-h-screen bg-[#F8F7F2] py-8 px-4">
