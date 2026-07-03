@@ -43,7 +43,7 @@ export default function TrackOrder() {
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 px-6 py-4 border border-gray-200 rounded-full focus:outline-none focus:border-[#0F3A2B]"
+             className="flex-1 px-6 py-4 border border-gray-200 rounded-full text-[#0F3A2B] placeholder:text-[#0F3A2B] placeholder:opacity-100 focus:outline-none focus:border-[#0F3A2B]"
               placeholder="أدخل رقم التتبع"
             />
             <button
