@@ -111,47 +111,7 @@ export default function HomePage({ onNavigate, onProductClick }: HomePageProps) 
   </div>
 </section>
       {/* Featured Products */}
-      <section className="w-full py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-12 text-center" style={{ color: '#0F3A2B' }}>
-            المنتجات المميزة
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {DJI_PRODUCTS.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => onProductClick(product)}
-                onMouseEnter={() => setHoveredProduct(product.id)}
-                onMouseLeave={() => setHoveredProduct(null)}
-                className="bg-white rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:shadow-lg"
-              >
-                <div className="flex items-center justify-center h-40 text-6xl mb-4 rounded-2xl" style={{ backgroundColor: '#FBF7EF' }}>
-                  {product.image}
-                </div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: '#0F3A2B' }}>
-                  {product.name}
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">{product.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold" style={{ color: '#0F3A2B' }}>
-                    {product.price}ر.ع
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onProductClick(product);
-                    }}
-                    className="px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
-                    style={{ backgroundColor: '#0F3A2B' }}
-                  >
-                    عرض التفاصيل
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+     
     </div>
   );
 }
