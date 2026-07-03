@@ -38,7 +38,7 @@ export default function TrackOrder() {
         {/* Search Section */}
         <div className="bg-white rounded-3xl p-8 mb-8">
           <div className="flex gap-3 mb-6">
-            <input
+            placeholder:text-[#0F3A2B]
               type="text"
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
