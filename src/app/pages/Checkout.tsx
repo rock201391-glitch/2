@@ -128,7 +128,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B]"
+                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B] text-[#0F3A2B] placeholder:text-[#0F3A2B] placeholder:opacity-100"
                     placeholder="+968 XXXX XXXX"
                     required
                   />
@@ -143,7 +143,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       name="country"
                       value={formData.country}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B]"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B] text-[#0F3A2B]"
                     >
                       <option>عمان</option>
                       <option>الإمارات</option>
@@ -159,7 +159,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       name="governorate"
                       value={formData.governorate}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B]"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B] text-[#0F3A2B] placeholder:text-[#0F3A2B] placeholder:opacity-100"
                       placeholder="المنطقة"
                       required
                     />
@@ -175,7 +175,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B]"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B] text-[#0F3A2B] placeholder:text-[#0F3A2B] placeholder:opacity-100"
                     placeholder="المدينة"
                     required
                   />
@@ -189,7 +189,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     name="notes"
                     value={formData.notes}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B] resize-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B] resize-none text-[#0F3A2B] placeholder:text-[#0F3A2B] placeholder:opacity-100"
                     rows={3}
                     placeholder="أي تعليقات خاصة للطلب..."
                   />
