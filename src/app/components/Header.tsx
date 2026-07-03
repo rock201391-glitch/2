@@ -109,11 +109,9 @@ style={{ color: item.id === currentPage ? '#0F3A2B' : '#F7F5EF' }}
         <img
           src="/merqab.png"
           alt="مرقاب"
-          className="h-16 mx-auto object-contain"
+         className="h-28 mx-auto object-contain"
         />
-        <h2 className="mt-4 text-3xl font-bold" style={{ color: '#0F3A2B' }}>
-          مرقاب
-        </h2>
+        
         <p className="mt-2 text-sm tracking-widest text-[#9AA69F]">
           متجر الدرونات الاحترافية
         </p>
