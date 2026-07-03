@@ -5,27 +5,7 @@ interface MyOrdersProps {
 }
 
 export default function MyOrders({ onNavigate }: MyOrdersProps) {
-  const orders = [
-    {
-      id: '12345',
-      date: '2026-07-01',
-      status: 'تم التسليم',
-      items: [
-        { name: 'DJI Mini 5 Pro', quantity: 1, price: 95 }
-      ],
-      total: 98
-    },
-    {
-      id: '12346',
-      date: '2026-07-02',
-      status: 'قيد الشحن',
-      items: [
-        { name: 'Osmo Pocket 4', quantity: 1, price: 125 },
-        { name: 'DJI Mic', quantity: 2, price: 35 }
-      ],
-      total: 195
-    }
-  ];
+ const orders = [];
 
   return (
     <div className="min-h-screen bg-[#F8F7F2] py-8 px-4">
