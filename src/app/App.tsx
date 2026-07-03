@@ -103,9 +103,10 @@ const [isCartOpen, setIsCartOpen] = useState(false);
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <div className="min-h-screen bg-[#F8F7F2] transition-colors duration-500" dir="rtl" lang="ar">
             <Header
-              onNavigate={handleNavigate}
-              onCartClick={() => setIsCartOpen(true)}
-            />
+  onNavigate={handleNavigate}
+  onCartClick={() => setIsCartOpen(true)}
+  currentPage={currentPage}
+/>
             <main>{renderPage()}</main>
             {isCartOpen && (
   <div className="fixed inset-0 z-[9999]">
