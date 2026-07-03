@@ -59,21 +59,36 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!receiptImage) {
-      alert('يرجى رفع صورة الإيصال');
-      return;
-    }
+  e.preventDefault();
 
-    setIsSubmitting(true);
-    
-    setTimeout(() => {
-      clearCart();
-      setIsSubmitting(false);
-      onSuccess();
-    }, 1500);
+  if (!receiptImage) {
+    alert('يرجى رفع صورة الإيصال');
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  const newOrder = {
+    id: Date.now().toString(),
+    date: new Date().toISOString(),
+    status: 'قيد المراجعة',
+    items: items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity || 1,
+      price: item.price
+    })),
+    total: total
   };
+
+  const oldOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+  localStorage.setItem('orders', JSON.stringify([newOrder, ...oldOrders]));
+
+  setTimeout(() => {
+    clearCart();
+    setIsSubmitting(false);
+    onSuccess();
+  }, 1500);
+};
 
   const subtotal = getTotal();
   const shippingCost = formData.shippingMethod === 'home' ? 2 : 1;
