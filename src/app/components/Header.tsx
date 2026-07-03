@@ -87,24 +87,74 @@ style={{ color: item.id === currentPage ? '#0F3A2B' : '#F7F5EF' }}
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden mt-4 flex flex-col gap-2">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onNavigate(item.id);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-right px-4 py-3 rounded-lg hover:bg-[#FBF7EF] transition-colors text-sm font-medium"
-                style={{ color: '#0F3A2B' }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        )}
+{/* Mobile Side Menu */}
+{mobileMenuOpen && (
+<div className="fixed inset-0 z-[9999] md:hidden">
+
+<div
+className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+onClick={() => setMobileMenuOpen(false)}
+/>
+
+<div className="absolute top-0 right-0 h-screen w-[80%] bg-[#F8F7F2] shadow-2xl p-8">
+
+<div className="flex items-center justify-between mb-12">
+
+<button
+onClick={() => setMobileMenuOpen(false)}
+className="text-3xl"
+style={{ color:'#0F3A2B' }}
+>
+×
+</button>
+
+<img
+src="/merqab.png"
+className="h-10"
+/>
+
+</div>
+
+<nav className="flex flex-col gap-6">
+
+{navItems.map((item)=>(
+
+<button
+key={item.id}
+onClick={()=>{
+onNavigate(item.id);
+setMobileMenuOpen(false);
+}}
+
+className="text-right text-2xl font-bold py-4"
+
+style={{
+color:item.id===currentPage
+?'#F8F7F2'
+:'#0F3A2B',
+
+backgroundColor:item.id===currentPage
+?'#0F3A2B'
+:'transparent',
+
+borderRadius:'999px'
+}}
+
+>
+
+{item.label}
+
+</button>
+
+))}
+
+</nav>
+
+</div>
+
+</div>
+
+)}
       </div>
     </header>
   );
