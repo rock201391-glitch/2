@@ -15,13 +15,13 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     country: 'عمان',
     governorate: '',
     city: '',
-    address: '',
     notes: '',
-    discountCode: '',
     shippingMethod: 'office',
   });
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
+  const [receiptFileName, setReceiptFileName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -30,14 +30,44 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setReceiptImage(file);
+    if (file) {
+      setReceiptImage(file);
+      setReceiptFileName(file.name);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setReceiptImage(file);
+      setReceiptFileName(file.name);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!receiptImage) {
+      alert('يرجى رفع صورة الإيصال');
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate order submission
     setTimeout(() => {
       clearCart();
       setIsSubmitting(false);
@@ -46,7 +76,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   };
 
   const subtotal = getTotal();
-  const shippingCost = formData.shippingMethod === 'home' ? 5 : 3;
+  const shippingCost = formData.shippingMethod === 'home' ? 2 : 1;
   const total = subtotal + shippingCost;
 
   return (
@@ -122,7 +152,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold mb-2" style={{ color: '#0F3A2B' }}>
-                      المحافظة
+                      المحافظة / المنطقة
                     </label>
                     <input
                       type="text"
@@ -131,13 +161,14 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B]"
                       placeholder="المنطقة"
+                      required
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: '#0F3A2B' }}>
-                    المدينة
+                    الولاية / المدينة
                   </label>
                   <input
                     type="text"
@@ -145,21 +176,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     value={formData.city}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B]"
-                    placeholder="أخرى"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: '#0F3A2B' }}>
-                    تفاصيل العنوان
-                  </label>
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0F3A2B] resize-none"
-                    rows={3}
-                    placeholder="رقم المنزل - الشارع - الحي..."
+                    placeholder="المدينة"
+                    required
                   />
                 </div>
 
@@ -185,7 +203,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 وسائل الشحن
               </h2>
               <div className="space-y-3">
-                <label className="flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all" 
+                <label 
+                  className="flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all"
                   style={{
                     borderColor: formData.shippingMethod === 'office' ? '#0F3A2B' : '#E8E3D9',
                     backgroundColor: formData.shippingMethod === 'office' ? '#FBF7EF' : 'transparent'
@@ -199,11 +218,18 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     onChange={handleInputChange}
                     className="w-4 h-4"
                   />
-                  <span className="mr-3 font-semibold" style={{ color: '#0F3A2B' }}>
-                    توصيل للمكتب - 4-6 أيام عمل (3 ر.ع)
-                  </span>
+                  <div className="mr-3">
+                    <p className="font-semibold" style={{ color: '#0F3A2B' }}>
+                      توصيل للمكتب
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      1 ر.ع • 2–4 أيام عمل
+                    </p>
+                  </div>
                 </label>
-                <label className="flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all"
+
+                <label 
+                  className="flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all"
                   style={{
                     borderColor: formData.shippingMethod === 'home' ? '#0F3A2B' : '#E8E3D9',
                     backgroundColor: formData.shippingMethod === 'home' ? '#FBF7EF' : 'transparent'
@@ -217,9 +243,14 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     onChange={handleInputChange}
                     className="w-4 h-4"
                   />
-                  <span className="mr-3 font-semibold" style={{ color: '#0F3A2B' }}>
-                    توصيل للمنزل - 5-8 أيام عمل (5 ر.ع)
-                  </span>
+                  <div className="mr-3">
+                    <p className="font-semibold" style={{ color: '#0F3A2B' }}>
+                      توصيل للمنزل
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      2 ر.ع • 2–4 أيام عمل
+                    </p>
+                  </div>
                 </label>
               </div>
             </div>
@@ -230,47 +261,78 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 طريقة الدفع
               </h2>
               <div className="bg-[#FBF7EF] rounded-2xl p-6 mb-6">
-                <p className="text-sm text-gray-600 mb-4">تحويل بنكي فقط - Please transfer to the following account:</p>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
+                <p className="text-sm text-gray-700 mb-4 font-semibold">يرجى تحويل المبلغ الإجمالي إلى الحساب التالي:</p>
+                <div className="space-y-4 text-sm">
+                  <div className="flex justify-between border-b border-[#E8E3D9] pb-3">
                     <span className="text-gray-600">اسم الحساب:</span>
-                    <span className="font-semibold">MERGAB LLC</span>
+                    <span className="font-semibold">HAMAD################BAL</span>
                   </div>
-                  <div className="flex justify-between border-t pt-3">
+                  <div className="flex justify-between border-b border-[#E8E3D9] pb-3">
                     <span className="text-gray-600">رقم الحساب:</span>
-                    <span className="font-semibold">12345678901</span>
+                    <span className="font-semibold">0401063526560013</span>
                   </div>
-                  <div className="flex justify-between border-t pt-3">
+                  <div className="flex justify-between border-b border-[#E8E3D9] pb-3">
                     <span className="text-gray-600">رقم التحويل:</span>
-                    <span className="font-semibold">SWIFT123456</span>
+                    <span className="font-semibold">90977867</span>
                   </div>
-                  <div className="flex justify-between border-t pt-3">
-                    <span className="text-gray-600" style={{ color: '#0F3A2B' }}>المبلغ المطلوب:</span>
-                    <span className="font-bold text-lg" style={{ color: '#0F3A2B' }}>{total} ر.ع</span>
+                  <div className="flex justify-between pt-3">
+                    <span className="font-semibold" style={{ color: '#0F3A2B' }}>المبلغ المطلوب:</span>
+                    <span className="text-lg font-bold" style={{ color: '#0F3A2B' }}>{total} ر.ع</span>
                   </div>
                 </div>
               </div>
 
+              {/* Upload Receipt */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-3" style={{ color: '#0F3A2B' }}>
-                  رفع صورة إيصال التحويل
+                <label className="block text-sm font-semibold mb-4" style={{ color: '#0F3A2B' }}>
+                  ارفع صورة إيصال التحويل
                 </label>
-                <div className="border-2 border-dashed border-[#E8E3D9] rounded-2xl p-6 text-center cursor-pointer hover:bg-[#FBF7EF] transition-colors">
+                <div
+                  className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                    dragActive ? 'bg-[#FBF7EF] border-[#0F3A2B]' : 'bg-white border-[#E8E3D9] hover:bg-[#FBF7EF]'
+                  }`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                >
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
                     className="hidden"
                     id="receipt-upload"
+                    required
                   />
                   <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center">
-                    <Upload className="w-8 h-8 mb-2" style={{ color: '#0F3A2B' }} />
-                    <span className="text-sm text-gray-600">
-                      {receiptImage ? receiptImage.name : 'اضغط لرفع صورة الإيصال أو اسحبها هنا'}
+                    <Upload className="w-10 h-10 mb-3" style={{ color: '#0F3A2B' }} />
+                    <span className="text-sm font-semibold mb-1" style={{ color: '#0F3A2B' }}>
+                      {receiptFileName ? 'تم الرفع: ' + receiptFileName : 'اضغط هنا أو اسحب الصورة للإرفاق'}
                     </span>
+                    {!receiptFileName && (
+                      <span className="text-xs text-gray-500">
+                        صيغ مدعومة: JPG, PNG, PDF
+                      </span>
+                    )}
                   </label>
                 </div>
               </div>
+
+              {receiptImage && (
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#0F3A2B' }}>
+                    ✓
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm" style={{ color: '#0F3A2B' }}>
+                      تم رفع الإيصال بنجاح
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {receiptFileName}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -323,8 +385,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !receiptImage}
-                className="w-full py-4 rounded-full text-white font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting || !receiptImage || !formData.fullName || !formData.phone}
+                className="w-full py-4 rounded-full text-white font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
                 style={{ backgroundColor: '#0F3A2B' }}
               >
                 {isSubmitting ? 'جاري المعالجة...' : 'تأكيد الطلب'}
