@@ -43,7 +43,7 @@ export default function Header({
           </button>
 
           {/* Navigation Menu - Center */}
-         <nav className="hidden md:flex items-center gap-1 bg-[#F7F5EF] rounded-[22px] p-2 shadow-md border border-[#ECE7DA]">
+         <nav className="hidden md:flex items-center gap-1 bg-[#0F3A2B] rounded-[22px] p-2 shadow-md border border-[#0F3A2B]">
             {navItems.map((item) => (
           <button
   key={item.id}
@@ -52,11 +52,11 @@ export default function Header({
     setMobileMenuOpen(false);
   }}
  className={`px-7 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
-item.id === currentPage
-    ? 'bg-white shadow-md'
-    : 'hover:bg-white hover:shadow-sm'
+  item.id === currentPage
+    ? 'bg-[#F7F5EF] shadow-md'
+    : 'hover:bg-[#F7F5EF]/20'
 }`}
-  style={{ color: '#0F3A2B' }}
+style={{ color: item.id === currentPage ? '#0F3A2B' : '#F7F5EF' }}
 >
   {item.label}
 </button>
