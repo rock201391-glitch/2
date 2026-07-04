@@ -206,6 +206,44 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               </div>
             </div>
 
+            <div className="space-y-3">
+
+  <label className="font-semibold text-[#0F3A2B]">
+    طريقة التوصيل
+  </label>
+
+  <div className="flex gap-4">
+
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="shippingMethod"
+        value="office"
+        checked={formData.shippingMethod === 'office'}
+        onChange={handleInputChange}
+      />
+
+      استلام من المكتب (1 ر.ع)
+    </label>
+
+    <label className="flex items-center gap-2">
+
+      <input
+        type="radio"
+        name="shippingMethod"
+        value="home"
+        checked={formData.shippingMethod === 'home'}
+        onChange={handleInputChange}
+      />
+
+      توصيل للمنزل (2 ر.ع)
+
+    </label>
+
+  </div>
+
+</div>
+            
             <div className="bg-white rounded-3xl p-8">
               <h2 className="text-2xl font-bold mb-6" style={{ color: '#0F3A2B' }}>
                 طريقة الدفع
