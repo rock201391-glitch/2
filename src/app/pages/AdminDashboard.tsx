@@ -2,17 +2,36 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
+  // حالات التحقق من تسجيل الدخول
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  // حالات لوحة التحكم بالطلبات
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
+  // التأكد من حالة تسجيل الدخول عند فتح أو تحديث الصفحة باستخدام sessionStorage
   useEffect(() => {
-    fetchOrders();
+    if (typeof window !== "undefined") {
+      const loggedInStatus = sessionStorage.getItem("adminLoggedIn");
+      if (loggedInStatus === "true") {
+        setIsLoggedIn(true);
+      }
+    }
   }, []);
+
+  // جلب الطلبات فقط في حال كان المستخدم مسجلاً للدخول بنجاح
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchOrders();
+    }
+  }, [isLoggedIn]);
 
   async function fetchOrders() {
     setLoading(true);
-
     const { data, error } = await supabase
       .from("orders")
       .select("*")
@@ -22,32 +41,119 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
+  // معالجة عملية تسجيل الدخول وحفظ الجلسة
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username === "ro0ak" && password === "99s551905") {
+      sessionStorage.setItem("adminLoggedIn", "true");
+      setIsLoggedIn(true);
+      setLoginError("");
+    } else {
+      setLoginError("اسم المستخدم أو كلمة المرور غير صحيحة");
+    }
+  };
+
+  // معالجة عملية تسجيل الخروج وحذف الجلسة
+  const handleLogout = () => {
+    sessionStorage.removeItem("adminLoggedIn");
+    setIsLoggedIn(false);
+  };
+
   const getShippingText = (method: string) => {
     if (method === "home") return "توصيل للمنزل";
     if (method === "office") return "استلام من المكتب";
     return method || "-";
   };
 
+  // 1. عرض صفحة تسجيل الدخول إذا لم يقم بتسجيل الدخول بعد
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[#F8F7F2] flex items-center justify-center px-4 text-[#0F3A2B]">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl border border-[#D8D2C5] text-center">
+          
+          {/* شعار مرقاب */}
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold tracking-wide text-[#0F3A2B]">مِرقاب</h2>
+            <p className="text-sm text-gray-500 mt-2">لوحة التحكم الإدارية</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5 text-right">
+            <div>
+              <label className="block text-sm font-semibold mb-2 mr-1">اسم المستخدم</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="أدخل اسم المستخدم"
+                className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-left"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2 mr-1">كلمة المرور</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="أدخل كلمة المرور"
+                className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-left"
+                required
+              />
+            </div>
+
+            {loginError && (
+              <p className="text-red-600 text-sm font-semibold text-center mt-2 bg-red-50 py-2 rounded-xl border border-red-100">
+                {loginError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full mt-4 rounded-2xl bg-[#0F3A2B] py-3 text-white font-bold text-lg hover:opacity-90 shadow-md transition-all"
+            >
+              تسجيل الدخول
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. عرض لوحة التحكم الرئيسية بعد تخطي صفحة تسجيل الدخول بنجاح
   return (
     <div className="min-h-screen bg-[#F8F7F2] px-6 py-10 text-[#0F3A2B]">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">لوحة الطلبات</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold">لوحة الطلبات</h1>
+            <span className="text-sm bg-white border border-[#D8D2C5] px-3 py-1 rounded-full font-medium">
+              مسؤول: ro0ak
+            </span>
+          </div>
 
-          <button
-            onClick={fetchOrders}
-            className="rounded-full bg-[#0F3A2B] px-5 py-2 text-white font-semibold"
-          >
-            تحديث
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={fetchOrders}
+              className="rounded-full bg-[#0F3A2B] px-5 py-2 text-white font-semibold shadow hover:opacity-90 transition-all"
+            >
+              تحديث
+            </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-full bg-white border border-[#D8D2C5] px-5 py-2 font-semibold text-gray-600 shadow hover:bg-gray-50 transition-all"
+            >
+              خروج
+            </button>
+          </div>
         </div>
 
         {loading ? (
-          <div className="rounded-2xl bg-white p-10 text-center shadow">
+          <div className="rounded-2xl bg-white p-10 text-center shadow border border-[#D8D2C5]">
             جاري تحميل الطلبات...
           </div>
         ) : orders.length === 0 ? (
-          <div className="rounded-2xl bg-white p-10 text-center shadow">
+          <div className="rounded-2xl bg-white p-10 text-center shadow border border-[#D8D2C5]">
             لا توجد طلبات حالياً
           </div>
         ) : (
@@ -110,7 +216,7 @@ export default function AdminDashboard() {
 
         {selectedOrder && (
           <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-8 max-w-3xl w-full text-[#0F3A2B] max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-3xl p-8 max-w-3xl w-full text-[#0F3A2B] max-h-[90vh] overflow-y-auto border border-[#D8D2C5]">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">
                   تفاصيل الطلب #{selectedOrder.id}
