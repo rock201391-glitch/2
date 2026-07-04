@@ -89,7 +89,9 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       .map(item => `${item.name} × ${item.quantity || 1}`)
       .join('، ');
 
-    const { error } = await supabase.from('orders').insert([
+  const { data, error } = await supabase
+  .from('orders')
+  .insert([
       {
         customer_name: formData.fullName,
         phone: formData.phone,
@@ -98,8 +100,9 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         payment_status: 'pending',
         receipt_url: receiptFileName,
       },
-    ]);
-
+  ])
+  .select();
+  
     if (error) {
       console.error('Supabase error:', error);
       alert('صار خطأ في إرسال الطلب');
