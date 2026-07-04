@@ -39,7 +39,6 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (file) {
       setReceiptImage(file);
       setReceiptFileName(file.name);
@@ -58,7 +57,6 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     setDragActive(false);
 
     const file = e.dataTransfer.files?.[0];
-
     if (file && file.type.startsWith('image/')) {
       setReceiptImage(file);
       setReceiptFileName(file.name);
@@ -68,13 +66,15 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+
     if (items.length === 0) {
       alert('السلة فارغة');
       return;
     }
 
-    if (!formData.fullName || !formData.phone) {
-      alert('يرجى إدخال الاسم ورقم الهاتف');
+    if (!formData.fullName || !formData.phone || !formData.governorate || !formData.city) {
+      alert('يرجى تعبئة جميع البيانات المطلوبة');
       return;
     }
 
@@ -85,51 +85,52 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
     setIsSubmitting(true);
 
-    const productNames = items
-      .map(item => `${item.name} × ${item.quantity || 1}`)
-      .join('، ');
+    try {
+      const productNames = items
+        .map(item => `${item.name} × ${item.quantity || 1}`)
+        .join('، ');
 
-  const { data, error } = await supabase
-  .from('orders')
-  .insert([
-      {
-        customer_name: formData.fullName,
-        phone: formData.phone,
-        product_name: productNames,
-        total: total,
-        payment_status: 'pending',
-        receipt_url: receiptFileName,
-      },
-  ])
-  .select();
-  
-    if (error) {
-      console.error('Supabase error:', error);
-      alert('صار خطأ في إرسال الطلب');
+      const { error } = await supabase.from('orders').insert([
+        {
+          customer_name: formData.fullName,
+          phone: formData.phone,
+          product_name: productNames,
+          total: total,
+          payment_status: 'pending',
+          receipt_url: receiptFileName,
+        },
+      ]);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        alert('فشل الطلب: ' + error.message);
+        return;
+      }
+
+      const newOrder = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        status: 'قيد المراجعة',
+        items: items.map(item => ({
+          name: item.name,
+          quantity: item.quantity || 1,
+          price: item.price,
+        })),
+        total,
+      };
+
+      const oldOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+      localStorage.setItem('orders', JSON.stringify([newOrder, ...oldOrders]));
+
+      clearCart();
+      alert('تم إرسال الطلب بنجاح');
+      onSuccess();
+    } catch (err) {
+      console.error(err);
+      alert('فشل الطلب');
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    const newOrder = {
-      id: Date.now().toString(),
-      date: new Date().toISOString(),
-      status: 'قيد المراجعة',
-      items: items.map(item => ({
-        name: item.name,
-        quantity: item.quantity || 1,
-        price: item.price,
-      })),
-      total,
-    };
-
-    const oldOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    localStorage.setItem('orders', JSON.stringify([newOrder, ...oldOrders]));
-
-    clearCart();
-    setIsSubmitting(false);
-
-    alert('تم إرسال الطلب بنجاح');
-    onSuccess();
   };
 
   return (
@@ -159,7 +160,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white"
                   placeholder="الاسم الكامل"
                   required
                 />
@@ -169,7 +170,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white"
                   placeholder="+968 XXXX XXXX"
                   required
                 />
@@ -179,7 +180,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="governorate"
                   value={formData.governorate}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white"
                   placeholder="المحافظة / المنطقة"
                   required
                 />
@@ -189,7 +190,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white"
                   placeholder="الولاية / المدينة"
                   required
                 />
@@ -198,7 +199,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none text-[#0F3A2B] bg-white"
                   rows={3}
                   placeholder="ملاحظات الطلب"
                 />
@@ -215,7 +216,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   يرجى تحويل المبلغ إلى الحساب التالي:
                 </p>
 
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-sm text-[#0F3A2B]">
                   <div className="flex justify-between">
                     <span>اسم الحساب:</span>
                     <b>HAMAD################BAL</b>
@@ -271,7 +272,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 ملخص الطلب
               </h2>
 
-              <div className="space-y-4 mb-6">
+              <div className="space-y-4 mb-6 text-[#0F3A2B]">
                 {items.map(item => (
                   <div key={item.id} className="flex justify-between border-b pb-3">
                     <span>{item.name} × {item.quantity || 1}</span>
@@ -280,17 +281,17 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 ))}
               </div>
 
-              <div className="flex justify-between mb-3">
+              <div className="flex justify-between mb-3 text-[#0F3A2B]">
                 <span>المنتجات:</span>
                 <span>{subtotal.toFixed(2)} ر.ع</span>
               </div>
 
-              <div className="flex justify-between mb-6">
+              <div className="flex justify-between mb-6 text-[#0F3A2B]">
                 <span>الشحن:</span>
                 <span>{shippingCost.toFixed(2)} ر.ع</span>
               </div>
 
-              <div className="flex justify-between text-xl font-bold mb-6">
+              <div className="flex justify-between text-xl font-bold mb-6 text-[#0F3A2B]">
                 <span>الإجمالي:</span>
                 <span>{total.toFixed(2)} ر.ع</span>
               </div>
@@ -298,8 +299,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               <button
                 type="submit"
                 disabled={isSubmitting || !receiptImage || !formData.fullName || !formData.phone}
-                className="w-full py-4 rounded-full text-white font-bold text-lg disabled:opacity-50 hover:scale-105 transition"
-                style={{ backgroundColor: '#0F3A2B' }}
+                className="w-full py-4 rounded-full text-white font-bold text-lg disabled:opacity-60 hover:scale-105 transition"
+                style={{ backgroundColor: '#0F3A2B', color: '#FFFFFF' }}
               >
                 {isSubmitting ? 'جاري إرسال الطلب...' : 'تأكيد الطلب'}
               </button>
