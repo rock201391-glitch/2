@@ -24,24 +24,7 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  // إخفاء الهيدر والفوتر الخاصين بالمتجر لحساب المسؤول
-  useEffect(() => {
-    const header = document.querySelector("header") || document.querySelector(".header") || document.querySelector("nav");
-    const footer = document.querySelector("footer") || document.querySelector(".footer");
-
-    if (!isLoggedIn) {
-      if (header) (header as HTMLElement).style.display = "none";
-      if (footer) (footer as HTMLElement).style.display = "none";
-    } else {
-      if (header) (header as HTMLElement).style.display = "none"; 
-      if (footer) (footer as HTMLElement).style.display = "none";
-    }
-
-    return () => {
-      if (header) (header as HTMLElement).style.display = "";
-      if (footer) (footer as HTMLElement).style.display = "";
-    };
-  }, [isLoggedIn]);
+ 
 
   // جلب الطلبات من قاعدة البيانات
   useEffect(() => {
