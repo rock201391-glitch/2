@@ -12,8 +12,9 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  // 1. التأكد من حالة تسجيل الدخول وإخفاء الهيدر والفوتر تماماً في صفحة تسجيل الدخول
+  // التأكد من حالة تسجيل الدخول عند فتح أو تحديث الصفحة باستخدام sessionStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       const loggedInStatus = sessionStorage.getItem("adminLoggedIn");
@@ -25,7 +26,6 @@ export default function AdminDashboard() {
 
   // كود برمي لإخفاء الهيدر والفوتر في المتجر عند عدم تسجيل الدخول
   useEffect(() => {
-    // نحدد عناصر الهيدر والفوتر الشائعة في الموقع لإخفائها
     const header = document.querySelector("header") || document.querySelector(".header") || document.querySelector("nav");
     const footer = document.querySelector("footer") || document.querySelector(".footer");
 
@@ -33,12 +33,10 @@ export default function AdminDashboard() {
       if (header) (header as HTMLElement).style.display = "none";
       if (footer) (footer as HTMLElement).style.display = "none";
     } else {
-      // إعادتهم للظهور داخل لوحة التحكم إذا رغبت، أو يمكنك إبقاؤهم مخفيين
       if (header) (header as HTMLElement).style.display = "none"; 
       if (footer) (footer as HTMLElement).style.display = "none";
     }
 
-    // تنظيف التأثير عند مغادرة الصفحة ليعود المتجر لطبيعته للمشترين
     return () => {
       if (header) (header as HTMLElement).style.display = "";
       if (footer) (footer as HTMLElement).style.display = "";
@@ -63,6 +61,27 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
+  // دالة تحديث حالة الطلب في الـ Supabase
+  async function handleUpdateStatus(orderId: any, newStatus: string) {
+    setUpdatingStatus(true);
+    
+    // نقوم بتحديث الحقل في قاعدة البيانات (حسب اسم الحقل لديك، افتراضياً payment_status)
+    const { error } = await supabase
+      .from("orders")
+      .update({ payment_status: newStatus })
+      .eq("id", orderId);
+
+    if (!error) {
+      // تحديث الحالة محلياً في القائمة والنافذة المفتوحة دون الحاجة لإعادة تحميل الصفحة بالكامل
+      setOrders(orders.map(o => o.id === orderId ? { ...o, payment_status: newStatus } : o));
+      setSelectedOrder({ ...selectedOrder, payment_status: newStatus });
+      alert("تم تحديث حالة الطلب بنجاح!");
+    } else {
+      alert("حدث خطأ أثناء تحديث الحالة، يرجى المحاولة لاحقاً.");
+    }
+    setUpdatingStatus(false);
+  }
+
   // معالجة عملية تسجيل الدخول وحفظ الجلسة
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +98,6 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     sessionStorage.removeItem("adminLoggedIn");
     setIsLoggedIn(false);
-    // عند تسجيل الخروج التام، يعاد توجيه المتصفح لتحديث العناصر أو إعادة إظهار القوائم للمتجر
     window.location.reload();
   };
 
@@ -95,9 +113,8 @@ export default function AdminDashboard() {
       <div className="fixed inset-0 z-[99999] min-h-screen bg-[#F8F7F2] flex flex-col items-center justify-center px-4 text-[#0F3A2B]">
         <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-[#D8D2C5] text-center">
           
-          {/* شعار مرقاب المتناسق */}
           <div className="mb-8">
-            <h2 className="text-4xl font-bold tracking-wide text-[#0F3A2B] font-serif">مِرقاب</h2>
+            <h2 className="text-4xl font-bold tracking-wide text-[#0F3A2B]">مِرقاب</h2>
             <p className="text-xs text-gray-400 mt-2 tracking-widest uppercase">Admin Access Only</p>
           </div>
 
@@ -254,6 +271,28 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
+              {/* قسم التحكم وتعديل حالة الطلب */}
+              <div className="mb-6 p-4 bg-[#F8F7F2] rounded-2xl border border-[#D8D2C5] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-right">
+                <div>
+                  <h4 className="font-bold text-sm text-gray-500">التحكم بحالة الطلب:</h4>
+                  <p className="text-xs text-gray-400 mt-1">الحالة التي تظهر للزبون في صفحة مشترياتي</p>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <select
+                    value={selectedOrder.payment_status || "pending"}
+                    disabled={updatingStatus}
+                    onChange={(e) => handleUpdateStatus(selectedOrder.id, e.target.value)}
+                    className="rounded-xl border border-[#D8D2C5] bg-white px-3 py-2 text-[#0F3A2B] font-semibold outline-none focus:border-[#0F3A2B]"
+                  >
+                    <option value="pending">قيد الانتظار</option>
+                    <option value="قيد المراجعة">قيد المراجعة</option>
+                    <option value="جاري التوصيل">جاري التوصيل</option>
+                    <option value="تم التوصيل">تم التوصيل</option>
+                    <option value="ملغي">ملغي</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <p><b>الاسم:</b> {selectedOrder.customer_name || "-"}</p>
                 <p><b>الهاتف:</b> {selectedOrder.phone || "-"}</p>
@@ -262,7 +301,7 @@ export default function AdminDashboard() {
                 <p><b>المحافظة:</b> {selectedOrder.governorate || "-"}</p>
                 <p><b>الولاية:</b> {selectedOrder.city || "-"}</p>
                 <p><b>طريقة التوصيل:</b> {getShippingText(selectedOrder.shipping_method)}</p>
-                <p><b>الحالة:</b> {selectedOrder.payment_status || "pending"}</p>
+                <p><b>الحالة الحالية:</b> <span className="font-bold underline">{selectedOrder.payment_status || "pending"}</span></p>
                 <p className="md:col-span-2">
                   <b>الملاحظات:</b> {selectedOrder.notes || "-"}
                 </p>
