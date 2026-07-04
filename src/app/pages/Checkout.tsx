@@ -95,15 +95,15 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           customer_name: formData.fullName,
           phone: formData.phone,
           product_name: productNames,
-          total: total,
+          total,
           payment_status: 'pending',
           receipt_url: receiptFileName,
         },
       ]);
 
       if (error) {
-        console.error('Supabase error:', error);
         alert('فشل الطلب: ' + error.message);
+        console.error('Supabase error:', error);
         return;
       }
 
@@ -134,23 +134,21 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="min-h-screen bg-[#F8F7F2] py-8 px-4">
+    <form onSubmit={handleSubmit} className="min-h-screen bg-[#F8F7F2] py-8 px-4 text-[#0F3A2B]">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex items-center gap-2 cursor-pointer" onClick={onBack}>
-          <ChevronRight style={{ color: '#0F3A2B' }} />
-          <span style={{ color: '#0F3A2B' }} className="font-semibold">
-            العودة للسلة
-          </span>
+          <ChevronRight className="text-[#0F3A2B]" />
+          <span className="font-semibold text-[#0F3A2B]">العودة للسلة</span>
         </div>
 
-        <h1 className="text-4xl font-bold mb-12 text-center" style={{ color: '#0F3A2B' }}>
+        <h1 className="text-4xl font-bold mb-12 text-center text-[#0F3A2B]">
           إتمام الطلب
         </h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-3xl p-8">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: '#0F3A2B' }}>
+            <div className="bg-white rounded-3xl p-8 shadow-sm">
+              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">
                 معلومات العميل
               </h2>
 
@@ -160,7 +158,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   placeholder="الاسم الكامل"
                   required
                 />
@@ -170,7 +168,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   placeholder="+968 XXXX XXXX"
                   required
                 />
@@ -180,7 +178,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="governorate"
                   value={formData.governorate}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   placeholder="المحافظة / المنطقة"
                   required
                 />
@@ -190,7 +188,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-white placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   placeholder="الولاية / المدينة"
                   required
                 />
@@ -199,78 +197,78 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none text-[#0F3A2B] bg-white"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none text-[#0F3A2B] bg-white placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   rows={3}
                   placeholder="ملاحظات الطلب"
                 />
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="bg-white rounded-3xl p-8 shadow-sm">
+              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">
+                طريقة التوصيل
+              </h2>
 
-  <label className="font-semibold text-[#0F3A2B]">
-    طريقة التوصيل
-  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="flex items-center justify-between gap-3 rounded-2xl border border-[#E8E3D9] bg-[#FBF7EF] px-5 py-4 cursor-pointer text-[#0F3A2B]">
+                  <span className="font-semibold">استلام من المكتب</span>
+                  <span className="flex items-center gap-2">
+                    <span>1 ر.ع</span>
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="office"
+                      checked={formData.shippingMethod === 'office'}
+                      onChange={handleInputChange}
+                      className="accent-[#0F3A2B]"
+                    />
+                  </span>
+                </label>
 
-  <div className="flex gap-4">
+                <label className="flex items-center justify-between gap-3 rounded-2xl border border-[#E8E3D9] bg-[#FBF7EF] px-5 py-4 cursor-pointer text-[#0F3A2B]">
+                  <span className="font-semibold">توصيل للمنزل</span>
+                  <span className="flex items-center gap-2">
+                    <span>2 ر.ع</span>
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="home"
+                      checked={formData.shippingMethod === 'home'}
+                      onChange={handleInputChange}
+                      className="accent-[#0F3A2B]"
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
 
-    <label className="flex items-center gap-2">
-      <input
-        type="radio"
-        name="shippingMethod"
-        value="office"
-        checked={formData.shippingMethod === 'office'}
-        onChange={handleInputChange}
-      />
-
-      استلام من المكتب (1 ر.ع)
-    </label>
-
-    <label className="flex items-center gap-2">
-
-      <input
-        type="radio"
-        name="shippingMethod"
-        value="home"
-        checked={formData.shippingMethod === 'home'}
-        onChange={handleInputChange}
-      />
-
-      توصيل للمنزل (2 ر.ع)
-
-    </label>
-
-  </div>
-
-</div>
-            
-            <div className="bg-white rounded-3xl p-8">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: '#0F3A2B' }}>
+            <div className="bg-white rounded-3xl p-8 shadow-sm">
+              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">
                 طريقة الدفع
               </h2>
 
-              <div className="bg-[#FBF7EF] rounded-2xl p-6 mb-6">
-                <p className="mb-4 font-semibold" style={{ color: '#0F3A2B' }}>
+              <div className="bg-[#FBF7EF] rounded-2xl p-6 mb-6 text-[#0F3A2B]">
+                <p className="mb-4 font-semibold">
                   يرجى تحويل المبلغ إلى الحساب التالي:
                 </p>
 
-                <div className="space-y-3 text-sm text-[#0F3A2B]">
-                  <div className="flex justify-between">
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between gap-4">
                     <span>اسم الحساب:</span>
                     <b>HAMAD################BAL</b>
                   </div>
 
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span>رقم الحساب:</span>
                     <b>0401063526560013</b>
                   </div>
 
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span>رقم التحويل:</span>
                     <b>90977867</b>
                   </div>
 
-                  <div className="flex justify-between text-lg">
+                  <div className="flex justify-between gap-4 text-lg">
                     <span>المبلغ المطلوب:</span>
                     <b>{total.toFixed(2)} ر.ع</b>
                   </div>
@@ -278,7 +276,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               </div>
 
               <div
-                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer ${
+                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition ${
                   dragActive ? 'bg-[#FBF7EF] border-[#0F3A2B]' : 'bg-white border-[#E8E3D9]'
                 }`}
                 onDragEnter={handleDrag}
@@ -294,9 +292,9 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   id="receipt-upload"
                 />
 
-                <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center">
-                  <Upload className="w-10 h-10 mb-3" style={{ color: '#0F3A2B' }} />
-                  <span style={{ color: '#0F3A2B' }}>
+                <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center text-[#0F3A2B]">
+                  <Upload className="w-10 h-10 mb-3 text-[#0F3A2B]" />
+                  <span className="font-semibold text-[#0F3A2B]">
                     {receiptFileName ? `تم الرفع: ${receiptFileName}` : 'اضغط هنا لرفع صورة الإيصال'}
                   </span>
                 </label>
@@ -305,14 +303,14 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-3xl p-8 sticky top-24">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: '#0F3A2B' }}>
+            <div className="bg-white rounded-3xl p-8 sticky top-24 shadow-sm">
+              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">
                 ملخص الطلب
               </h2>
 
               <div className="space-y-4 mb-6 text-[#0F3A2B]">
                 {items.map(item => (
-                  <div key={item.id} className="flex justify-between border-b pb-3">
+                  <div key={item.id} className="flex justify-between border-b border-gray-200 pb-3 gap-4">
                     <span>{item.name} × {item.quantity || 1}</span>
                     <b>{(item.price * (item.quantity || 1)).toFixed(2)} ر.ع</b>
                   </div>
@@ -336,8 +334,15 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !receiptImage || !formData.fullName || !formData.phone}
-                className="w-full py-4 rounded-full text-white font-bold text-lg disabled:opacity-60 hover:scale-105 transition"
+                disabled={
+                  isSubmitting ||
+                  !receiptImage ||
+                  !formData.fullName ||
+                  !formData.phone ||
+                  !formData.governorate ||
+                  !formData.city
+                }
+                className="w-full py-4 rounded-full font-bold text-lg transition hover:scale-105 disabled:hover:scale-100 disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#0F3A2B', color: '#FFFFFF' }}
               >
                 {isSubmitting ? 'جاري إرسال الطلب...' : 'تأكيد الطلب'}
