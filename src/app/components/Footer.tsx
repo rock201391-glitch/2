@@ -11,7 +11,6 @@ export default function Footer({ onNavigate }: FooterProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-[1.6fr_0.9fr_1fr] gap-10 items-start text-right">
 
-          {/* Right: Logo + About */}
           <div className="flex justify-end items-start gap-6">
             <img
               src="/merqab.png"
@@ -31,7 +30,6 @@ export default function Footer({ onNavigate }: FooterProps) {
             </div>
           </div>
 
-          {/* Middle: Links */}
           <div className="md:pr-6">
             <h3 className="font-bold mb-3" style={{ color: '#0F3A2B' }}>
               الروابط
@@ -53,7 +51,6 @@ export default function Footer({ onNavigate }: FooterProps) {
             </div>
           </div>
 
-          {/* Left: Contact */}
           <div className="md:pr-10">
             <h3 className="font-bold mb-3" style={{ color: '#0F3A2B' }}>
               تواصل معنا
@@ -66,8 +63,8 @@ export default function Footer({ onNavigate }: FooterProps) {
                 rel="noopener noreferrer"
                 className="group flex items-center gap-3 transition-all hover:scale-105 hover:text-[#0F3A2B]"
               >
-                <div className="w-9 h-9 rounded-2xl bg-[#F1EDE3] flex items-center justify-center transition-all group-hover:bg-[#0F3A2B]">
-                  <Instagram className="w-5 h-5 transition-all" style={{ color: 'currentColor' }} />
+                <div className="w-9 h-9 rounded-2xl bg-[#F1EDE3] flex items-center justify-center transition-all duration-300 group-hover:bg-[#0F3A2B] group-hover:scale-110">
+                  <Instagram className="w-5 h-5 text-[#0F3A2B] group-hover:text-white transition-all duration-300" />
                 </div>
                 <span>MERGAB.0M</span>
               </a>
@@ -78,8 +75,8 @@ export default function Footer({ onNavigate }: FooterProps) {
                 rel="noopener noreferrer"
                 className="group flex items-center gap-3 transition-all hover:scale-105 hover:text-[#0F3A2B]"
               >
-                <div className="w-9 h-9 rounded-2xl bg-[#F1EDE3] flex items-center justify-center transition-all group-hover:bg-[#0F3A2B]">
-                  <MessageCircle className="w-5 h-5 transition-all" style={{ color: 'currentColor' }} />
+                <div className="w-9 h-9 rounded-2xl bg-[#F1EDE3] flex items-center justify-center transition-all duration-300 group-hover:bg-[#0F3A2B] group-hover:scale-110">
+                  <MessageCircle className="w-5 h-5 text-[#0F3A2B] group-hover:text-white transition-all duration-300" />
                 </div>
                 <span dir="ltr">+968 9097 7867</span>
               </a>
