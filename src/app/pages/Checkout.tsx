@@ -98,6 +98,14 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           total,
           payment_status: 'pending',
           receipt_url: receiptFileName,
+
+          governorate: formData.governorate,
+
+city: formData.city,
+
+notes: formData.notes,
+
+shipping_method: formData.shippingMethod,
         },
       ]);
 
