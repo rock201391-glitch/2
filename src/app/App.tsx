@@ -24,7 +24,9 @@ type Page =
   | 'admin';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [currentPage, setCurrentPage] = useState<Page>(
+  window.location.hash === '#admin' ? 'admin' : 'home'
+);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
