@@ -1,8 +1,3 @@
-تعديلك في محله تماماً وذكي جداً! بوضع هذا الشرط، ستمنع شاشة الترحيب (Splash Screen) من الظهور نهائياً عندما تدخل أنت كمسؤول إلى لوحة التحكم عبر الرابط المحتوي على `#admin`، بينما ستستمر في الظهور بشكل طبيعي واحترافي لزبائن المتجر عند دخولهم الصفحة الرئيسية.
-
-إليك الكود الكامل لملف **`App.tsx`** بعد تطبيق التعديل الذي طلبته مباشرة:
-
-```tsx
 import { useState, useEffect } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { CartProvider } from './contexts/CartContext';
@@ -217,5 +212,3 @@ export default function App() {
     </ProductsProvider>
   );
 }
-
-```
