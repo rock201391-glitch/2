@@ -39,6 +39,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       setReceiptImage(file);
       setReceiptFileName(file.name);
@@ -57,14 +58,25 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     setDragActive(false);
 
     const file = e.dataTransfer.files?.[0];
+
     if (file && file.type.startsWith('image/')) {
       setReceiptImage(file);
       setReceiptFileName(file.name);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (items.length === 0) {
+      alert('السلة فارغة');
+      return;
+    }
+
+    if (!formData.fullName || !formData.phone) {
+      alert('يرجى إدخال الاسم ورقم الهاتف');
+      return;
+    }
 
     if (!receiptImage) {
       alert('يرجى رفع صورة الإيصال');
@@ -89,8 +101,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     ]);
 
     if (error) {
-      alert('صار خطأ في إرسال الطلب، تأكد من Supabase');
-      console.error(error);
+      console.error('Supabase error:', error);
+      alert('صار خطأ في إرسال الطلب');
       setIsSubmitting(false);
       return;
     }
@@ -112,11 +124,13 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
     clearCart();
     setIsSubmitting(false);
+
+    alert('تم إرسال الطلب بنجاح');
     onSuccess();
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F7F2] py-8 px-4">
+    <form onSubmit={handleSubmit} className="min-h-screen bg-[#F8F7F2] py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex items-center gap-2 cursor-pointer" onClick={onBack}>
           <ChevronRight style={{ color: '#0F3A2B' }} />
@@ -279,7 +293,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               </div>
 
               <button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={isSubmitting || !receiptImage || !formData.fullName || !formData.phone}
                 className="w-full py-4 rounded-full text-white font-bold text-lg disabled:opacity-50 hover:scale-105 transition"
                 style={{ backgroundColor: '#0F3A2B' }}
@@ -290,6 +304,6 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 }
