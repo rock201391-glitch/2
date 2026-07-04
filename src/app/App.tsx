@@ -1,4 +1,9 @@
-import { useState } from 'react';
+تعديلك في محله تماماً وذكي جداً! بوضع هذا الشرط، ستمنع شاشة الترحيب (Splash Screen) من الظهور نهائياً عندما تدخل أنت كمسؤول إلى لوحة التحكم عبر الرابط المحتوي على `#admin`، بينما ستستمر في الظهور بشكل طبيعي واحترافي لزبائن المتجر عند دخولهم الصفحة الرئيسية.
+
+إليك الكود الكامل لملف **`App.tsx`** بعد تطبيق التعديل الذي طلبته مباشرة:
+
+```tsx
+import { useState, useEffect } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { CartProvider } from './contexts/CartContext';
 import { ProductsProvider } from './contexts/ProductsContext';
@@ -25,10 +30,34 @@ type Page =
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>(
-  window.location.hash === '#admin' ? 'admin' : 'home'
-);
+    window.location.hash === '#admin' ? 'admin' : 'home'
+  );
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // تحديث حالة شاشة الترحيب بناءً على الشرط الخاص بك لتخطيها في صفحة الأدمن
+  const [showSplash, setShowSplash] = useState<boolean>(
+    window.location.hash !== '#admin'
+  );
+  const [splashFade, setSplashFade] = useState<boolean>(true);
+
+  // إدارة مؤقت شاشة الترحيب (تشتغل فقط إذا كانت showSplash قيمتها البدئية true)
+  useEffect(() => {
+    if (!showSplash) return;
+
+    const displayTimeout = setTimeout(() => {
+      setSplashFade(false); // بدء التلاشي الناعم بعد 1.5 ثانية
+    }, 1500);
+
+    const removeTimeout = setTimeout(() => {
+      setShowSplash(false); // إزالة العنصر تماماً بعد ثانيتين
+    }, 2000);
+
+    return () => {
+      clearTimeout(displayTimeout);
+      clearTimeout(removeTimeout);
+    };
+  }, [showSplash]);
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page as Page);
@@ -112,12 +141,7 @@ export default function App() {
         );
 
       case 'admin':
-        return (
-          <>
-            <AdminDashboard />
-            <Footer onNavigate={handleNavigate} />
-          </>
-        );
+        return <AdminDashboard />;
 
       default:
         return null;
@@ -129,18 +153,43 @@ export default function App() {
       <CartProvider>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <div
-            className="min-h-screen bg-[#F8F7F2] transition-colors duration-500"
+            className="min-h-screen bg-[#F8F7F2] transition-colors duration-500 relative"
             dir="rtl"
             lang="ar"
           >
-            <Header
-              onNavigate={handleNavigate}
-              onCartClick={() => setIsCartOpen(true)}
-              currentPage={currentPage}
-            />
+            {/* شاشة الترحيب الفخمة لمتجر مرقاب - لن تظهر إذا كنت أدمن */}
+            {showSplash && (
+              <div
+                className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#F8F7F2] text-[#0F3A2B] transition-opacity duration-500 ease-in-out ${
+                  splashFade ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="text-center">
+                  <h1 className="text-6xl font-bold tracking-widest mb-3 font-serif animate-pulse">
+                    مِرقاب
+                  </h1>
+                  
+                  <div className="w-16 h-[2px] bg-[#0F3A2B] mx-auto opacity-30 mb-4 rounded-full"></div>
+                  
+                  <p className="text-xs tracking-[0.35em] text-gray-500 font-medium uppercase font-sans">
+                    MERGAB SHOP
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* الهيدر العلوي - يختفي تلقائياً في صفحة الأدمن */}
+            {currentPage !== 'admin' && (
+              <Header
+                onNavigate={handleNavigate}
+                onCartClick={() => setIsCartOpen(true)}
+                currentPage={currentPage}
+              />
+            )}
 
             <main>{renderPage()}</main>
 
+            {/* نافذة السلة الجانبية */}
             {isCartOpen && (
               <div className="fixed inset-0 z-[9999]">
                 <div
@@ -168,3 +217,5 @@ export default function App() {
     </ProductsProvider>
   );
 }
+
+```
