@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
-
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -11,7 +10,6 @@ export default function AdminDashboard() {
   }, []);
 
   async function fetchOrders() {
-
     const { data, error } = await supabase
       .from("orders")
       .select("*")
@@ -25,8 +23,7 @@ export default function AdminDashboard() {
   }
 
   return (
-
-    <div className="p-8">
+    <div className="min-h-screen bg-[#F8F7F2] p-8 text-[#0E4F3A]">
 
       <h1 className="text-3xl font-bold mb-6">
         لوحة الطلبات
@@ -34,58 +31,81 @@ export default function AdminDashboard() {
 
       {loading ? (
 
-        <p>جاري التحميل...</p>
+        <div className="text-center py-10">
+          جاري تحميل الطلبات...
+        </div>
 
       ) : (
 
-        <table className="w-full border">
+        <div className="overflow-x-auto rounded-2xl shadow-lg">
 
-          <thead>
+          <table className="w-full bg-white rounded-2xl overflow-hidden border border-[#d9d2c4]">
 
-            <tr>
+            <thead className="bg-[#0E4F3A] text-white">
 
-              <th>ID</th>
+              <tr>
 
-              <th>الاسم</th>
+                <th className="p-4">ID</th>
 
-              <th>الهاتف</th>
+                <th className="p-4">الاسم</th>
 
-              <th>الإجمالي</th>
+                <th className="p-4">الهاتف</th>
 
-              <th>الحالة</th>
+                <th className="p-4">الإجمالي</th>
 
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {orders.map((order) => (
-
-              <tr key={order.id}>
-
-                <td>{order.id}</td>
-
-                <td>{order.customer_name}</td>
-
-                <td>{order.phone}</td>
-
-                <td>{order.total}</td>
-
-                <td>{order.payment_status}</td>
+                <th className="p-4">الحالة</th>
 
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {orders.map((order) => (
+
+                <tr
+                  key={order.id}
+                  className="border-b hover:bg-[#f5f2ea] transition"
+                >
+
+                  <td className="p-4">
+                    {order.id}
+                  </td>
+
+                  <td className="p-4">
+                    {order.customer_name}
+                  </td>
+
+                  <td className="p-4">
+                    {order.phone}
+                  </td>
+
+                  <td className="p-4 font-semibold">
+                    {order.total}
+                  </td>
+
+                  <td className="p-4">
+
+                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
+
+                      {order.payment_status}
+
+                    </span>
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       )}
 
     </div>
-
   );
-
 }
