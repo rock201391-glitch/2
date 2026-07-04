@@ -69,21 +69,14 @@ export default function HomePage({ onNavigate, onProductClick }: HomePageProps) 
 
     {/* Left Video */}
     <div className="order-1 lg:order-1 flex justify-center">
-      <div
-        className="relative w-full max-w-2xl h-[480px] rounded-[42px] overflow-hidden border"
-        style={{
-          background: 'linear-gradient(135deg, #FFFDF7 0%, #F8F5EA 50%, #EDE7D8 100%)',
-          borderColor: '#D8CFB8',
-          boxShadow: '0 30px 80px rgba(15,58,43,0.18)',
-        }}
-      >
+     <div className="relative w-full max-w-2xl h-[480px] overflow-hidden">
         <video
           src="/omani-drone.mp4"
           autoPlay
           muted
           loop
           playsInline
-          className="w-full h-full object-cover rounded-[42px]"
+         className="w-full h-full object-contain"
         />
       </div>
     </div>
