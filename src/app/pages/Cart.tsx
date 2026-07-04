@@ -57,15 +57,14 @@ export default function Cart({ onNavigate, onCheckout }: CartProps) {
               <div>
                 <p className="text-gray-600 mb-4">سلتك فارغة</p>
                 <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    onNavigate('shop');
-                  }}
-                  className="px-6 py-2 rounded-full text-white font-semibold transition-all"
-                  style={{ backgroundColor: '#0F3A2B' }}
-                >
-                  تصفح المتجر
-                </button>
+  onClick={() => onNavigate('shop')}
+  className="group px-8 py-4 rounded-full text-white font-bold transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
+  style={{ backgroundColor: '#0F3A2B' }}
+>
+  <span className="relative z-10">
+    تصفح المتجر
+  </span>
+</button>
               </div>
             </div>
           ) : (
