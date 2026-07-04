@@ -2,21 +2,50 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
+  // حالات التحقق من تسجيل الدخول
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
+  // حالات لوحة التحكم بالطلبات
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
+  // 1. التأكد من حالة تسجيل الدخول وإخفاء الهيدر والفوتر تماماً في صفحة تسجيل الدخول
   useEffect(() => {
-    if (sessionStorage.getItem("adminLoggedIn") === "true") {
-      setIsLoggedIn(true);
+    if (typeof window !== "undefined") {
+      const loggedInStatus = sessionStorage.getItem("adminLoggedIn");
+      if (loggedInStatus === "true") {
+        setIsLoggedIn(true);
+      }
     }
   }, []);
 
+  // كود برمي لإخفاء الهيدر والفوتر في المتجر عند عدم تسجيل الدخول
+  useEffect(() => {
+    // نحدد عناصر الهيدر والفوتر الشائعة في الموقع لإخفائها
+    const header = document.querySelector("header") || document.querySelector(".header") || document.querySelector("nav");
+    const footer = document.querySelector("footer") || document.querySelector(".footer");
+
+    if (!isLoggedIn) {
+      if (header) (header as HTMLElement).style.display = "none";
+      if (footer) (footer as HTMLElement).style.display = "none";
+    } else {
+      // إعادتهم للظهور داخل لوحة التحكم إذا رغبت، أو يمكنك إبقاؤهم مخفيين
+      if (header) (header as HTMLElement).style.display = "none"; 
+      if (footer) (footer as HTMLElement).style.display = "none";
+    }
+
+    // تنظيف التأثير عند مغادرة الصفحة ليعود المتجر لطبيعته للمشترين
+    return () => {
+      if (header) (header as HTMLElement).style.display = "";
+      if (footer) (footer as HTMLElement).style.display = "";
+    };
+  }, [isLoggedIn]);
+
+  // جلب الطلبات فقط في حال كان المستخدم مسجلاً للدخول بنجاح
   useEffect(() => {
     if (isLoggedIn) {
       fetchOrders();
@@ -25,7 +54,6 @@ export default function AdminDashboard() {
 
   async function fetchOrders() {
     setLoading(true);
-
     const { data, error } = await supabase
       .from("orders")
       .select("*")
@@ -35,9 +63,9 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
+  // معالجة عملية تسجيل الدخول وحفظ الجلسة
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (username === "ro0ak" && password === "99s551905") {
       sessionStorage.setItem("adminLoggedIn", "true");
       setIsLoggedIn(true);
@@ -47,12 +75,12 @@ export default function AdminDashboard() {
     }
   };
 
+  // معالجة عملية تسجيل الخروج وحذف الجلسة
   const handleLogout = () => {
     sessionStorage.removeItem("adminLoggedIn");
     setIsLoggedIn(false);
-    setUsername("");
-    setPassword("");
-    setOrders([]);
+    // عند تسجيل الخروج التام، يعاد توجيه المتصفح لتحديث العناصر أو إعادة إظهار القوائم للمتجر
+    window.location.reload();
   };
 
   const getShippingText = (method: string) => {
@@ -61,64 +89,52 @@ export default function AdminDashboard() {
     return method || "-";
   };
 
+  // 1. عرض صفحة تسجيل الدخول الصافية (بدون هيدر ولا فوتر)
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#F8F7F2] flex items-center justify-center px-4 text-[#0F3A2B]">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl border border-[#D8D2C5] text-center">
-          <img
-            src="/merqab.png"
-            alt="مرقاب"
-            className="h-24 w-auto mx-auto mb-4 object-contain"
-          />
-
-          <h2 className="text-3xl font-bold text-[#0F3A2B]">
-            لوحة تحكم مرقاب
-          </h2>
-
-          <p className="text-sm text-gray-500 mt-2 mb-8">
-            الرجاء تسجيل الدخول لعرض الطلبات
-          </p>
+      <div className="fixed inset-0 z-[99999] min-h-screen bg-[#F8F7F2] flex flex-col items-center justify-center px-4 text-[#0F3A2B]">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-[#D8D2C5] text-center">
+          
+          {/* شعار مرقاب المتناسق */}
+          <div className="mb-8">
+            <h2 className="text-4xl font-bold tracking-wide text-[#0F3A2B] font-serif">مِرقاب</h2>
+            <p className="text-xs text-gray-400 mt-2 tracking-widest uppercase">Admin Access Only</p>
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-5 text-right">
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                اسم المستخدم
-              </label>
-
+              <label className="block text-sm font-semibold mb-2 mr-1">اسم المستخدم</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="أدخل اسم المستخدم"
-                className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] text-left"
+                className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-left font-mono"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                كلمة المرور
-              </label>
-
+              <label className="block text-sm font-semibold mb-2 mr-1">كلمة المرور</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="أدخل كلمة المرور"
-                className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] text-left"
+                className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-left font-mono"
                 required
               />
             </div>
 
             {loginError && (
-              <p className="text-red-600 text-sm font-semibold text-center bg-red-50 py-2 rounded-xl border border-red-100">
+              <p className="text-red-600 text-sm font-semibold text-center mt-2 bg-red-50 py-2 rounded-xl border border-red-100">
                 {loginError}
               </p>
             )}
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-[#0F3A2B] py-3 text-white font-bold text-lg hover:scale-105 transition-all shadow-md"
+              className="w-full mt-4 rounded-2xl bg-[#0F3A2B] py-3 text-white font-bold text-lg hover:opacity-90 shadow-md transition-all"
             >
               تسجيل الدخول
             </button>
@@ -128,28 +144,28 @@ export default function AdminDashboard() {
     );
   }
 
+  // 2. عرض لوحة التحكم الرئيسية الصافية بعد الدخول
   return (
     <div className="min-h-screen bg-[#F8F7F2] px-6 py-10 text-[#0F3A2B]">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <div>
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold">لوحة الطلبات</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <span className="text-sm bg-white border border-[#D8D2C5] px-3 py-1 rounded-full font-medium">
               مسؤول: ro0ak
-            </p>
+            </span>
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={fetchOrders}
-              className="rounded-full bg-[#0F3A2B] px-5 py-2 text-white font-semibold shadow hover:opacity-90"
+              className="rounded-full bg-[#0F3A2B] px-5 py-2 text-white font-semibold shadow hover:opacity-90 transition-all"
             >
               تحديث
             </button>
-
             <button
               onClick={handleLogout}
-              className="rounded-full bg-white border border-[#D8D2C5] px-5 py-2 font-semibold text-gray-600 shadow hover:bg-gray-50"
+              className="rounded-full bg-white border border-[#D8D2C5] px-5 py-2 font-semibold text-gray-600 shadow hover:bg-gray-50 transition-all"
             >
               خروج
             </button>
