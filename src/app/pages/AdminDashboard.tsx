@@ -72,7 +72,7 @@ export default function AdminDashboard() {
 
                 <td>{order.total}</td>
 
-                <td>{order.status}</td>
+                <td>{order.payment_status}</td>
 
               </tr>
 
