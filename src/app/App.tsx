@@ -72,7 +72,7 @@ export default function App() {
       window.location.hash = 'admin';
       setCurrentPage('admin');
     } else {
-      window.history.replaceState(null, '', window.location.pathname);
+      window.history.replaceState(null, '', '/');
       setCurrentPage(page as Page);
     }
 
