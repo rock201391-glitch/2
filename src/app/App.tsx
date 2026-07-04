@@ -62,24 +62,24 @@ export default function App() {
     };
   }, []); // مصفوفة فارغة لضمان عدم تكرار الفحص أثناء التنقل بين الصفحات
 
-  // دالة التنقل الصارمة لحماية مسارات الزبون ومنع ظهور الأدمن بالخطأ
+  // التعديل الجديد والمباشر الذي طلبته لدالة التنقل الصارمة
   const handleNavigate = (page: string) => {
-    const targetPage = page as Page;
-    setCurrentPage(targetPage);
-    
-    // تنظيف روابط الـ Hash تماماً لمنع المتصفح من الخلط على الجوالات
-    if (typeof window !== 'undefined') {
-      if (targetPage === 'admin') {
-        window.location.hash = 'admin';
-      } else {
-        // إذا لم تكن الصفحة أدمن، نمسح أي هاش معلق لحماية تجربة الزبون
-        if (window.location.hash) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        }
-      }
+    if (page === 'admin') {
+      window.location.hash = 'admin';
+    } else {
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname
+      );
     }
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    setCurrentPage(page as Page);
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   const handleProductClick = (product: any) => {
