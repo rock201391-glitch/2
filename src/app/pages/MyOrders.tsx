@@ -5,7 +5,7 @@ interface MyOrdersProps {
 }
 
 export default function MyOrders({ onNavigate }: MyOrdersProps) {
-  const orders = JSON.parse(localStorage.getItem('myOrders') || '[]');
+const orders = JSON.parse(localStorage.getItem('orders') || '[]');
 
   return (
     <div className="min-h-screen bg-[#F8F7F2] py-8 px-4">
