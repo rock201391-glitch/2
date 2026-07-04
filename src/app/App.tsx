@@ -24,19 +24,27 @@ type Page =
   | 'admin';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>(
-    window.location.hash === '#admin' ? 'admin' : 'home'
-  );
+  // تحديد الصفحة الحالية بدقة عند الإقلاع الأولي فقط
+  const [currentPage, setCurrentPage] = useState<Page>(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#admin') {
+      return 'admin';
+    }
+    return 'home';
+  });
+
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // تحديث حالة شاشة الترحيب بناءً على الشرط الخاص بك لتخطيها في صفحة الأدمن
-  const [showSplash, setShowSplash] = useState<boolean>(
-    window.location.hash !== '#admin'
-  );
+  // شاشة الترحيب تفتح true فقط إذا لم يكن الرابط الأولي يحتوي على #admin لمنع التكرار والتداخل
+  const [showSplash, setShowSplash] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#admin') {
+      return false;
+    }
+    return true;
+  });
   const [splashFade, setSplashFade] = useState<boolean>(true);
 
-  // إدارة مؤقت شاشة الترحيب (تشتغل فقط إذا كانت showSplash قيمتها البدئية true)
+  // إدارة مؤقت شاشة الترحيب (تعمل لمرة واحدة فقط عند بداية الزيارة)
   useEffect(() => {
     if (!showSplash) return;
 
@@ -45,17 +53,32 @@ export default function App() {
     }, 1500);
 
     const removeTimeout = setTimeout(() => {
-      setShowSplash(false); // إزالة العنصر تماماً بعد ثانيتين
+      setShowSplash(false); // إزالة العنصر تماماً من شجرة الـ DOM بعد ثانيتين
     }, 2000);
 
     return () => {
       clearTimeout(displayTimeout);
       clearTimeout(removeTimeout);
     };
-  }, [showSplash]);
+  }, []); // مصفوفة فارغة لضمان عدم تكرار الفحص أثناء التنقل بين الصفحات
 
+  // دالة التنقل الصارمة لحماية مسارات الزبون ومنع ظهور الأدمن بالخطأ
   const handleNavigate = (page: string) => {
-    setCurrentPage(page as Page);
+    const targetPage = page as Page;
+    setCurrentPage(targetPage);
+    
+    // تنظيف روابط الـ Hash تماماً لمنع المتصفح من الخلط على الجوالات
+    if (typeof window !== 'undefined') {
+      if (targetPage === 'admin') {
+        window.location.hash = 'admin';
+      } else {
+        // إذا لم تكن الصفحة أدمن، نمسح أي هاش معلق لحماية تجربة الزبون
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      }
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -152,7 +175,7 @@ export default function App() {
             dir="rtl"
             lang="ar"
           >
-            {/* شاشة الترحيب الفخمة لمتجر مرقاب - لن تظهر إذا كنت أدمن */}
+            {/* شاشة الترحيب الفخمة لمتجر مرقاب */}
             {showSplash && (
               <div
                 className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#F8F7F2] text-[#0F3A2B] transition-opacity duration-500 ease-in-out ${
@@ -173,7 +196,7 @@ export default function App() {
               </div>
             )}
 
-            {/* الهيدر العلوي - يختفي تلقائياً في صفحة الأدمن */}
+            {/* الهيدر العلوي - يختفي تماماً وبشكل تلقائي في صفحة الأدمن */}
             {currentPage !== 'admin' && (
               <Header
                 onNavigate={handleNavigate}
