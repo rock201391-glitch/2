@@ -24,18 +24,22 @@ type Page =
   | 'admin';
 
 export default function App() {
-  // تحديد الصفحة الحالية بدقة عند الإقلاع الأولي فقط
-  const [currentPage, setCurrentPage] = useState<Page>(() => {
-    if (typeof window !== 'undefined' && window.location.hash === '#admin') {
-      return 'admin';
+  // الحالة البدئية تبدأ دائماً من الرئيسية كما طلبت
+  const [currentPage, setCurrentPage] = useState<Page>('home');
+
+  // فحص الرابط عند تحميل الصفحة لأول مرة وتوجيه الأدمن بشكل معزول ونظيف
+  useEffect(() => {
+    if (window.location.hash === '#admin') {
+      setCurrentPage('admin');
+    } else {
+      setCurrentPage('home');
     }
-    return 'home';
-  });
+  }, []);
 
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // شاشة الترحيب تفتح true فقط إذا لم يكن الرابط الأولي يحتوي على #admin لمنع التكرار والتداخل
+  // شاشة الترحيب تفتح true فقط إذا لم يكن الرابط الأولي يحتوي على #admin
   const [showSplash, setShowSplash] = useState<boolean>(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#admin') {
       return false;
@@ -60,26 +64,19 @@ export default function App() {
       clearTimeout(displayTimeout);
       clearTimeout(removeTimeout);
     };
-  }, []); // مصفوفة فارغة لضمان عدم تكرار الفحص أثناء التنقل بين الصفحات
+  }, [showSplash]);
 
-  // التعديل الجديد والمباشر الذي طلبته لدالة التنقل الصارمة
+  // دالة التنقل المعدلة بدقة التي تمنع ظهور صفحة الأدمن للزبائن وتتحكم بالرابط
   const handleNavigate = (page: string) => {
     if (page === 'admin') {
       window.location.hash = 'admin';
+      setCurrentPage('admin');
     } else {
-      window.history.replaceState(
-        null,
-        '',
-        window.location.pathname
-      );
+      window.history.replaceState(null, '', window.location.pathname);
+      setCurrentPage(page as Page);
     }
 
-    setCurrentPage(page as Page);
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleProductClick = (product: any) => {
