@@ -22,6 +22,12 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
+  const getShippingText = (method: string) => {
+    if (method === "home") return "توصيل للمنزل";
+    if (method === "office") return "استلام من المكتب";
+    return method || "-";
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F7F2] px-6 py-10 text-[#0F3A2B]">
       <div className="max-w-7xl mx-auto">
@@ -54,7 +60,9 @@ export default function AdminDashboard() {
                   <th className="p-4">الهاتف</th>
                   <th className="p-4">المنتج</th>
                   <th className="p-4">الإجمالي</th>
-                  <th className="p-4">المنطقة</th>
+                  <th className="p-4">المحافظة</th>
+                  <th className="p-4">الولاية</th>
+                  <th className="p-4">التوصيل</th>
                   <th className="p-4">الحالة</th>
                   <th className="p-4">التاريخ</th>
                   <th className="p-4">التفاصيل</th>
@@ -63,15 +71,18 @@ export default function AdminDashboard() {
 
               <tbody>
                 {orders.map((order) => (
-                  <tr key={order.id} className="border-b border-[#E8E3D9] hover:bg-[#F8F7F2]">
+                  <tr
+                    key={order.id}
+                    className="border-b border-[#E8E3D9] hover:bg-[#F8F7F2]"
+                  >
                     <td className="p-4 font-bold">{order.id}</td>
                     <td className="p-4">{order.customer_name || "-"}</td>
                     <td className="p-4" dir="ltr">{order.phone || "-"}</td>
                     <td className="p-4">{order.product_name || "-"}</td>
                     <td className="p-4 font-bold">{order.total || 0} ر.ع</td>
-                    <td className="p-4">
-                      {order.governorate || "-"} / {order.city || "-"}
-                    </td>
+                    <td className="p-4">{order.governorate || "-"}</td>
+                    <td className="p-4">{order.city || "-"}</td>
+                    <td className="p-4">{getShippingText(order.shipping_method)}</td>
                     <td className="p-4">
                       <span className="rounded-full bg-[#EAF3EE] px-4 py-1 text-sm font-bold">
                         {order.payment_status || "pending"}
@@ -99,32 +110,57 @@ export default function AdminDashboard() {
 
         {selectedOrder && (
           <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-8 max-w-2xl w-full text-[#0F3A2B]">
+            <div className="bg-white rounded-3xl p-8 max-w-3xl w-full text-[#0F3A2B] max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">تفاصيل الطلب #{selectedOrder.id}</h2>
+                <h2 className="text-2xl font-bold">
+                  تفاصيل الطلب #{selectedOrder.id}
+                </h2>
+
                 <button
                   onClick={() => setSelectedOrder(null)}
-                  className="text-xl font-bold"
+                  className="text-2xl font-bold"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <p><b>الاسم:</b> {selectedOrder.customer_name || "-"}</p>
                 <p><b>الهاتف:</b> {selectedOrder.phone || "-"}</p>
                 <p><b>المنتج:</b> {selectedOrder.product_name || "-"}</p>
                 <p><b>الإجمالي:</b> {selectedOrder.total || 0} ر.ع</p>
                 <p><b>المحافظة:</b> {selectedOrder.governorate || "-"}</p>
                 <p><b>الولاية:</b> {selectedOrder.city || "-"}</p>
-                <p><b>طريقة التوصيل:</b> {selectedOrder.shipping_method || "-"}</p>
+                <p><b>طريقة التوصيل:</b> {getShippingText(selectedOrder.shipping_method)}</p>
                 <p><b>الحالة:</b> {selectedOrder.payment_status || "pending"}</p>
-                <p className="md:col-span-2">
-                  <b>الإيصال:</b> {selectedOrder.receipt_url || "-"}
-                </p>
                 <p className="md:col-span-2">
                   <b>الملاحظات:</b> {selectedOrder.notes || "-"}
                 </p>
+              </div>
+
+              <div className="border-t pt-5">
+                <h3 className="font-bold mb-3">صورة الإيصال</h3>
+
+                {selectedOrder.receipt_url ? (
+                  <>
+                    <a
+                      href={selectedOrder.receipt_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block mb-4 rounded-full bg-[#0F3A2B] px-5 py-2 text-white text-sm"
+                    >
+                      فتح الصورة
+                    </a>
+
+                    <img
+                      src={selectedOrder.receipt_url}
+                      alt="إيصال التحويل"
+                      className="w-full max-h-[450px] object-contain rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2]"
+                    />
+                  </>
+                ) : (
+                  <p>لا توجد صورة إيصال</p>
+                )}
               </div>
             </div>
           </div>
