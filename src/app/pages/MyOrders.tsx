@@ -1,48 +1,61 @@
 import { useEffect, useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
-import { supabase } from '../lib/supabase'; // تأكد من صحة مسار ملف سوبابيز لديك
+import { supabase } from '../lib/supabase';
+
+interface LocalOrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+interface LocalOrder {
+  id: string | number;
+  date?: string;
+  status?: string;
+  total: number;
+  items?: LocalOrderItem[];
+}
 
 interface MyOrdersProps {
   onNavigate: (page: string) => void;
 }
 
 export default function MyOrders({ onNavigate }: MyOrdersProps) {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<LocalOrder[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function syncOrdersWithSupabase() {
-      // 1. جلب الطلبات المخزنة في متصفح الزبون محلياً
-      const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-      
-      if (savedOrders.length === 0) {
-        setOrders([]);
-        setLoading(false);
-        return;
-      }
-
-      // استخراج المعرفات (IDs) للبحث عنها في قاعدة البيانات
-      const orderIds = savedOrders.map((o: any) => o.id);
-
       try {
-        // 2. جلب البيانات المباشرة من سوبابيز
-        // ملاحظة: قمنا بجلب عمود 'status' وعمود 'payment_status' معاً لضمان قراءة العمود الصحيح أياً كان المسمى في جدولك
+        const stored = localStorage.getItem('orders');
+        const savedOrders: LocalOrder[] = stored ? JSON.parse(stored) : [];
+        
+        if (savedOrders.length === 0) {
+          setOrders([]);
+          setLoading(false);
+          return;
+        }
+
+        const orderIds = savedOrders.map((o) => o.id);
+
+        // جلب البيانات مباشرة للتأكد من الحالة المحدثة في قاعدة البيانات
         const { data: liveOrders, error } = await supabase
           .from('orders')
           .select('id, status, payment_status')
           .in('id', orderIds);
 
         if (!error && liveOrders) {
-          const updatedOrders = savedOrders.map((localOrder: any) => {
-            const liveMatch = liveOrders.find((live: any) => Number(live.id) === Number(localOrder.id));
+          const updatedOrders = savedOrders.map((localOrder) => {
+            const liveMatch = liveOrders.find(
+              (live: any) => String(live.id) === String(localOrder.id)
+            );
             
-            // تحديد الحالة القادمة من قاعدة البيانات (سواء كانت في خانة status أو payment_status)
+            // قراءة أي تحديث للحالة من العمود المتاح
             const remoteStatus = liveMatch ? (liveMatch.status || liveMatch.payment_status) : null;
 
             return {
               ...localOrder,
-              // إذا وجدت حالة في سوبابيز نعتمدها فوراً، وإلا نترك الحالة القديمة
-              status: remoteStatus || localOrder.status
+              status: remoteStatus || localOrder.status || 'قيد المراجعة'
             };
           });
 
@@ -52,29 +65,28 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
         }
       } catch (err) {
         console.error("Error syncing orders:", err);
-        setOrders(savedOrders);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     syncOrdersWithSupabase();
   }, []);
 
-  // دالة تلوين الحالات بناءً على النصوص العربية التي تختارها من لوحة التحكم للأدمن
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'جاري التوصيل':
-      case 'pending': // كخيار احتياطي في حال كانت القيمة الافتراضية بالإنجليزية
-        return { backgroundColor: '#e3f2fd', color: '#0d47a1' }; // لون أزرق
+      case 'pending':
+        return { backgroundColor: '#e3f2fd', color: '#0d47a1' }; 
       case 'تم التوصيل':
       case 'تم التسليم':
-        return { backgroundColor: '#e8f5e9', color: '#2e7d32' }; // لون أخضر
+        return { backgroundColor: '#e8f5e9', color: '#2e7d32' }; 
       case 'ملغي':
       case 'تم إلغاء الطلب':
-        return { backgroundColor: '#ffebee', color: '#c62828' }; // لون أحمر
+        return { backgroundColor: '#ffebee', color: '#c62828' }; 
       case 'قيد المراجعة':
       default:
-        return { backgroundColor: '#fff3e0', color: '#e65100' }; // لون برتقالي (الافتراضي)
+        return { backgroundColor: '#fff3e0', color: '#e65100' }; 
     }
   };
 
@@ -88,7 +100,6 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
         {loading ? (
           <div className="text-center py-16 font-medium text-gray-500">جاري تحديث حالات الطلبات...</div>
         ) : orders.length === 0 ? (
-          // في حال عدم وجود طلبات
           <div className="flex flex-col items-center justify-center py-16">
             <div className="bg-white rounded-3xl p-12 max-w-md w-full text-center">
               <div className="flex items-center justify-center w-20 h-20 rounded-full mx-auto mb-6" style={{ backgroundColor: '#FBF7EF' }}>
@@ -108,7 +119,6 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
             </div>
           </div>
         ) : (
-          // عرض قائمة الطلبات المحدثة حياً
           <div className="space-y-6">
             {orders.map((order) => (
               <div key={order.id} className="bg-white rounded-3xl p-6 md:p-8 shadow-sm">
@@ -128,7 +138,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
                   <div>
                     <p className="text-sm text-gray-600 mb-1">الحالة</p>
                     <div className="inline-block px-4 py-2 rounded-full text-sm font-semibold" 
-                      style={getStatusStyle(order.status)}
+                      style={getStatusStyle(order.status || 'قيد المراجعة')}
                     >
                       {order.status || 'قيد المراجعة'}
                     </div>
@@ -141,9 +151,8 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
                   </div>
                 </div>
 
-                {/* المنتجات داخل الطلب */}
                 <div className="space-y-3">
-                  {order.items && order.items.map((item: any, idx: number) => (
+                  {order.items && order.items.map((item, idx) => (
                     <div key={idx} className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">
                         {item.name} x {item.quantity}
