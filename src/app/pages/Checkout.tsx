@@ -90,24 +90,49 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         .map(item => `${item.name} × ${item.quantity || 1}`)
         .join('، ');
 
-      const { error } = await supabase.from('orders').insert([
-        {
-          customer_name: formData.fullName,
-          phone: formData.phone,
-          product_name: productNames,
-          total,
-          payment_status: 'pending',
-          receipt_url: receiptFileName,
+      const fileName = `${Date.now()}-${receiptImage.name}`;
 
-          governorate: formData.governorate,
+const { error: uploadError } = await supabase.storage
+  .from('receipts')
+  .upload(fileName, receiptImage);
 
-city: formData.city,
+if (uploadError) {
+  alert('فشل رفع صورة الإيصال');
+  console.log(uploadError);
+  setIsSubmitting(false);
+  return;
+}
 
-notes: formData.notes,
+const { data: publicUrl } = supabase.storage
+  .from('receipts')
+  .getPublicUrl(fileName);
 
-shipping_method: formData.shippingMethod,
-        },
-      ]);
+const { error } = await supabase
+  .from('orders')
+  .insert([
+    {
+      customer_name: formData.fullName,
+
+      phone: formData.phone,
+
+      product_name: productNames,
+
+      total,
+
+      payment_status: 'pending',
+
+      receipt_url: publicUrl.publicUrl,
+
+      governorate: formData.governorate,
+
+      city: formData.city,
+
+      notes: formData.notes,
+
+      shipping_method: formData.shippingMethod,
+    },
+  ]);
+       
 
       if (error) {
         alert('فشل الطلب: ' + error.message);
