@@ -99,13 +99,15 @@ export default function HomePage({ onNavigate, onProductClick }: HomePageProps) 
       </p>
 
       <button
-        onClick={() => onNavigate('shop')}
-        className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-white font-semibold transition-all hover:shadow-lg"
-        style={{ backgroundColor: '#0F3A2B' }}
-      >
-        تصفح المتجر
-        <ChevronLeft className="w-5 h-5" />
-      </button>
+  onClick={() => onNavigate('shop')}
+  className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95"
+  style={{ backgroundColor: '#0F3A2B' }}
+>
+  <span className="transition-all duration-300 group-hover:translate-x-1">
+    تصفح المتجر
+  </span>
+  <ChevronLeft className="w-5 h-5 transition-all duration-300 group-hover:-translate-x-1" />
+</button>
     </div>
 
   </div>
