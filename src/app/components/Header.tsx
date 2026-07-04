@@ -30,17 +30,21 @@ export default function Header({
       <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Cart Icon - Left */}
-          <button
-            onClick={onCartClick}
-            className="relative p-2 rounded-full hover:bg-[#FBF7EF] transition-colors"
-          >
-            <ShoppingBag className="w-6 h-6" style={{ color: '#0F3A2B' }} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -left-1 bg-[#0F3A2B] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </button>
+         <button
+  onClick={onCartClick}
+  className="group relative p-2 rounded-full hover:bg-[#FBF7EF] transition-all duration-300 hover:scale-110 hover:shadow-md active:scale-95"
+>
+  <ShoppingBag
+    className="w-6 h-6 transition-all duration-300 group-hover:scale-110"
+    style={{ color: '#0F3A2B' }}
+  />
+
+  {cartCount > 0 && (
+    <span className="absolute -top-1 -left-1 bg-[#0F3A2B] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+      {cartCount}
+    </span>
+  )}
+</button>
 
           {/* Navigation Menu - Center */}
          <nav className="hidden md:flex items-center gap-1 bg-[#0F3A2B] rounded-[22px] p-2 shadow-md border border-[#0F3A2B]">
