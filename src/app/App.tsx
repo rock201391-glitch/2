@@ -11,13 +11,23 @@ import Checkout from './pages/Checkout';
 import TrackOrder from './pages/TrackOrder';
 import MyOrders from './pages/MyOrders';
 import Footer from './components/Footer';
+import AdminDashboard from './pages/AdminDashboard';
 
-type Page = 'home' | 'shop' | 'product-detail' | 'cart' | 'checkout' | 'track-order' | 'my-orders';
+type Page =
+  | 'home'
+  | 'shop'
+  | 'product-detail'
+  | 'cart'
+  | 'checkout'
+  | 'track-order'
+  | 'my-orders'
+  | 'admin';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   const handleNavigate = (page: string) => {
     setCurrentPage(page as Page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -34,13 +44,14 @@ const [isCartOpen, setIsCartOpen] = useState(false);
       case 'home':
         return (
           <>
-            <HomePage 
+            <HomePage
               onNavigate={handleNavigate}
               onProductClick={handleProductClick}
             />
             <Footer onNavigate={handleNavigate} />
           </>
         );
+
       case 'shop':
         return (
           <>
@@ -48,6 +59,7 @@ const [isCartOpen, setIsCartOpen] = useState(false);
             <Footer onNavigate={handleNavigate} />
           </>
         );
+
       case 'product-detail':
         return selectedProduct ? (
           <>
@@ -58,26 +70,29 @@ const [isCartOpen, setIsCartOpen] = useState(false);
             <Footer onNavigate={handleNavigate} />
           </>
         ) : null;
+
       case 'cart':
         return (
           <>
-            <Cart 
+            <Cart
               onNavigate={handleNavigate}
               onCheckout={() => setCurrentPage('checkout')}
             />
             <Footer onNavigate={handleNavigate} />
           </>
         );
+
       case 'checkout':
         return (
           <>
-            <Checkout 
+            <Checkout
               onBack={() => setCurrentPage('cart')}
               onSuccess={() => setCurrentPage('my-orders')}
             />
             <Footer onNavigate={handleNavigate} />
           </>
         );
+
       case 'track-order':
         return (
           <>
@@ -85,6 +100,7 @@ const [isCartOpen, setIsCartOpen] = useState(false);
             <Footer onNavigate={handleNavigate} />
           </>
         );
+
       case 'my-orders':
         return (
           <>
@@ -92,6 +108,15 @@ const [isCartOpen, setIsCartOpen] = useState(false);
             <Footer onNavigate={handleNavigate} />
           </>
         );
+
+      case 'admin':
+        return (
+          <>
+            <AdminDashboard />
+            <Footer onNavigate={handleNavigate} />
+          </>
+        );
+
       default:
         return null;
     }
@@ -101,34 +126,40 @@ const [isCartOpen, setIsCartOpen] = useState(false);
     <ProductsProvider>
       <CartProvider>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          <div className="min-h-screen bg-[#F8F7F2] transition-colors duration-500" dir="rtl" lang="ar">
+          <div
+            className="min-h-screen bg-[#F8F7F2] transition-colors duration-500"
+            dir="rtl"
+            lang="ar"
+          >
             <Header
-  onNavigate={handleNavigate}
-  onCartClick={() => setIsCartOpen(true)}
-  currentPage={currentPage}
-/>
-            <main>{renderPage()}</main>
-            {isCartOpen && (
-  <div className="fixed inset-0 z-[9999]">
-    <div
-      className="absolute inset-0 bg-black/35"
-      onClick={() => setIsCartOpen(false)}
-    />
+              onNavigate={handleNavigate}
+              onCartClick={() => setIsCartOpen(true)}
+              currentPage={currentPage}
+            />
 
-    <div className="absolute top-0 right-0 h-screen w-full max-w-md bg-[#F8F7F2] shadow-2xl overflow-y-auto">
-     <Cart
-  onNavigate={(page) => {
-    setIsCartOpen(false);
-    handleNavigate(page);
-  }}
-  onCheckout={() => {
-    setIsCartOpen(false);
-    setCurrentPage('checkout');
-  }}
-/>
-    </div>
-  </div>
-)}
+            <main>{renderPage()}</main>
+
+            {isCartOpen && (
+              <div className="fixed inset-0 z-[9999]">
+                <div
+                  className="absolute inset-0 bg-black/35"
+                  onClick={() => setIsCartOpen(false)}
+                />
+
+                <div className="absolute top-0 right-0 h-screen w-full max-w-md bg-[#F8F7F2] shadow-2xl overflow-y-auto">
+                  <Cart
+                    onNavigate={(page) => {
+                      setIsCartOpen(false);
+                      handleNavigate(page);
+                    }}
+                    onCheckout={() => {
+                      setIsCartOpen(false);
+                      setCurrentPage('checkout');
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </ThemeProvider>
       </CartProvider>
