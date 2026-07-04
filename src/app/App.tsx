@@ -155,9 +155,20 @@ export default function App() {
           </>
         );
 
-      case 'admin':
-        return <AdminDashboard />;
+     case 'admin':
+  if (window.location.hash !== '#admin') {
+    return (
+      <>
+        <HomePage
+          onNavigate={handleNavigate}
+          onProductClick={handleProductClick}
+        />
+        <Footer onNavigate={handleNavigate} />
+      </>
+    );
+  }
 
+  return <AdminDashboard />;
       default:
         return null;
     }
