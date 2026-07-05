@@ -531,7 +531,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               </div>
 
               <div className="flex justify-between mb-3 text-[#0F3A2B]">
-                <span>ا��خصم:</span>
+                <span>الخصم:</span>
                 <span>-{formatPrice(discountAmount)}</span>
               </div>
 
