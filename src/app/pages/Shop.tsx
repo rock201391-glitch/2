@@ -41,6 +41,11 @@ function normalizeCategoryName(value: string) {
     .replace(/ة/g, 'ه');
 }
 
+const normalizedCategoryFilterOptions = categoryFilterOptions.map((filter) => ({
+  ...filter,
+  normalizedAliases: filter.aliases.map(normalizeCategoryName),
+}));
+
 export default function Shop({ onProductClick }: ShopProps) {
   const { addItem } = useCart();
   const { products, loading, error } = useProducts();
@@ -72,12 +77,11 @@ export default function Shop({ onProductClick }: ShopProps) {
   };
 
   const resolvedCategoryFilters = useMemo(() => {
-    return categoryFilterOptions.map((filter) => {
+    return normalizedCategoryFilterOptions.map((filter) => {
       const ids = categories
         .filter((category) => {
           const normalizedName = normalizeCategoryName(category.name);
-          return filter.aliases.some((alias) => {
-            const normalizedAlias = normalizeCategoryName(alias);
+          return filter.normalizedAliases.some((normalizedAlias) => {
             return (
               normalizedName === normalizedAlias ||
               normalizedName.includes(normalizedAlias) ||
@@ -182,7 +186,7 @@ export default function Shop({ onProductClick }: ShopProps) {
       <div className="sticky top-0 z-10 bg-[#F8F7F2]/95 backdrop-blur-sm border-b border-[#E8E4DC] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap justify-center gap-2.5 lg:flex-1 lg:justify-center lg:pl-14">
+            <div className="flex flex-wrap justify-center gap-2.5 lg:flex-1 lg:justify-center">
               <button
                 onClick={() => setSelectedCategory('all')}
                 className={`rounded-full border px-5 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
