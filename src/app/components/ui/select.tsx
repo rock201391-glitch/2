@@ -58,6 +58,8 @@ function SelectContent({
   className,
   children,
   position = "popper",
+  side = "bottom", // تم تحديد الظهور ليكون لأسفل افتراضياً
+  sideOffset = 4,   // إضافة مسافة خفيفة بين القائمة والزر
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
@@ -71,6 +73,8 @@ function SelectContent({
           className,
         )}
         position={position}
+        side={side}
+        sideOffset={sideOffset}
         {...props}
       >
         <SelectScrollUpButton />
