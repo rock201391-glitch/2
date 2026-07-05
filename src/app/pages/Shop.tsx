@@ -96,6 +96,11 @@ export default function Shop({ onProductClick }: ShopProps) {
     return resolvedCategoryFilters.find((filter) => filter.key === selectedCategory)?.ids ?? [];
   }, [resolvedCategoryFilters, selectedCategory]);
 
+  const selectedCategoryLabel = useMemo(() => {
+    if (selectedCategory === 'all') return 'الكل';
+    return resolvedCategoryFilters.find((filter) => filter.key === selectedCategory)?.label ?? 'هذا التصنيف';
+  }, [resolvedCategoryFilters, selectedCategory]);
+
   const sortedFilteredProducts = useMemo(() => {
     let list = selectedCategoryIds
       ? products.filter((product) => product.category_id !== null && selectedCategoryIds.includes(product.category_id))
@@ -114,7 +119,7 @@ export default function Shop({ onProductClick }: ShopProps) {
       list = [...list].sort((a, b) => a.price - b.price);
     }
     return list;
-  }, [products, selectedCategory, sortOption]);
+  }, [products, selectedCategoryIds, sortOption]);
 
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.stopPropagation();
@@ -267,7 +272,9 @@ export default function Shop({ onProductClick }: ShopProps) {
               📦
             </div>
             <p className="text-base font-medium text-gray-500">
-              لا توجد منتجات حالياً
+              {selectedCategory === 'all'
+                ? 'لا توجد منتجات حالياً'
+                : `لا توجد منتجات ضمن ${selectedCategoryLabel} حالياً`}
             </p>
           </div>
         )}
