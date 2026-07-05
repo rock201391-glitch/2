@@ -420,7 +420,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   onValueChange={value => setFormData(prev => ({ ...prev, governorate: value, city: '' }))}
                 >
                   <SelectTrigger 
-                    className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl bg-[#F6F4EE] text-[#0F3A2B] outline-none focus:border-[#0F3A2B] focus:ring-0 flex items-center justify-between text-right shadow-none [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]"
+                    className="!w-full !h-[50px] !px-4 !py-3 !border !border-[#E5DDCE] !rounded-2xl !bg-[#F6F4EE] !text-[#0F3A2B] !shadow-none !outline-none !ring-0 focus:!border-[#0F3A2B] focus:!ring-0 flex items-center justify-between text-right [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]"
                   >
                     <SelectValue placeholder="اختر المحافظة" />
                   </SelectTrigger>
@@ -448,7 +448,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   disabled={!formData.governorate}
                 >
                   <SelectTrigger 
-                    className="w-full h-[56px] px-4 border border-[#E5DDCE] rounded-2xl bg-[#F6F4EE] text-[#0F3A2B] shadow-none focus:border-[#0F3A2B] focus:ring-0 flex items-center justify-between text-right"
+                    className="!w-full !h-[50px] !px-4 !py-3 !border !border-[#E5DDCE] !rounded-2xl !bg-[#F6F4EE] !text-[#0F3A2B] !shadow-none !outline-none !ring-0 focus:!border-[#0F3A2B] focus:!ring-0 flex items-center justify-between text-right [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]"
                   >
                     <SelectValue placeholder="اختر الولاية / المدينة" />
                   </SelectTrigger>
