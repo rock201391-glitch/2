@@ -264,17 +264,20 @@ export default function Shop({ onProductClick }: ShopProps) {
                   </div>
 
                   {/* Info */}
-                  <div className="p-4 flex flex-col flex-1">
+                  <div
+                    className="p-4 flex flex-col flex-1"
+                    style={{ backgroundColor: '#0F3A2B' }}
+                  >
                     <h3
                       className="text-sm font-bold mb-1 leading-snug line-clamp-2"
-                      style={{ color: '#0F3A2B' }}
+                      style={{ color: '#F8F7F2' }}
                     >
                       {product.name}
                     </h3>
                     <div className="mt-auto pt-3 flex items-center justify-between">
                       <span
                         className="text-lg font-bold"
-                        style={{ color: '#0F3A2B' }}
+                        style={{ color: '#F8F7F2' }}
                       >
                         {product.price} <span className="text-xs font-medium">ر.ع</span>
                       </span>
@@ -283,8 +286,9 @@ export default function Shop({ onProductClick }: ShopProps) {
                         disabled={product.quantity === 0}
                         className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{
-                          backgroundColor: isAdded ? '#2d6a4f' : '#0F3A2B',
-                          color: '#F8F7F2',
+                          backgroundColor: isAdded ? '#F8F7F2' : 'transparent',
+                          color: isAdded ? '#0F3A2B' : '#F8F7F2',
+                          border: '1px solid #F8F7F2',
                         }}
                       >
                         {isAdded ? '✓' : '+'}
