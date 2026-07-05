@@ -96,11 +96,6 @@ export default function Products({ onProductClick, onViewAll, limit = 5 }: Produ
                     </motion.button>
                   </motion.div>
 
-                  {/* Category Badge */}
-                  <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-white/90 dark:bg-black/90 backdrop-blur-xl text-xs">
-                    {language === 'ar' ? product.categoryAr : product.category}
-                  </div>
-
                   {/* NEW Badge */}
                   {index === 0 && (
                     <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 text-white text-xs font-bold">
