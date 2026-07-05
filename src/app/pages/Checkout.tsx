@@ -280,6 +280,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 />
 
                 <Select
+                  name="governorate"
+                  required
                   value={formData.governorate}
                   onValueChange={value => setFormData(prev => ({ ...prev, governorate: value, city: '' }))}
                 >
@@ -301,16 +303,10 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <input
-                  tabIndex={-1}
-                  aria-hidden="true"
-                  readOnly
-                  required
-                  value={formData.governorate}
-                  className="sr-only"
-                />
 
                 <Select
+                  name="city"
+                  required
                   value={formData.city}
                   onValueChange={value => setFormData(prev => ({ ...prev, city: value }))}
                   disabled={!formData.governorate}
@@ -333,15 +329,6 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <input
-                  tabIndex={-1}
-                  aria-hidden="true"
-                  readOnly
-                  required
-                  disabled={!formData.governorate}
-                  value={formData.city}
-                  className="sr-only"
-                />
 
                 <textarea
                   name="addressDetails"
