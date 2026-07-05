@@ -201,21 +201,15 @@ export default function App() {
             {/* شاشة الترحيب الفخمة لمتجر مرقاب */}
             {showSplash && (
               <div
-                className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#F8F7F2] text-[#0F3A2B] transition-opacity duration-500 ease-in-out ${
+                className={`fixed inset-0 z-[99999] flex items-center justify-center bg-[#F0EDE3] transition-opacity duration-500 ease-in-out ${
                   splashFade ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}
               >
-                <div className="text-center">
-                  <h1 className="text-6xl font-bold tracking-widest mb-3 font-serif animate-pulse">
-                    مِرقاب
-                  </h1>
-                  
-                  <div className="w-16 h-[2px] bg-[#0F3A2B] mx-auto opacity-30 mb-4 rounded-full"></div>
-                  
-                  <p className="text-xs tracking-[0.35em] text-gray-500 font-medium uppercase font-sans">
-                    MERGAB SHOP
-                  </p>
-                </div>
+                <img
+                  src="/merqab.png"
+                  alt="مرقاب"
+                  className="w-64 h-64 object-contain"
+                />
               </div>
             )}
 
