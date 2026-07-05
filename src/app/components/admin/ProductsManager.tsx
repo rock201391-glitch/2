@@ -54,6 +54,11 @@ export default function ProductsManager() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ProductFormData>(emptyForm);
 
+  // image upload state
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   // delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -82,6 +87,8 @@ export default function ProductsManager() {
   function openCreateForm() {
     setEditingId(null);
     setForm(emptyForm);
+    setUploadSuccess(false);
+    setUploadError(null);
     setShowForm(true);
   }
 
@@ -98,6 +105,8 @@ export default function ProductsManager() {
       colors: Array.isArray(product.colors) ? product.colors.join(", ") : "",
       is_active: product.is_active,
     });
+    setUploadSuccess(false);
+    setUploadError(null);
     setShowForm(true);
   }
 
@@ -105,6 +114,49 @@ export default function ProductsManager() {
     setShowForm(false);
     setEditingId(null);
     setForm(emptyForm);
+    setUploadSuccess(false);
+    setUploadError(null);
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError("نوع الملف غير مدعوم. الأنواع المسموح بها: jpg, jpeg, png, webp");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("حجم الملف يتجاوز الحد المسموح به (5 ميجابايت)");
+      return;
+    }
+
+    setUploading(true);
+    setUploadSuccess(false);
+    setUploadError(null);
+
+    const ext = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const filePath = `products/${fileName}`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, file, { upsert: false });
+
+    if (uploadErr) {
+      setUploadError(uploadErr.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filePath);
+
+    setForm((f) => ({ ...f, image_url: publicUrlData.publicUrl }));
+    setUploadSuccess(true);
+    setUploading(false);
   }
 
   function handleNameChange(value: string) {
@@ -351,17 +403,34 @@ export default function ProductsManager() {
                 />
               </div>
 
-              {/* رابط الصورة */}
+              {/* رفع الصورة */}
               <div>
-                <label className="block text-sm font-semibold mb-1">رابط الصورة</label>
-                <input
-                  type="url"
-                  value={form.image_url}
-                  onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
-                  dir="ltr"
-                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-sm font-mono text-left"
-                  placeholder="https://..."
-                />
+                <label className="block text-sm font-semibold mb-1">رفع الصورة</label>
+                {form.image_url && (
+                  <img
+                    src={form.image_url}
+                    alt="معاينة الصورة"
+                    className="w-24 h-24 object-cover rounded-2xl border border-[#D8D2C5] mb-2"
+                  />
+                )}
+                <label className="inline-block cursor-pointer">
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                  />
+                  <span className="inline-block rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] text-sm font-semibold hover:bg-[#EAF3EE] transition-all cursor-pointer select-none">
+                    {uploading ? "جاري الرفع..." : form.image_url ? "تغيير الصورة" : "اختر صورة"}
+                  </span>
+                </label>
+                {uploadSuccess && (
+                  <p className="mt-1 text-xs text-green-700">تم رفع الصورة بنجاح</p>
+                )}
+                {uploadError && (
+                  <p className="mt-1 text-xs text-red-600">{uploadError}</p>
+                )}
               </div>
 
               {/* التصنيف */}
