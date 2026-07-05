@@ -14,19 +14,23 @@ interface Category {
 
 export default function Shop({ onProductClick }: ShopProps) {
   const { addItem } = useCart();
-  const { products, loading } = useProducts();
+  const { products, loading, error } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [addedProducts, setAddedProducts] = useState<Set<number>>(new Set());
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     async function fetchCategories() {
-      const { data } = await supabase
+      const { data, error: categoryError } = await supabase
         .from('categories')
         .select('id, name')
         .eq('is_active', true)
         .order('sort_order');
-      if (data) setCategories(data as Category[]);
+      if (categoryError) {
+        console.error('Failed to fetch categories:', categoryError.message);
+      } else if (data) {
+        setCategories(data as Category[]);
+      }
     }
     fetchCategories();
   }, []);
@@ -114,8 +118,17 @@ export default function Shop({ onProductClick }: ShopProps) {
           </div>
         )}
 
+        {/* Error State */}
+        {!loading && error && (
+          <div className="flex items-center justify-center py-20">
+            <p className="text-lg font-medium text-red-500">
+              حدث خطأ أثناء تحميل المنتجات
+            </p>
+          </div>
+        )}
+
         {/* Empty State */}
-        {!loading && filteredProducts.length === 0 && (
+        {!loading && !error && filteredProducts.length === 0 && (
           <div className="flex items-center justify-center py-20">
             <p className="text-lg font-medium text-gray-500">
               لا توجد منتجات حالياً
@@ -124,7 +137,7 @@ export default function Shop({ onProductClick }: ShopProps) {
         )}
 
         {/* Products Grid */}
-        {!loading && filteredProducts.length > 0 && (
+        {!loading && !error && filteredProducts.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <div
