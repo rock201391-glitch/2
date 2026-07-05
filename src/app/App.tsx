@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { CartProvider } from './contexts/CartContext';
 import { ProductsProvider } from './contexts/ProductsContext';
@@ -79,11 +79,23 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = useCallback((product: any) => {
     setSelectedProduct(product);
     setCurrentPage('product-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
+
+  // Handle buy-now event dispatched from ProductDetail
+  useEffect(() => {
+    const onCheckout = () => {
+      window.history.replaceState(null, '', '/');
+      setCurrentPage('checkout');
+    };
+    window.addEventListener('navigate-to-checkout', onCheckout);
+    return () => {
+      window.removeEventListener('navigate-to-checkout', onCheckout);
+    };
+  }, []);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -111,7 +123,8 @@ export default function App() {
           <>
             <ProductDetail
               product={selectedProduct}
-              onBack={() => setCurrentPage('home')}
+              onBack={() => setCurrentPage('shop')}
+              onProductClick={handleProductClick}
             />
             <Footer onNavigate={handleNavigate} />
           </>

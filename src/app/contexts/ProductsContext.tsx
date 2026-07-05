@@ -10,8 +10,9 @@ export interface Product {
   image_url: string | null;
   quantity: number;
   category_id: number | null;
-  colors: string[];
+  colors: string[] | null;
   is_active: boolean;
+  created_at: string | null;
 }
 
 interface ProductsContextType {
