@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Upload } from 'lucide-react';
+import { ChevronRight, Upload, Building2, House } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
 
@@ -26,19 +26,17 @@ const governorateToWilayah: Record<string, string[]> = {
 
 const shippingOptions: Record<
   ShippingMethod,
-  { label: string; price: number; duration: string; payment: string }
+  { label: string; price: number; duration: string }
 > = {
   office: {
     label: 'توصيل للمكتب',
     price: 1,
-    duration: '1-2 يوم عمل',
-    payment: 'تحويل بنكي',
+    duration: '2-4 أيام عمل',
   },
   home: {
     label: 'توصيل للمنزل',
     price: 2,
     duration: '2-4 أيام عمل',
-    payment: 'تحويل بنكي',
   },
 };
 
@@ -67,7 +65,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const [receiptFileName, setReceiptFileName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [couponCode, setCouponCode] = useState(DISCOUNT_CODE);
+  const [couponCode, setCouponCode] = useState('');
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [couponStatus, setCouponStatus] = useState('');
 
@@ -278,12 +276,12 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="governorate"
                   value={formData.governorate}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#FFFEFC] outline-none focus:border-[#0F3A2B]"
+                  className="w-full px-5 py-3.5 border border-[#DDD6C8] rounded-2xl text-[15px] font-medium text-[#0F3A2B] bg-[#FFFEFC] shadow-sm outline-none transition-all duration-200 hover:border-[#BFB6A5] focus:border-[#0F3A2B] focus:shadow-[0_0_0_3px_rgba(15,58,43,0.08)]"
                   required
                 >
                   <option value="">اختر المحافظة</option>
                   {Object.keys(governorateToWilayah).map(governorate => (
-                    <option key={governorate} value={governorate}>
+                    <option key={governorate} value={governorate} className="text-[#0F3A2B] bg-white hover:bg-[#F7F3EA]">
                       {governorate}
                     </option>
                   ))}
@@ -294,12 +292,12 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   value={formData.city}
                   onChange={handleInputChange}
                   disabled={!formData.governorate}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#FFFEFC] outline-none focus:border-[#0F3A2B] disabled:bg-[#F6F4EE] disabled:cursor-not-allowed"
+                  className="w-full px-5 py-3.5 border border-[#DDD6C8] rounded-2xl text-[15px] font-medium text-[#0F3A2B] bg-[#FFFEFC] shadow-sm outline-none transition-all duration-200 hover:border-[#BFB6A5] focus:border-[#0F3A2B] focus:shadow-[0_0_0_3px_rgba(15,58,43,0.08)] disabled:bg-[#F6F4EE] disabled:text-[#7A8A83] disabled:border-[#E4DED1] disabled:cursor-not-allowed"
                   required
                 >
                   <option value="">اختر الولاية / المدينة</option>
                   {wilayahOptions.map(wilayah => (
-                    <option key={wilayah} value={wilayah}>
+                    <option key={wilayah} value={wilayah} className="text-[#0F3A2B] bg-white hover:bg-[#F7F3EA]">
                       {wilayah}
                     </option>
                   ))}
@@ -330,35 +328,50 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(Object.entries(shippingOptions) as [ShippingMethod, (typeof shippingOptions)[ShippingMethod]][]).map(
-                  ([key, option]) => (
-                    <label
-                      key={key}
-                      className={`rounded-2xl border px-5 py-4 cursor-pointer text-[#0F3A2B] transition ${
-                        formData.shippingMethod === key
-                          ? 'border-[#0F3A2B] bg-[#F7F3EA]'
-                          : 'border-[#E8E3D9] bg-[#FBF7EF]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-3 mb-3">
-                        <span className="font-semibold">{option.label}</span>
-                        <span className="flex items-center gap-2">
-                          <span>{formatPrice(option.price)}</span>
+                  ([key, option]) => {
+                    const isSelected = formData.shippingMethod === key;
+                    return (
+                      <label
+                        key={key}
+                        className={`rounded-2xl border-2 px-5 py-5 cursor-pointer transition-all duration-200 ${
+                          isSelected
+                            ? 'border-[#0F3A2B] bg-[#F6F1E6] shadow-[0_8px_20px_rgba(15,58,43,0.08)]'
+                            : 'border-[#E5DDCE] bg-[#FEFCF7] hover:border-[#CFC5B3] hover:shadow-[0_4px_12px_rgba(15,58,43,0.06)]'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`inline-flex items-center justify-center w-10 h-10 rounded-xl border ${
+                                isSelected
+                                  ? 'border-[#0F3A2B] bg-[#0F3A2B] text-white'
+                                  : 'border-[#D9D0BE] bg-white text-[#0F3A2B]'
+                              }`}
+                            >
+                              {key === 'office' ? <Building2 className="w-5 h-5" /> : <House className="w-5 h-5" />}
+                            </span>
+                            <span className="font-bold text-[15px] text-[#0F3A2B]">{option.label}</span>
+                          </div>
+
                           <input
                             type="radio"
                             name="shippingMethod"
                             value={key}
-                            checked={formData.shippingMethod === key}
+                            checked={isSelected}
                             onChange={handleInputChange}
-                            className="accent-[#0F3A2B]"
+                            className="mt-1 accent-[#0F3A2B] w-4 h-4"
                           />
-                        </span>
-                      </div>
-                      <div className="space-y-1 text-sm text-[#2F4D42]">
-                        <p>مدة التوصيل: {option.duration}</p>
-                        <p>طريقة الدفع: {option.payment}</p>
-                      </div>
-                    </label>
-                  )
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 mb-2 text-[#0F3A2B]">
+                          <span className="text-sm font-medium">رسوم الشحن</span>
+                          <span className="font-semibold">{formatPrice(option.price)}</span>
+                        </div>
+
+                        <p className="text-sm text-[#2F4D42]">مدة التوصيل: {option.duration}</p>
+                      </label>
+                    );
+                  }
                 )}
               </div>
             </div>
@@ -477,7 +490,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               </div>
 
               <div className="flex justify-between mb-3 text-[#0F3A2B]">
-                <span>الخصم:</span>
+                <span>ا��خصم:</span>
                 <span>-{formatPrice(discountAmount)}</span>
               </div>
 
