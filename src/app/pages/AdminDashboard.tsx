@@ -2,13 +2,21 @@ import { useEffect, useState } from "react";
 import OrdersTab from "../components/admin/OrdersTab";
 import ProductsManager from "../components/admin/ProductsManager";
 import CategoriesManager from "../components/admin/CategoriesManager";
+import DiscountCodesManager from "../components/admin/DiscountCodesManager";
+import ShippingManager from "../components/admin/ShippingManager";
+import SettingsManager from "../components/admin/SettingsManager";
+import ThemeManager from "../components/admin/ThemeManager";
 
-type AdminTab = "orders" | "products" | "categories";
+type AdminTab = "orders" | "products" | "categories" | "discounts" | "shipping" | "settings" | "theme";
 
 const TABS: { id: AdminTab; label: string }[] = [
-  { id: "orders", label: "الطلبات" },
-  { id: "products", label: "المنتجات" },
+  { id: "orders",    label: "الطلبات" },
+  { id: "products",  label: "المنتجات" },
   { id: "categories", label: "الأقسام" },
+  { id: "discounts", label: "كوبونات الخصم" },
+  { id: "shipping",  label: "الشحن" },
+  { id: "settings",  label: "إعدادات البنك" },
+  { id: "theme",     label: "الثيم" },
 ];
 
 export default function AdminDashboard() {
@@ -140,9 +148,13 @@ export default function AdminDashboard() {
 
         {/* Main content */}
         <main className="flex-1 px-6 py-8 overflow-x-auto">
-          {activeTab === "orders" && <OrdersTab />}
-          {activeTab === "products" && <ProductsManager />}
+          {activeTab === "orders"     && <OrdersTab />}
+          {activeTab === "products"   && <ProductsManager />}
           {activeTab === "categories" && <CategoriesManager />}
+          {activeTab === "discounts"  && <DiscountCodesManager />}
+          {activeTab === "shipping"   && <ShippingManager />}
+          {activeTab === "settings"   && <SettingsManager />}
+          {activeTab === "theme"      && <ThemeManager />}
         </main>
       </div>
     </div>

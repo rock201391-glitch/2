@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight, Upload, Building2, House, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
@@ -15,7 +15,25 @@ interface CheckoutProps {
   onSuccess: () => void;
 }
 
-type ShippingMethod = 'office' | 'home';
+interface ShippingOption {
+  key: string;
+  label: string;
+  price: number;
+  duration: string;
+}
+
+interface DiscountCodeRow {
+  id: number;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  min_order: number | null;
+  max_uses: number | null;
+  used_count: number;
+  starts_at: string | null;
+  expires_at: string | null;
+  is_active: boolean;
+}
 
 const governorateToWilayah: Record<string, string[]> = {
   مسقط: ['مسقط', 'مطرح', 'بوشر', 'السيب', 'العامرات', 'قريات'],
@@ -31,31 +49,64 @@ const governorateToWilayah: Record<string, string[]> = {
   الوسطى: ['هيما', 'محوت', 'الدقم', 'الجازر'],
 };
 
-const shippingOptions: Record<
-  ShippingMethod,
-  { label: string; price: number; duration: string }
-> = {
-  office: {
-    label: 'توصيل للمكتب',
-    price: 1,
-    duration: '2-4 أيام عمل',
-  },
-  home: {
-    label: 'توصيل للمنزل',
-    price: 2,
-    duration: '2-4 أيام عمل',
-  },
-};
+// Fallback shipping options used if Supabase is unavailable
+const FALLBACK_SHIPPING: ShippingOption[] = [
+  { key: 'office', label: 'توصيل للمكتب', price: 1, duration: '2-4 أيام عمل' },
+  { key: 'home',   label: 'توصيل للمنزل', price: 2, duration: '2-4 أيام عمل' },
+];
 
-const DISCOUNT_CODE = 'مرقاب';
-// 1.30% discount represented as a decimal ratio.
-const DISCOUNT_RATE = 0.013;
-const DISCOUNT_PERCENTAGE_LABEL = `${(DISCOUNT_RATE * 100).toFixed(2)}%`;
+// Fallback bank info used if Supabase is unavailable
+const FALLBACK_BANK = {
+  bank_account_name:         'HAMAD################BAL',
+  bank_account_number:       '0401063526560013',
+  bank_transfer_number:      '90977867',
+  bank_payment_instructions: '',
+};
 
 const formatPrice = (amount: number) => `${amount.toFixed(2)} ر.ع`;
 
 export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const { items, getTotal, clearCart } = useCart();
+
+  // ── Dynamic data from Supabase ─────────────────────────────────────────
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(FALLBACK_SHIPPING);
+  const [bankInfo, setBankInfo] = useState(FALLBACK_BANK);
+
+  useEffect(() => {
+    // Load shipping methods
+    supabase
+      .from('shipping_methods')
+      .select('key, label, price, duration')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setShippingOptions(
+            data.map(m => ({
+              key: m.key,
+              label: m.label,
+              price: Number(m.price),
+              duration: m.duration ?? '',
+            }))
+          );
+        }
+      })
+      .catch(() => {}); // keep fallback on error
+
+    // Load bank info from site_settings
+    supabase
+      .from('site_settings')
+      .select('key, value')
+      .in('key', ['bank_account_name', 'bank_account_number', 'bank_transfer_number', 'bank_payment_instructions'])
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const map: Record<string, string> = {};
+          data.forEach((row: { key: string; value: string }) => { map[row.key] = row.value; });
+          setBankInfo(prev => ({ ...prev, ...map }));
+        }
+      })
+      .catch(() => {}); // keep fallback on error
+  }, []);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -65,7 +116,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     city: '',
     addressDetails: '',
     notes: '',
-    shippingMethod: 'office' as ShippingMethod,
+    shippingMethod: 'office',
   });
 
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
@@ -75,10 +126,13 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const [couponCode, setCouponCode] = useState('');
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [couponStatus, setCouponStatus] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<{ amount: number; label: string; codeId?: number } | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const subtotal = getTotal();
-  const shippingCost = shippingOptions[formData.shippingMethod].price;
-  const discountAmount = isCouponApplied ? subtotal * DISCOUNT_RATE : 0;
+  const selectedShipping = shippingOptions.find(s => s.key === formData.shippingMethod) ?? shippingOptions[0];
+  const shippingCost = selectedShipping?.price ?? 0;
+  const discountAmount = appliedDiscount?.amount ?? 0;
   const total = subtotal - discountAmount + shippingCost;
   const wilayahOptions = governorateToWilayah[formData.governorate] || [];
 
@@ -93,7 +147,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     }
 
     if (name === 'shippingMethod') {
-      setFormData(prev => ({ ...prev, shippingMethod: value as ShippingMethod }));
+      setFormData(prev => ({ ...prev, shippingMethod: value }));
       return;
     }
 
@@ -126,20 +180,90 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     }
   };
 
-  const applyCoupon = () => {
-    if (couponCode.trim() === DISCOUNT_CODE) {
+  const applyCoupon = async () => {
+    const trimmedCode = couponCode.trim();
+    if (!trimmedCode) return;
+
+    setIsApplyingCoupon(true);
+    setCouponStatus('');
+
+    try {
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .eq('code', trimmedCode.toUpperCase())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error || !data) {
+        setIsCouponApplied(false);
+        setAppliedDiscount(null);
+        setCouponStatus('كود الخصم غير صالح');
+        setIsApplyingCoupon(false);
+        return;
+      }
+
+      const coupon = data as DiscountCodeRow;
+      const now = new Date();
+
+      if (coupon.starts_at && new Date(coupon.starts_at) > now) {
+        setIsCouponApplied(false);
+        setAppliedDiscount(null);
+        setCouponStatus('كود الخصم لم يبدأ بعد');
+        setIsApplyingCoupon(false);
+        return;
+      }
+
+      if (coupon.expires_at && new Date(coupon.expires_at) < now) {
+        setIsCouponApplied(false);
+        setAppliedDiscount(null);
+        setCouponStatus('انتهت صلاحية كود الخصم');
+        setIsApplyingCoupon(false);
+        return;
+      }
+
+      if (coupon.max_uses !== null && coupon.used_count >= coupon.max_uses) {
+        setIsCouponApplied(false);
+        setAppliedDiscount(null);
+        setCouponStatus('تم استخدام هذا الكود بالحد الأقصى');
+        setIsApplyingCoupon(false);
+        return;
+      }
+
+      if (coupon.min_order !== null && subtotal < coupon.min_order) {
+        setIsCouponApplied(false);
+        setAppliedDiscount(null);
+        setCouponStatus(`الحد الأدنى للطلب هو ${formatPrice(coupon.min_order)}`);
+        setIsApplyingCoupon(false);
+        return;
+      }
+
+      const discountAmt =
+        coupon.discount_type === 'percentage'
+          ? (subtotal * coupon.discount_value) / 100
+          : coupon.discount_value;
+
+      const label =
+        coupon.discount_type === 'percentage'
+          ? `${coupon.code} (${coupon.discount_value}%)`
+          : `${coupon.code} (${formatPrice(coupon.discount_value)})`;
+
+      setAppliedDiscount({ amount: discountAmt, label, codeId: coupon.id });
       setIsCouponApplied(true);
       setCouponStatus('تم تطبيق كود الخصم بنجاح');
-      return;
+    } catch {
+      setIsCouponApplied(false);
+      setAppliedDiscount(null);
+      setCouponStatus('كود الخصم غير صالح');
+    } finally {
+      setIsApplyingCoupon(false);
     }
-
-    setIsCouponApplied(false);
-    setCouponStatus('كود الخصم غير صالح');
   };
 
   const handleCouponChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCouponCode(e.target.value);
     setIsCouponApplied(false);
+    setAppliedDiscount(null);
     setCouponStatus('');
   };
 
@@ -170,7 +294,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       const noteLines = [
         formData.addressDetails ? `تفاصيل العنوان: ${formData.addressDetails}` : '',
         formData.notes ? `ملاحظات الطلب: ${formData.notes}` : '',
-        isCouponApplied ? `كوبون الخصم: ${DISCOUNT_CODE} (${DISCOUNT_PERCENTAGE_LABEL})` : '',
+        isCouponApplied && appliedDiscount ? `كوبون الخصم: ${appliedDiscount.label}` : '',
       ].filter(Boolean);
 
       const fileName = `${Date.now()}-${receiptImage.name}`;
@@ -205,6 +329,13 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         alert('فشل الطلب: ' + error.message);
         console.error('Supabase error:', error);
         return;
+      }
+
+      // Increment coupon used_count if a coupon was applied
+      if (isCouponApplied && appliedDiscount?.codeId) {
+        supabase.rpc('increment_coupon_used_count', { coupon_id: appliedDiscount.codeId }).catch(() => {
+          // non-critical, ignore
+        });
       }
 
       const newOrder = {
@@ -354,12 +485,11 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">طرق الشحن</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(Object.entries(shippingOptions) as [ShippingMethod, (typeof shippingOptions)[ShippingMethod]][]).map(
-                  ([key, option]) => {
-                    const isSelected = formData.shippingMethod === key;
+                {shippingOptions.map(option => {
+                    const isSelected = formData.shippingMethod === option.key;
                     return (
                       <label
-                        key={key}
+                        key={option.key}
                         className={`rounded-2xl border-2 px-5 py-5 cursor-pointer transition-all duration-200 ${
                           isSelected
                             ? 'border-[#0F3A2B] bg-[#F6F1E6] shadow-[0_8px_20px_rgba(15,58,43,0.08)]'
@@ -375,7 +505,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                                   : 'border-[#D9D0BE] bg-white text-[#0F3A2B]'
                               }`}
                             >
-                              {key === 'office' ? <Building2 className="w-5 h-5" /> : <House className="w-5 h-5" />}
+                              {option.key === 'office' ? <Building2 className="w-5 h-5" /> : <House className="w-5 h-5" />}
                             </span>
                             <span className="font-bold text-[15px] text-[#0F3A2B]">{option.label}</span>
                           </div>
@@ -383,7 +513,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                           <input
                             type="radio"
                             name="shippingMethod"
-                            value={key}
+                            value={option.key}
                             checked={isSelected}
                             onChange={handleInputChange}
                             className="sr-only"
@@ -404,7 +534,9 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                           <span className="font-semibold">{formatPrice(option.price)}</span>
                         </div>
 
-                        <p className="text-sm text-[#2F4D42]">مدة التوصيل: {option.duration}</p>
+                        {option.duration && (
+                          <p className="text-sm text-[#2F4D42]">مدة التوصيل: {option.duration}</p>
+                        )}
                       </label>
                     );
                   }
@@ -424,23 +556,29 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between gap-4">
                     <span>اسم الحساب:</span>
-                    <b>HAMAD################BAL</b>
+                    <b>{bankInfo.bank_account_name}</b>
                   </div>
 
                   <div className="flex justify-between gap-4">
                     <span>رقم الحساب:</span>
-                    <b>0401063526560013</b>
+                    <b>{bankInfo.bank_account_number}</b>
                   </div>
 
                   <div className="flex justify-between gap-4">
                     <span>رقم التحويل:</span>
-                    <b>90977867</b>
+                    <b>{bankInfo.bank_transfer_number}</b>
                   </div>
 
                   <div className="flex justify-between gap-4 text-lg">
                     <span>المبلغ المطلوب:</span>
                     <b>{formatPrice(total)}</b>
                   </div>
+
+                  {bankInfo.bank_payment_instructions && (
+                    <p className="text-sm text-[#4F665D] pt-2 border-t border-[#E8E3D9] mt-2">
+                      {bankInfo.bank_payment_instructions}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -508,9 +646,10 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   <button
                     type="button"
                     onClick={applyCoupon}
-                    className="px-4 py-2 rounded-xl bg-[#0F3A2B] text-white font-semibold"
+                    disabled={isApplyingCoupon}
+                    className="px-4 py-2 rounded-xl bg-[#0F3A2B] text-white font-semibold disabled:opacity-60"
                   >
-                    تطبيق
+                    {isApplyingCoupon ? '...' : 'تطبيق'}
                   </button>
                 </div>
                 {couponStatus && (

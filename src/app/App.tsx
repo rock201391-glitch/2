@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { CartProvider } from './contexts/CartContext';
 import { ProductsProvider } from './contexts/ProductsContext';
+import { ThemeSettingsProvider } from './contexts/ThemeSettingsContext';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import Shop from './pages/Shop';
@@ -190,6 +191,7 @@ export default function App() {
   return (
     <ProductsProvider>
       <CartProvider>
+        <ThemeSettingsProvider>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <div
             className="min-h-screen bg-[#F8F7F2] transition-colors duration-500 relative"
@@ -252,6 +254,7 @@ export default function App() {
             )}
           </div>
         </ThemeProvider>
+        </ThemeSettingsProvider>
       </CartProvider>
     </ProductsProvider>
   );
