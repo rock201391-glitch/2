@@ -290,12 +290,10 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     try {
       const productNames = items.map(item => `${item.name} × ${item.quantity || 1}`).join('، ');
       
-      // منطق تحديد جملة طريقة الدفع المطلوبة بدقة
       const paymentMethodNote = paymentMethod === 'cash_on_delivery' 
         ? 'العربون 5 ر.ع والباقي عند الاستلام' 
         : 'تحويل بنكي كامل';
 
-      // دمج الجملة كأحد عناصر مصفوفة السطور المكونة لحقل الملاحظات
       const noteLines = [
         `طريقة الدفع: ${paymentMethodNote}`,
         formData.addressDetails ? `تفاصيل العنوان: ${formData.addressDetails}` : '',
@@ -390,7 +388,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
+                  className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   placeholder="الاسم الكامل"
                   required
                 />
@@ -400,7 +398,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
+                  className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   placeholder="+968 XXXX XXXX"
                   required
                 />
@@ -412,7 +410,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   readOnly
                   aria-label="الدولة ثابتة: سلطنة عمان"
                   title="الدولة ثابتة: سلطنة عمان"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none"
+                  className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none"
                 />
 
                 <Select
@@ -421,7 +419,9 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   value={formData.governorate}
                   onValueChange={value => setFormData(prev => ({ ...prev, governorate: value, city: '' }))}
                 >
-                  <SelectTrigger className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none flex items-center justify-between text-right shadow-none [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]">
+                  <SelectTrigger 
+                    className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none focus:border-[#0F3A2B] focus:ring-0 flex items-center justify-between text-right shadow-none [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]"
+                  >
                     <SelectValue placeholder="اختر المحافظة" />
                   </SelectTrigger>
                   <SelectContent
@@ -447,7 +447,9 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   onValueChange={value => setFormData(prev => ({ ...prev, city: value }))}
                   disabled={!formData.governorate}
                 >
-                  <SelectTrigger className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none flex items-center justify-between text-right shadow-none disabled:cursor-not-allowed disabled:border-[#E4DED1] disabled:bg-[#F6F4EE] disabled:text-[#7A8A83] [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]">
+                  <SelectTrigger 
+                    className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none focus:border-[#0F3A2B] focus:ring-0 flex items-center justify-between text-right shadow-none disabled:cursor-not-allowed disabled:border-[#E4DED1] disabled:bg-[#F6F4EE] disabled:text-[#7A8A83] [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]"
+                  >
                     <SelectValue placeholder="اختر الولاية / المدينة" />
                   </SelectTrigger>
                   <SelectContent
@@ -470,7 +472,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="addressDetails"
                   value={formData.addressDetails}
                   onChange={handleInputChange}
-                  className="md:col-span-2 w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
+                  className="md:col-span-2 w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl resize-none text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   rows={2}
                   placeholder="تفاصيل العنوان (اختياري)"
                 />
@@ -479,7 +481,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  className="md:col-span-2 w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
+                  className="md:col-span-2 w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl resize-none text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   rows={3}
                   placeholder="ملاحظات الطلب (اختياري)"
                 />
