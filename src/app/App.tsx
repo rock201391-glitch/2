@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { CartProvider } from './contexts/CartContext';
 import { ProductsProvider } from './contexts/ProductsContext';
@@ -79,29 +79,22 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = useCallback((product: any) => {
     setSelectedProduct(product);
     setCurrentPage('product-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  // Handle custom events from ProductDetail (similar products, buy now)
+  // Handle buy-now event dispatched from ProductDetail
   useEffect(() => {
-    const onProductClickEvent = (e: Event) => {
-      const p = (e as CustomEvent).detail;
-      if (p) handleProductClick({ ...p, image: p.image_url || '', category: '' });
-    };
     const onCheckout = () => {
       window.history.replaceState(null, '', '/');
       setCurrentPage('checkout');
     };
-    window.addEventListener('product-click', onProductClickEvent);
     window.addEventListener('navigate-to-checkout', onCheckout);
     return () => {
-      window.removeEventListener('product-click', onProductClickEvent);
       window.removeEventListener('navigate-to-checkout', onCheckout);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const renderPage = () => {
@@ -131,6 +124,7 @@ export default function App() {
             <ProductDetail
               product={selectedProduct}
               onBack={() => setCurrentPage('shop')}
+              onProductClick={handleProductClick}
             />
             <Footer onNavigate={handleNavigate} />
           </>

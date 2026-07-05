@@ -6,12 +6,14 @@ import { useProducts } from '../contexts/ProductsContext';
 interface ProductDetailProps {
   product: any;
   onBack: () => void;
+  onProductClick?: (product: any) => void;
 }
 
-export default function ProductDetail({ product, onBack }: ProductDetailProps) {
+export default function ProductDetail({ product, onBack, onProductClick }: ProductDetailProps) {
   const { addItem } = useCart();
   const { products } = useProducts();
-  const [quantity, setQuantity] = useState(1);
+  const maxQty = Math.max(1, product.quantity ?? 1);
+  const [quantity, setQuantity] = useState(() => Math.min(1, maxQty));
   const [addedToCart, setAddedToCart] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -79,15 +81,16 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
       quantity,
       image: product.image_url || product.image || '',
     });
-    // Navigate to checkout via cart – add item then navigate
-    window.location.hash = '#checkout';
-    // Dispatch custom event so App.tsx can intercept if needed
+    // Dispatch custom event so App.tsx navigates to checkout
     window.dispatchEvent(new CustomEvent('navigate-to-checkout'));
   };
 
   const handleSimilarProductClick = (p: any) => {
-    // Trigger same navigation as clicking a product in Shop
-    window.dispatchEvent(new CustomEvent('product-click', { detail: p }));
+    if (onProductClick) {
+      onProductClick({ ...p, image: p.image_url || '' });
+    } else {
+      window.dispatchEvent(new CustomEvent('product-click', { detail: p }));
+    }
   };
 
   return (

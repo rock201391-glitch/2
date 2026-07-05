@@ -51,8 +51,9 @@ export default function Shop({ onProductClick }: ShopProps) {
 
     if (sortOption === 'newest') {
       list = [...list].sort((a, b) => {
-        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        // Fall back to product id so items without created_at appear after dated items
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : a.id;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : b.id;
         return dateB - dateA;
       });
     } else if (sortOption === 'price-desc') {
