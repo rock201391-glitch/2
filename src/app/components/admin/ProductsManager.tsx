@@ -124,7 +124,7 @@ export default function ProductsManager() {
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      setUploadError("نوع الملف غير مدعوم. الأنواع المسموح بها: jpg, jpeg, png, webp");
+      setUploadError("نوع الملف غير مدعوم. الأنواع المسموح بها: jpeg, png, webp");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
@@ -136,7 +136,12 @@ export default function ProductsManager() {
     setUploadSuccess(false);
     setUploadError(null);
 
-    const ext = file.name.split(".").pop();
+    const extMap: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+    };
+    const ext = extMap[file.type] ?? "jpg";
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const filePath = `products/${fileName}`;
 
