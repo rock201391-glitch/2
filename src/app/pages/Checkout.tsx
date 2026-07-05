@@ -427,7 +427,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       <SelectItem
                         key={governorate}
                         value={governorate}
-                        className="mb-1 min-h-[46px] rounded-2xl px-4 py-3 text-[15px] font-medium text-[#0F3A2B] outline-none transition data-[highlighted]:bg-[#F6F1E6] data-[state=checked]:bg-[#F6F1E6] last:mb-0"
+                        className="mb-1 min-h-[46px] rounded-2xl px-4 py-3 text-[15px] font-medium text-[#0F3A2B] outline-none transition data-[highlighted]:bg-[#0F3A2B] data-[highlighted]:text-[#FFFEF8] data-[state=checked]:bg-[#0F3A2B] data-[state=checked]:text-[#FFFEF8] last:mb-0"
                       >
                         {governorate}
                       </SelectItem>
@@ -453,7 +453,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       <SelectItem
                         key={wilayah}
                         value={wilayah}
-                        className="mb-1 min-h-[46px] rounded-2xl px-4 py-3 text-[15px] font-medium text-[#0F3A2B] outline-none transition data-[highlighted]:bg-[#F6F1E6] data-[state=checked]:bg-[#F6F1E6] last:mb-0"
+                        className="mb-1 min-h-[46px] rounded-2xl px-4 py-3 text-[15px] font-medium text-[#0F3A2B] outline-none transition data-[highlighted]:bg-[#0F3A2B] data-[highlighted]:text-[#FFFEF8] data-[state=checked]:bg-[#0F3A2B] data-[state=checked]:text-[#FFFEF8] last:mb-0"
                       >
                         {wilayah}
                       </SelectItem>
