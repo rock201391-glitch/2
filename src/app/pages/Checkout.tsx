@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Upload, Building2, House } from 'lucide-react';
+import { ChevronRight, Upload, Building2, House, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
 import {
@@ -129,7 +129,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const applyCoupon = () => {
     if (couponCode.trim() === DISCOUNT_CODE) {
       setIsCouponApplied(true);
-      setCouponStatus(`تم تطبيق خصم ${DISCOUNT_PERCENTAGE_LABEL} بنجاح`);
+      setCouponStatus('تم تطبيق كود الخصم بنجاح');
       return;
     }
 
@@ -386,8 +386,17 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                             value={key}
                             checked={isSelected}
                             onChange={handleInputChange}
-                            className="mt-1 accent-[#0F3A2B] w-4 h-4"
+                            className="sr-only"
                           />
+                          <span
+                            className={`mt-1 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                              isSelected
+                                ? 'border-[#0F3A2B] bg-[#0F3A2B]'
+                                : 'border-[#B0A99A] bg-white'
+                            }`}
+                          >
+                            {isSelected && <span className="w-2 h-2 rounded-full bg-white block" />}
+                          </span>
                         </div>
 
                         <div className="flex items-center justify-between gap-3 mb-2 text-[#0F3A2B]">
@@ -505,9 +514,14 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   </button>
                 </div>
                 {couponStatus && (
-                  <p className={`text-sm mt-2 ${isCouponApplied ? 'text-green-700' : 'text-red-600'}`}>
-                    {couponStatus}
-                  </p>
+                  isCouponApplied ? (
+                    <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-green-700" />
+                      <span>{couponStatus}</span>
+                    </div>
+                  ) : (
+                    <p className="text-sm mt-2 text-red-600">{couponStatus}</p>
+                  )
                 )}
               </div>
 
