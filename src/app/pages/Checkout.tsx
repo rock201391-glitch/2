@@ -301,6 +301,14 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <input
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  readOnly
+                  required
+                  value={formData.governorate}
+                  className="sr-only"
+                />
 
                 <Select
                   value={formData.city}
@@ -325,6 +333,15 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <input
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  readOnly
+                  required
+                  disabled={!formData.governorate}
+                  value={formData.city}
+                  className="sr-only"
+                />
 
                 <textarea
                   name="addressDetails"
