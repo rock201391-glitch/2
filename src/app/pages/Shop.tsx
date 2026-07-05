@@ -325,15 +325,7 @@ export default function Shop({ onProductClick }: ShopProps) {
                         📦
                       </div>
                     )}
-                    {/* Category badge */}
-                    {categoryName && (
-                      <span
-                        className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold"
-                        style={{ backgroundColor: '#0A261C', color: '#F8F7F2' }}
-                      >
-                        {categoryName}
-                      </span>
-                    )}
+
                     {/* Out of stock badge */}
                     {product.quantity === 0 && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
