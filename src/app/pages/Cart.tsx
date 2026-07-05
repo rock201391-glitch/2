@@ -36,9 +36,9 @@ function getCartItemImageSrc(image: string | null | undefined) {
   }
 
   const pathSegments = normalized.split('/').filter(Boolean);
-  const hasExplicitBucket = pathSegments.length > 1;
-  const bucket = hasExplicitBucket ? pathSegments[0] : PRODUCT_IMAGE_BUCKET;
-  const path = hasExplicitBucket ? pathSegments.slice(1).join('/') : normalized;
+  const hasBucketPrefix = pathSegments[0] === PRODUCT_IMAGE_BUCKET;
+  const bucket = PRODUCT_IMAGE_BUCKET;
+  const path = hasBucketPrefix ? pathSegments.slice(1).join('/') : normalized;
 
   if (!path) {
     return null;
@@ -108,19 +108,22 @@ export default function Cart({ onNavigate, onCheckout }: CartProps) {
               </div>
             </div>
           ) : (
-            items.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-2xl p-4 flex flex-row-reverse items-center gap-4"
-              >
+            items.map((item) => {
+              const imageSrc = getCartItemImageSrc(item.image);
+
+              return (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-2xl p-4 flex flex-row-reverse items-center gap-4"
+                >
                 {/* Product Image */}
                 <div
                   className="w-20 h-20 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 bg-[#F8F7F2]"
                   style={{ backgroundColor: '#F8F7F2' }}
                 >
-                  {getCartItemImageSrc(item.image) ? (
+                  {imageSrc ? (
                     <ImageWithFallback
-                      src={getCartItemImageSrc(item.image) || undefined}
+                      src={imageSrc}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />
@@ -175,7 +178,8 @@ export default function Cart({ onNavigate, onCheckout }: CartProps) {
                   </div>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
 
