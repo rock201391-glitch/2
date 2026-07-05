@@ -43,7 +43,11 @@ const shippingOptions: Record<
 };
 
 const DISCOUNT_CODE = 'مرقاب';
+// 1.30% discount represented as a decimal ratio.
 const DISCOUNT_RATE = 0.013;
+const DISCOUNT_PERCENTAGE_LABEL = `${(DISCOUNT_RATE * 100).toFixed(2)}%`;
+
+const formatPrice = (amount: number) => `${amount.toFixed(2)} ر.ع`;
 
 export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const { items, getTotal, clearCart } = useCart();
@@ -64,7 +68,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [couponCode, setCouponCode] = useState(DISCOUNT_CODE);
-  const [isCouponApplied, setIsCouponApplied] = useState(true);
+  const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [couponStatus, setCouponStatus] = useState('');
 
   const subtotal = getTotal();
@@ -120,12 +124,18 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const applyCoupon = () => {
     if (couponCode.trim() === DISCOUNT_CODE) {
       setIsCouponApplied(true);
-      setCouponStatus(`تم تطبيق خصم ${(DISCOUNT_RATE * 100).toFixed(2)}% بنجاح`);
+      setCouponStatus(`تم تطبيق خصم ${DISCOUNT_PERCENTAGE_LABEL} بنجاح`);
       return;
     }
 
     setIsCouponApplied(false);
     setCouponStatus('كود الخصم غير صالح');
+  };
+
+  const handleCouponChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCouponCode(e.target.value);
+    setIsCouponApplied(false);
+    setCouponStatus('');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -155,7 +165,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       const noteLines = [
         formData.addressDetails ? `تفاصيل العنوان: ${formData.addressDetails}` : '',
         formData.notes ? `ملاحظات الطلب: ${formData.notes}` : '',
-        isCouponApplied ? `كوبون الخصم: ${DISCOUNT_CODE} (${(DISCOUNT_RATE * 100).toFixed(2)}%)` : '',
+        isCouponApplied ? `كوبون الخصم: ${DISCOUNT_CODE} (${DISCOUNT_PERCENTAGE_LABEL})` : '',
       ].filter(Boolean);
 
       const fileName = `${Date.now()}-${receiptImage.name}`;
@@ -164,7 +174,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
       if (uploadError) {
         alert('فشل رفع صورة الإيصال');
-        console.log(uploadError);
+        console.error(uploadError);
         setIsSubmitting(false);
         return;
       }
@@ -219,7 +229,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} dir="rtl" className="min-h-screen bg-[#F8F7F2] py-8 px-4 text-[#0F3A2B]">
+    <form onSubmit={handleSubmit} dir="rtl" lang="ar" className="min-h-screen bg-[#F8F7F2] py-8 px-4 text-[#0F3A2B]">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-center gap-2 cursor-pointer" onClick={onBack}>
           <ChevronRight className="text-[#0F3A2B]" />
@@ -259,6 +269,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   name="country"
                   value={formData.country}
                   readOnly
+                  aria-label="الدولة ثابتة: سلطنة عمان"
+                  title="الدولة ثابتة: سلطنة عمان"
                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none"
                 />
 
@@ -330,7 +342,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       <div className="flex items-center justify-between gap-3 mb-3">
                         <span className="font-semibold">{option.label}</span>
                         <span className="flex items-center gap-2">
-                          <span>{option.price.toFixed(2)} ر.ع</span>
+                          <span>{formatPrice(option.price)}</span>
                           <input
                             type="radio"
                             name="shippingMethod"
@@ -357,7 +369,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               <div className="rounded-2xl border border-[#E8E3D9] bg-[#FBF7EF] p-5 mb-6 text-[#0F3A2B]">
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-semibold text-lg">تحويل بنكي</span>
-                  <span className="text-sm bg-[#0F3A2B] text-white px-3 py-1 rounded-full">يدوي</span>
+                  <span aria-label="طريقة دفع يدوية عبر التحويل البنكي" className="text-sm bg-[#0F3A2B] text-white px-3 py-1 rounded-full">يدوي</span>
                 </div>
 
                 <div className="space-y-3 text-sm">
@@ -378,7 +390,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
                   <div className="flex justify-between gap-4 text-lg">
                     <span>المبلغ المطلوب:</span>
-                    <b>{total.toFixed(2)} ر.ع</b>
+                    <b>{formatPrice(total)}</b>
                   </div>
                 </div>
               </div>
@@ -421,7 +433,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     <div className="flex items-center gap-3 min-w-0">
                       <img
                         src={item.image}
-                        alt={item.name}
+                        alt={`صورة المنتج ${item.name}`}
                         className="w-14 h-14 rounded-xl object-cover border border-[#E8E3D9] bg-[#F7F3EA]"
                       />
                       <div className="min-w-0">
@@ -429,7 +441,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                         <p className="text-sm text-[#4F665D]">الكمية: {item.quantity || 1}</p>
                       </div>
                     </div>
-                    <b className="whitespace-nowrap">{(item.price * (item.quantity || 1)).toFixed(2)} ر.ع</b>
+                    <b className="whitespace-nowrap">{formatPrice(item.price * (item.quantity || 1))}</b>
                   </div>
                 ))}
               </div>
@@ -440,11 +452,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   <input
                     type="text"
                     value={couponCode}
-                    onChange={e => {
-                      setCouponCode(e.target.value);
-                      setIsCouponApplied(false);
-                      setCouponStatus('');
-                    }}
+                    onChange={handleCouponChange}
                     className="flex-1 px-3 py-2 border border-[#D9D2C3] rounded-xl bg-white outline-none focus:border-[#0F3A2B]"
                     placeholder="أدخل كود الخصم"
                   />
@@ -465,22 +473,22 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
               <div className="flex justify-between mb-3 text-[#0F3A2B]">
                 <span>المنتجات:</span>
-                <span>{subtotal.toFixed(2)} ر.ع</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
 
               <div className="flex justify-between mb-3 text-[#0F3A2B]">
                 <span>الخصم:</span>
-                <span>-{discountAmount.toFixed(2)} ر.ع</span>
+                <span>-{formatPrice(discountAmount)}</span>
               </div>
 
               <div className="flex justify-between mb-6 text-[#0F3A2B]">
                 <span>رسوم التوصيل:</span>
-                <span>{shippingCost.toFixed(2)} ر.ع</span>
+                <span>{formatPrice(shippingCost)}</span>
               </div>
 
               <div className="flex justify-between text-xl font-bold mb-6 text-[#0F3A2B]">
                 <span>الإجمالي:</span>
-                <span>{total.toFixed(2)} ر.ع</span>
+                <span>{formatPrice(total)}</span>
               </div>
 
               <button
