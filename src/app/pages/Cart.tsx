@@ -114,7 +114,7 @@ export default function Cart({ onNavigate, onCheckout }: CartProps) {
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-2xl p-4 flex flex-row-reverse items-center gap-4"
+                  className="bg-[#0F3A2B] rounded-2xl p-4 flex flex-row-reverse items-center gap-4"
                 >
                   {/* Product Image */}
                   <div
@@ -135,10 +135,10 @@ export default function Cart({ onNavigate, onCheckout }: CartProps) {
 
                   {/* Product Info */}
                   <div className="flex-1 min-w-0 text-right">
-                    <h3 className="font-bold text-sm mb-1 truncate" style={{ color: '#0F3A2B' }}>
+                    <h3 className="font-bold text-sm mb-1 truncate text-white">
                       {item.name}
                     </h3>
-                    <p className="text-lg font-bold mb-2" style={{ color: '#0F3A2B' }}>
+                    <p className="text-lg font-bold mb-2 text-white">
                       {item.price} ر.ع
                     </p>
 
