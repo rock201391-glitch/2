@@ -49,13 +49,11 @@ const governorateToWilayah: Record<string, string[]> = {
   الوسطى: ['هيما', 'محوت', 'الدقم', 'الجازر'],
 };
 
-// Fallback shipping options used if Supabase is unavailable
 const FALLBACK_SHIPPING: ShippingOption[] = [
   { key: 'office', label: 'توصيل للمكتب', price: 1, duration: '2-4 أيام عمل' },
   { key: 'home',   label: 'توصيل للمنزل', price: 2, duration: '2-4 أيام عمل' },
 ];
 
-// Fallback bank info used if Supabase is unavailable
 const FALLBACK_BANK = {
   bank_account_name:         'HAMAD################BAL',
   bank_account_number:       '0401063526560013',
@@ -68,12 +66,13 @@ const formatPrice = (amount: number) => `${amount.toFixed(2)} ر.ع`;
 export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const { items, getTotal, clearCart } = useCart();
 
-  // ── Dynamic data from Supabase ─────────────────────────────────────────
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(FALLBACK_SHIPPING);
   const [bankInfo, setBankInfo] = useState(FALLBACK_BANK);
+  
+  // طريقة الدفع الافتراضية
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cash_on_delivery'>('bank_transfer');
 
   useEffect(() => {
-    // Load shipping methods
     supabase
       .from('shipping_methods')
       .select('key, label, price, duration')
@@ -91,9 +90,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           );
         }
       })
-      .catch(() => {}); // keep fallback on error
+      .catch(() => {});
 
-    // Load bank info from site_settings
     supabase
       .from('site_settings')
       .select('key, value')
@@ -105,7 +103,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           setBankInfo(prev => ({ ...prev, ...map }));
         }
       })
-      .catch(() => {}); // keep fallback on error
+      .catch(() => {});
   }, []);
 
   const [formData, setFormData] = useState({
@@ -283,7 +281,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     }
 
     if (!receiptImage) {
-      alert('يرجى رفع صورة الإيصال');
+      alert(paymentMethod === 'bank_transfer' ? 'يرجى رفع صورة الإيصال للتحويل الكامل' : 'يرجى رفع صورة إيصال تحويل العربون لتأكيد الطلب');
       return;
     }
 
@@ -291,7 +289,15 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
     try {
       const productNames = items.map(item => `${item.name} × ${item.quantity || 1}`).join('، ');
+      
+      // منطق تحديد جملة طريقة الدفع المطلوبة بدقة
+      const paymentMethodNote = paymentMethod === 'cash_on_delivery' 
+        ? 'العربون 5 ر.ع والباقي عند الاستلام' 
+        : 'تحويل بنكي كامل';
+
+      // دمج الجملة كأحد عناصر مصفوفة السطور المكونة لحقل الملاحظات
       const noteLines = [
+        `طريقة الدفع: ${paymentMethodNote}`,
         formData.addressDetails ? `تفاصيل العنوان: ${formData.addressDetails}` : '',
         formData.notes ? `ملاحظات الطلب: ${formData.notes}` : '',
         isCouponApplied && appliedDiscount ? `كوبون الخصم: ${appliedDiscount.label}` : '',
@@ -322,20 +328,19 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           city: formData.city,
           notes: noteLines.join(' | '),
           shipping_method: formData.shippingMethod,
+          payment_method: paymentMethod, 
         },
       ]);
 
       if (error) {
         alert('فشل الطلب: ' + error.message);
         console.error('Supabase error:', error);
+        setIsSubmitting(false);
         return;
       }
 
-      // Increment coupon used_count if a coupon was applied
       if (isCouponApplied && appliedDiscount?.codeId) {
-        supabase.rpc('increment_coupon_used_count', { coupon_id: appliedDiscount.codeId }).catch(() => {
-          // non-critical, ignore
-        });
+        supabase.rpc('increment_coupon_used_count', { coupon_id: appliedDiscount.codeId }).catch(() => {});
       }
 
       const newOrder = {
@@ -547,11 +552,57 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
             <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#ECE7DC]">
               <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">طريقة الدفع</h2>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div
+                  onClick={() => setPaymentMethod('bank_transfer')}
+                  className={`rounded-2xl border-2 px-5 py-4 flex items-center justify-between cursor-pointer transition-all duration-200 ${
+                    paymentMethod === 'bank_transfer'
+                      ? 'border-[#0F3A2B] bg-[#F6F1E6] shadow-[0_8px_20px_rgba(15,58,43,0.08)]'
+                      : 'border-[#E5DDCE] bg-[#FEFCF7] hover:border-[#CFC5B3]'
+                  }`}
+                >
+                  <span className="font-bold text-[15px]">تحويل بنكي</span>
+                  <span
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      paymentMethod === 'bank_transfer' ? 'border-[#0F3A2B] bg-[#0F3A2B]' : 'border-[#B0A99A]'
+                    }`}
+                  >
+                    {paymentMethod === 'bank_transfer' && <span className="w-2 h-2 rounded-full bg-white block" />}
+                  </span>
+                </div>
+
+                <div
+                  onClick={() => setPaymentMethod('cash_on_delivery')}
+                  className={`rounded-2xl border-2 px-5 py-4 flex items-center justify-between cursor-pointer transition-all duration-200 ${
+                    paymentMethod === 'cash_on_delivery'
+                      ? 'border-[#0F3A2B] bg-[#F6F1E6] shadow-[0_8px_20px_rgba(15,58,43,0.08)]'
+                      : 'border-[#E5DDCE] bg-[#FEFCF7] hover:border-[#CFC5B3]'
+                  }`}
+                >
+                  <span className="font-bold text-[15px]">الدفع عند الاستلام</span>
+                  <span
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      paymentMethod === 'cash_on_delivery' ? 'border-[#0F3A2B] bg-[#0F3A2B]' : 'border-[#B0A99A]'
+                    }`}
+                  >
+                    {paymentMethod === 'cash_on_delivery' && <span className="w-2 h-2 rounded-full bg-white block" />}
+                  </span>
+                </div>
+              </div>
+
               <div className="rounded-2xl border border-[#E8E3D9] bg-[#FBF7EF] p-5 mb-6 text-[#0F3A2B]">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-semibold text-lg">تحويل بنكي</span>
+                  <span className="font-semibold text-lg">
+                    {paymentMethod === 'bank_transfer' ? 'تحويل بنكي' : 'الدفع عند الاستلام'}
+                  </span>
                   <span aria-label="طريقة دفع يدوية عبر التحويل البنكي" className="text-sm bg-[#0F3A2B] text-white px-3 py-1 rounded-full">يدوي</span>
                 </div>
+
+                {paymentMethod === 'cash_on_delivery' && (
+                  <p className="text-sm text-[#0F3A2B] font-medium mb-4 p-3 bg-[#F0EAE1] rounded-xl border border-[#E3DAC9]">
+                    يرجى تحويل عربون لا يقل عن 5 ر.ع لتأكيد الطلب، ويتم دفع باقي المبلغ عند الاستلام.
+                  </p>
+                )}
 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between gap-4">
@@ -569,9 +620,11 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     <b>{bankInfo.bank_transfer_number}</b>
                   </div>
 
-                  <div className="flex justify-between gap-4 text-lg">
-                    <span>المبلغ المطلوب:</span>
-                    <b>{formatPrice(total)}</b>
+                  <div className="flex justify-between gap-4 text-lg border-t border-[#E8E3D9] pt-2 mt-2">
+                    <span>{paymentMethod === 'bank_transfer' ? 'المبلغ المطلوب:' : 'العربون المطلوب:'}</span>
+                    <b className="text-xl text-[#0F3A2B]">
+                      {paymentMethod === 'bank_transfer' ? formatPrice(total) : formatPrice(5)}
+                    </b>
                   </div>
 
                   {bankInfo.bank_payment_instructions && (
@@ -602,7 +655,11 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center text-[#0F3A2B]">
                   <Upload className="w-10 h-10 mb-3 text-[#0F3A2B]" />
                   <span className="font-semibold text-[#0F3A2B]">
-                    {receiptFileName ? `تم الرفع: ${receiptFileName}` : 'رفع صورة التحويل / إرفاق إثبات الدفع'}
+                    {receiptFileName 
+                      ? `تم الرفع: ${receiptFileName}` 
+                      : paymentMethod === 'bank_transfer' 
+                        ? 'رفع صورة التحويل / إرفاق إثبات الدفع' 
+                        : 'إرفاق إيصال تحويل العربون (5 ر.ع)'}
                   </span>
                   <span className="text-sm text-[#5D6D66] mt-2">PNG / JPG</span>
                 </label>
@@ -680,7 +737,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               </div>
 
               <div className="flex justify-between text-xl font-bold mb-6 text-[#0F3A2B]">
-                <span>الإجمالي:</span>
+                <span>الإجمالي الكامل:</span>
                 <span>{formatPrice(total)}</span>
               </div>
 
@@ -697,7 +754,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 className="w-full py-4 rounded-full font-bold text-lg transition hover:scale-105 disabled:hover:scale-100 disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#0F3A2B', color: '#FFFFFF' }}
               >
-                {isSubmitting ? 'جاري إرسال الطلب...' : 'تأكيد الطلب'}
+                تأكيد الطلب
               </button>
             </div>
           </div>
