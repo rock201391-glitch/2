@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { slugify } from "../../../utils/slugify";
 import type { Category } from "./CategoriesManager";
 
 interface Product {
@@ -40,14 +41,6 @@ const emptyForm: ProductFormData = {
   colors: "",
   is_active: true,
 };
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[\s]+/g, "-")
-    .replace(/[^\w-]+/g, "");
-}
 
 export default function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);

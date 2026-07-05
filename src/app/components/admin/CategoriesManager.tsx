@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { slugify } from "../../../utils/slugify";
 
 export interface Category {
   id: number;
@@ -27,14 +28,6 @@ const emptyForm: CategoryFormData = {
   sort_order: 0,
   is_active: true,
 };
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[\s]+/g, "-")
-    .replace(/[^\w-]+/g, "");
-}
 
 export default function CategoriesManager() {
   const [categories, setCategories] = useState<Category[]>([]);
