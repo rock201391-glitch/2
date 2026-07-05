@@ -1,10 +1,50 @@
 import { useState } from 'react';
 import { X, Plus, Minus, Trash2 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { supabase } from '../../lib/supabase';
+import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 
 interface CartProps {
   onNavigate: (page: string) => void;
   onCheckout: () => void;
+}
+
+const PRODUCT_IMAGE_BUCKET = 'product-images';
+const ABSOLUTE_URL_PATTERN = /^(https?:)?\/\//i;
+
+function getCartItemImageSrc(image: string | null | undefined) {
+  const value = image?.trim();
+
+  if (!value) {
+    return null;
+  }
+
+  if (
+    ABSOLUTE_URL_PATTERN.test(value) ||
+    value.startsWith('data:') ||
+    value.startsWith('blob:')
+  ) {
+    return value;
+  }
+
+  const normalized = value.replace(/^\/+/, '');
+  const storagePathMatch = normalized.match(/^storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+
+  if (storagePathMatch) {
+    const [, bucket, path] = storagePathMatch;
+    return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  }
+
+  const pathSegments = normalized.split('/').filter(Boolean);
+  const hasExplicitBucket = pathSegments.length > 1;
+  const bucket = hasExplicitBucket ? pathSegments[0] : PRODUCT_IMAGE_BUCKET;
+  const path = hasExplicitBucket ? pathSegments.slice(1).join('/') : normalized;
+
+  if (!path) {
+    return null;
+  }
+
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
 
 export default function Cart({ onNavigate, onCheckout }: CartProps) {
@@ -71,56 +111,69 @@ export default function Cart({ onNavigate, onCheckout }: CartProps) {
             items.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl p-4 flex gap-4"
+                className="bg-white rounded-2xl p-4 flex flex-row-reverse items-center gap-4"
               >
                 {/* Product Image */}
                 <div
-                  className="w-20 h-20 rounded-xl flex items-center justify-center text-4xl flex-shrink-0"
+                  className="w-20 h-20 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 bg-[#F8F7F2]"
                   style={{ backgroundColor: '#F8F7F2' }}
                 >
-                  {item.image}
+                  {getCartItemImageSrc(item.image) ? (
+                    <ImageWithFallback
+                      src={getCartItemImageSrc(item.image) || undefined}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-[#8A8374]">
+                      لا توجد صورة
+                    </div>
+                  )}
                 </div>
 
                 {/* Product Info */}
-                <div className="flex-1">
-                  <h3 className="font-bold text-sm mb-1" style={{ color: '#0F3A2B' }}>
+                <div className="flex-1 min-w-0 text-right">
+                  <h3 className="font-bold text-sm mb-1 truncate" style={{ color: '#0F3A2B' }}>
                     {item.name}
                   </h3>
                   <p className="text-lg font-bold mb-2" style={{ color: '#0F3A2B' }}>
                     {item.price} ر.ع
                   </p>
 
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-2 bg-[#F8F7F2] rounded-lg p-1 w-fit">
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 bg-[#F8F7F2] rounded-full p-1 w-fit">
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.id, (item.quantity || 1) + 1)
+                        }
+                        className="p-1.5 hover:bg-white rounded-full transition-colors"
+                        aria-label={`زيادة كمية ${item.name}`}
+                      >
+                        <Plus className="w-4 h-4" style={{ color: '#0F3A2B' }} />
+                      </button>
+                      <span className="w-6 text-center font-bold text-sm" style={{ color: '#0F3A2B' }}>
+                        {item.quantity || 1}
+                      </span>
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.id, Math.max(1, (item.quantity || 1) - 1))
+                        }
+                        className="p-1.5 hover:bg-white rounded-full transition-colors"
+                        aria-label={`تقليل كمية ${item.name}`}
+                      >
+                        <Minus className="w-4 h-4" style={{ color: '#0F3A2B' }} />
+                      </button>
+                    </div>
+
                     <button
-                      onClick={() =>
-                        updateQuantity(item.id, Math.max(1, (item.quantity || 1) - 1))
-                      }
-                      className="p-1 hover:bg-white rounded transition-colors"
+                      onClick={() => removeItem(item.id)}
+                      className="p-2 hover:bg-red-50 rounded-full transition-colors"
+                      aria-label={`حذف ${item.name} من السلة`}
                     >
-                      <Minus className="w-4 h-4" style={{ color: '#0F3A2B' }} />
-                    </button>
-                    <span className="w-6 text-center font-bold text-sm" style={{ color: '#0F3A2B' }}>
-                      {item.quantity || 1}
-                    </span>
-                    <button
-                      onClick={() =>
-                        updateQuantity(item.id, (item.quantity || 1) + 1)
-                      }
-                      className="p-1 hover:bg-white rounded transition-colors"
-                    >
-                      <Plus className="w-4 h-4" style={{ color: '#0F3A2B' }} />
+                      <Trash2 className="w-5 h-5 text-red-500" />
                     </button>
                   </div>
                 </div>
-
-                {/* Delete Button */}
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-5 h-5 text-red-500" />
-                </button>
               </div>
             ))
           )}
