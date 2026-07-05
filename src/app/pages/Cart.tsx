@@ -119,7 +119,6 @@ export default function Cart({ onNavigate, onCheckout }: CartProps) {
                   {/* Product Image */}
                   <div
                     className="w-20 h-20 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 bg-[#F8F7F2]"
-                    style={{ backgroundColor: '#F8F7F2' }}
                   >
                     {imageSrc ? (
                       <ImageWithFallback
