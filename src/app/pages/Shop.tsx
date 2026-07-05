@@ -24,6 +24,7 @@ interface CategoryFilterOption {
 const FILTER_BAR_ACTIVE_COLOR = '#0F3A2B';
 const FILTER_BAR_INACTIVE_BG = '#FBF7EF';
 const FILTER_BAR_INACTIVE_BORDER = '#D8D2C5';
+const FILTER_BAR_CHIP_BASE_CLASS = 'rounded-full border font-semibold whitespace-nowrap transition-all duration-200';
 
 const categoryFilterOptions: CategoryFilterOption[] = [
   { key: 'drones', label: 'الدرون', aliases: ['الدرون', 'الدرونات', 'drone', 'drones'] },
@@ -45,6 +46,20 @@ const normalizedCategoryFilterOptions = categoryFilterOptions.map((filter) => ({
   ...filter,
   normalizedAliases: filter.aliases.map(normalizeCategoryName),
 }));
+
+function getFilterChipClass(isActive: boolean, sizeClassName: string) {
+  return `${FILTER_BAR_CHIP_BASE_CLASS} ${sizeClassName} ${
+    isActive
+      ? 'text-white border-transparent shadow-md'
+      : 'text-[#4E6159] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
+  }`;
+}
+
+function getFilterChipStyle(isActive: boolean) {
+  return isActive
+    ? { backgroundColor: FILTER_BAR_ACTIVE_COLOR }
+    : { backgroundColor: FILTER_BAR_INACTIVE_BG, borderColor: FILTER_BAR_INACTIVE_BORDER };
+}
 
 export default function Shop({ onProductClick }: ShopProps) {
   const { addItem } = useCart();
@@ -189,14 +204,8 @@ export default function Shop({ onProductClick }: ShopProps) {
             <div className="flex flex-wrap justify-center gap-2.5 lg:flex-1 lg:justify-center">
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`rounded-full border px-5 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                  selectedCategory === 'all'
-                    ? 'text-white border-transparent shadow-md'
-                    : 'text-[#4E6159] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
-                }`}
-                style={selectedCategory === 'all'
-                  ? { backgroundColor: FILTER_BAR_ACTIVE_COLOR }
-                  : { backgroundColor: FILTER_BAR_INACTIVE_BG, borderColor: FILTER_BAR_INACTIVE_BORDER }}
+                className={getFilterChipClass(selectedCategory === 'all', 'px-5 py-2 text-sm')}
+                style={getFilterChipStyle(selectedCategory === 'all')}
               >
                 الكل
               </button>
@@ -204,14 +213,8 @@ export default function Shop({ onProductClick }: ShopProps) {
                 <button
                   key={category.key}
                   onClick={() => setSelectedCategory(category.key)}
-                  className={`rounded-full border px-5 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                    selectedCategory === category.key
-                      ? 'text-white border-transparent shadow-md'
-                      : 'text-[#4E6159] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
-                  }`}
-                  style={selectedCategory === category.key
-                    ? { backgroundColor: FILTER_BAR_ACTIVE_COLOR }
-                    : { backgroundColor: FILTER_BAR_INACTIVE_BG, borderColor: FILTER_BAR_INACTIVE_BORDER }}
+                  className={getFilterChipClass(selectedCategory === category.key, 'px-5 py-2 text-sm')}
+                  style={getFilterChipStyle(selectedCategory === category.key)}
                 >
                   {category.label}
                 </button>
@@ -223,14 +226,8 @@ export default function Shop({ onProductClick }: ShopProps) {
                 <button
                   key={key}
                   onClick={() => setSortOption(key)}
-                  className={`rounded-full border px-3.5 py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                    sortOption === key
-                      ? 'text-white border-transparent shadow-md'
-                      : 'text-[#4E6159] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
-                  }`}
-                  style={sortOption === key
-                    ? { backgroundColor: FILTER_BAR_ACTIVE_COLOR }
-                    : { backgroundColor: FILTER_BAR_INACTIVE_BG, borderColor: FILTER_BAR_INACTIVE_BORDER }}
+                  className={getFilterChipClass(sortOption === key, 'px-3.5 py-1.5 text-xs sm:text-sm')}
+                  style={getFilterChipStyle(sortOption === key)}
                 >
                   {label}
                 </button>
