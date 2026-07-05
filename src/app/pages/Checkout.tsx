@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { ChevronRight, Upload, Building2, House } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 
 interface CheckoutProps {
   onBack: () => void;
@@ -272,36 +279,56 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none"
                 />
 
-                <select
+                <Select
                   name="governorate"
+                  required
                   value={formData.governorate}
-                  onChange={handleInputChange}
-                  className="w-full px-5 py-3.5 border border-[#DDD6C8] rounded-2xl text-[15px] font-medium text-[#0F3A2B] bg-[#FFFEFC] shadow-sm outline-none transition-all duration-200 hover:border-[#BFB6A5] focus:border-[#0F3A2B] focus:shadow-[0_0_0_3px_rgba(15,58,43,0.08)]"
-                  required
+                  onValueChange={value => setFormData(prev => ({ ...prev, governorate: value, city: '' }))}
                 >
-                  <option value="">اختر المحافظة</option>
-                  {Object.keys(governorateToWilayah).map(governorate => (
-                    <option key={governorate} value={governorate} className="text-[#0F3A2B] bg-white hover:bg-[#F7F3EA]">
-                      {governorate}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-auto w-full rounded-[22px] border border-[#DDD6C8] bg-[#FFFEFC] px-5 py-3.5 text-[15px] font-medium text-[#0F3A2B] shadow-sm outline-none transition-all duration-200 hover:border-[#BFB6A5] focus:border-[#0F3A2B] focus:shadow-[0_0_0_3px_rgba(15,58,43,0.08)] data-[placeholder]:text-[#7B867F] [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]">
+                    <SelectValue placeholder="اختر المحافظة" />
+                  </SelectTrigger>
+                  <SelectContent
+                    position="popper"
+                    className="rounded-[28px] border border-[#E8E1D4] bg-[#FFFEFC] p-2 shadow-[0_16px_34px_rgba(15,58,43,0.10)]"
+                  >
+                    {Object.keys(governorateToWilayah).map(governorate => (
+                      <SelectItem
+                        key={governorate}
+                        value={governorate}
+                        className="mb-1 min-h-[46px] rounded-2xl px-4 py-3 text-[15px] font-medium text-[#0F3A2B] outline-none transition data-[highlighted]:bg-[#F6F1E6] data-[state=checked]:bg-[#F6F1E6] last:mb-0"
+                      >
+                        {governorate}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                <select
+                <Select
                   name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  disabled={!formData.governorate}
-                  className="w-full px-5 py-3.5 border border-[#DDD6C8] rounded-2xl text-[15px] font-medium text-[#0F3A2B] bg-[#FFFEFC] shadow-sm outline-none transition-all duration-200 hover:border-[#BFB6A5] focus:border-[#0F3A2B] focus:shadow-[0_0_0_3px_rgba(15,58,43,0.08)] disabled:bg-[#F6F4EE] disabled:text-[#7A8A83] disabled:border-[#E4DED1] disabled:cursor-not-allowed"
                   required
+                  value={formData.city}
+                  onValueChange={value => setFormData(prev => ({ ...prev, city: value }))}
+                  disabled={!formData.governorate}
                 >
-                  <option value="">اختر الولاية / المدينة</option>
-                  {wilayahOptions.map(wilayah => (
-                    <option key={wilayah} value={wilayah} className="text-[#0F3A2B] bg-white hover:bg-[#F7F3EA]">
-                      {wilayah}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-auto w-full rounded-[22px] border border-[#DDD6C8] bg-[#FFFEFC] px-5 py-3.5 text-[15px] font-medium text-[#0F3A2B] shadow-sm outline-none transition-all duration-200 hover:border-[#BFB6A5] focus:border-[#0F3A2B] focus:shadow-[0_0_0_3px_rgba(15,58,43,0.08)] data-[placeholder]:text-[#7B867F] disabled:cursor-not-allowed disabled:border-[#E4DED1] disabled:bg-[#F6F4EE] disabled:text-[#7A8A83] [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]">
+                    <SelectValue placeholder="اختر الولاية / المدينة" />
+                  </SelectTrigger>
+                  <SelectContent
+                    position="popper"
+                    className="rounded-[28px] border border-[#E8E1D4] bg-[#FFFEFC] p-2 shadow-[0_16px_34px_rgba(15,58,43,0.10)]"
+                  >
+                    {wilayahOptions.map(wilayah => (
+                      <SelectItem
+                        key={wilayah}
+                        value={wilayah}
+                        className="mb-1 min-h-[46px] rounded-2xl px-4 py-3 text-[15px] font-medium text-[#0F3A2B] outline-none transition data-[highlighted]:bg-[#F6F1E6] data-[state=checked]:bg-[#F6F1E6] last:mb-0"
+                      >
+                        {wilayah}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
                 <textarea
                   name="addressDetails"
