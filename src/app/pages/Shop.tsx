@@ -167,6 +167,11 @@ export default function Shop({ onProductClick }: ShopProps) {
     });
   };
 
+  const sortButtons: { key: SortOption; label: string }[] = [
+    { key: 'newest', label: 'الأحدث' },
+    { key: 'price-desc', label: 'الأعلى سعراً' },
+    { key: 'price-asc', label: 'الأقل سعراً' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#F8F7F2]" dir="rtl">
