@@ -13,11 +13,38 @@ interface Category {
 }
 
 type SortOption = 'newest' | 'price-desc' | 'price-asc';
+type CategoryFilterKey = 'all' | 'drones' | 'cameras' | 'microphones' | 'accessories';
+
+interface CategoryFilterOption {
+  key: Exclude<CategoryFilterKey, 'all'>;
+  label: string;
+  aliases: string[];
+}
+
+const FILTER_BAR_ACTIVE_COLOR = '#0F3A2B';
+const FILTER_BAR_INACTIVE_BG = '#FBF7EF';
+const FILTER_BAR_INACTIVE_BORDER = '#D8D2C5';
+
+const categoryFilterOptions: CategoryFilterOption[] = [
+  { key: 'drones', label: 'الدرون', aliases: ['الدرون', 'الدرونات', 'drone', 'drones'] },
+  { key: 'cameras', label: 'الكاميرات', aliases: ['الكاميرات', 'الكاميرا', 'camera', 'cameras'] },
+  { key: 'microphones', label: 'المايكات', aliases: ['المايكات', 'المايك', 'الميكروفونات', 'الميكروفون', 'mic', 'mics', 'microphone', 'microphones'] },
+  { key: 'accessories', label: 'إكسسوارات', aliases: ['إكسسوارات', 'اكسسوارات', 'الإكسسوارات', 'الاكسسوارات', 'الملحقات', 'ملحقات', 'accessory', 'accessories'] },
+];
+
+function normalizeCategoryName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه');
+}
 
 export default function Shop({ onProductClick }: ShopProps) {
   const { addItem } = useCart();
   const { products, loading, error } = useProducts();
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilterKey>('all');
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [addedProducts, setAddedProducts] = useState<Set<number>>(new Set());
   const [categories, setCategories] = useState<Category[]>([]);
@@ -44,9 +71,34 @@ export default function Shop({ onProductClick }: ShopProps) {
     return cat?.name || '';
   };
 
+  const resolvedCategoryFilters = useMemo(() => {
+    return categoryFilterOptions.map((filter) => {
+      const ids = categories
+        .filter((category) => {
+          const normalizedName = normalizeCategoryName(category.name);
+          return filter.aliases.some((alias) => {
+            const normalizedAlias = normalizeCategoryName(alias);
+            return (
+              normalizedName === normalizedAlias ||
+              normalizedName.includes(normalizedAlias) ||
+              normalizedAlias.includes(normalizedName)
+            );
+          });
+        })
+        .map((category) => category.id);
+
+      return { ...filter, ids };
+    });
+  }, [categories]);
+
+  const selectedCategoryIds = useMemo(() => {
+    if (selectedCategory === 'all') return null;
+    return resolvedCategoryFilters.find((filter) => filter.key === selectedCategory)?.ids ?? [];
+  }, [resolvedCategoryFilters, selectedCategory]);
+
   const sortedFilteredProducts = useMemo(() => {
-    let list = selectedCategory
-      ? products.filter(p => p.category_id === selectedCategory)
+    let list = selectedCategoryIds
+      ? products.filter((product) => product.category_id !== null && selectedCategoryIds.includes(product.category_id))
       : products;
 
     if (sortOption === 'newest') {
@@ -123,53 +175,55 @@ export default function Shop({ onProductClick }: ShopProps) {
 
       {/* ── Filters Row ── */}
       <div className="sticky top-0 z-10 bg-[#F8F7F2]/95 backdrop-blur-sm border-b border-[#E8E4DC] shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            {/* Sorting chips – RIGHT (start in RTL) */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">ترتيب:</span>
-              {sortButtons.map(({ key, label }) => (
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap justify-center gap-2.5 lg:flex-1 lg:justify-center lg:pl-14">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`rounded-full border px-5 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                  selectedCategory === 'all'
+                    ? 'text-white border-transparent shadow-md'
+                    : 'text-[#4E6159] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
+                }`}
+                style={selectedCategory === 'all'
+                  ? { backgroundColor: FILTER_BAR_ACTIVE_COLOR }
+                  : { backgroundColor: FILTER_BAR_INACTIVE_BG, borderColor: FILTER_BAR_INACTIVE_BORDER }}
+              >
+                الكل
+              </button>
+              {resolvedCategoryFilters.map((category) => (
                 <button
-                  key={key}
-                  onClick={() => setSortOption(key)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 border ${
-                    sortOption === key
+                  key={category.key}
+                  onClick={() => setSelectedCategory(category.key)}
+                  className={`rounded-full border px-5 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                    selectedCategory === category.key
                       ? 'text-white border-transparent shadow-md'
-                      : 'bg-white text-gray-600 border-[#D8D2C5] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
+                      : 'text-[#4E6159] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
                   }`}
-                  style={sortOption === key ? { backgroundColor: '#0F3A2B' } : {}}
+                  style={selectedCategory === category.key
+                    ? { backgroundColor: FILTER_BAR_ACTIVE_COLOR }
+                    : { backgroundColor: FILTER_BAR_INACTIVE_BG, borderColor: FILTER_BAR_INACTIVE_BORDER }}
                 >
-                  {label}
+                  {category.label}
                 </button>
               ))}
             </div>
 
-            {/* Category chips – LEFT (end in RTL) */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">تصنيف:</span>
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 border ${
-                  selectedCategory === null
-                    ? 'text-white border-transparent shadow-md'
-                    : 'bg-white text-gray-600 border-[#D8D2C5] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
-                }`}
-                style={selectedCategory === null ? { backgroundColor: '#0F3A2B' } : {}}
-              >
-                الكل
-              </button>
-              {categories.map(category => (
+            <div className="flex flex-wrap justify-end gap-2 lg:ml-auto">
+              {sortButtons.map(({ key, label }) => (
                 <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 border ${
-                    selectedCategory === category.id
+                  key={key}
+                  onClick={() => setSortOption(key)}
+                  className={`rounded-full border px-3.5 py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                    sortOption === key
                       ? 'text-white border-transparent shadow-md'
-                      : 'bg-white text-gray-600 border-[#D8D2C5] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
+                      : 'text-[#4E6159] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
                   }`}
-                  style={selectedCategory === category.id ? { backgroundColor: '#0F3A2B' } : {}}
+                  style={sortOption === key
+                    ? { backgroundColor: FILTER_BAR_ACTIVE_COLOR }
+                    : { backgroundColor: FILTER_BAR_INACTIVE_BG, borderColor: FILTER_BAR_INACTIVE_BORDER }}
                 >
-                  {category.name}
+                  {label}
                 </button>
               ))}
             </div>
