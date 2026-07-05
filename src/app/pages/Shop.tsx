@@ -21,10 +21,11 @@ interface CategoryFilterOption {
   aliases: string[];
 }
 
-const FILTER_BAR_ACTIVE_COLOR = '#0F3A2B';
+// تعديل اللون النشط ليكون أخضر ديواني فخم متناسق مع الخلفيات
+const FILTER_BAR_ACTIVE_COLOR = '#0A261C';
 const FILTER_BAR_INACTIVE_BG = '#FBF7EF';
-const FILTER_BAR_INACTIVE_BORDER = '#D8D2C5';
-const FILTER_BAR_CHIP_BASE_CLASS = 'rounded-full border font-semibold whitespace-nowrap transition-all duration-200';
+const FILTER_BAR_INACTIVE_BORDER = '#EDE9E1';
+const FILTER_BAR_CHIP_BASE_CLASS = 'rounded-full border font-medium whitespace-nowrap transition-all duration-200 text-center';
 
 const categoryFilterOptions: CategoryFilterOption[] = [
   { key: 'drones', label: 'الدرون', aliases: ['الدرون', 'الدرونات', 'drone', 'drones'] },
@@ -50,8 +51,8 @@ const normalizedCategoryFilterOptions = categoryFilterOptions.map((filter) => ({
 function getFilterChipClass(isActive: boolean, sizeClassName: string) {
   return `${FILTER_BAR_CHIP_BASE_CLASS} ${sizeClassName} ${
     isActive
-      ? 'text-white border-transparent shadow-md'
-      : 'text-[#4E6159] hover:border-[#0F3A2B] hover:text-[#0F3A2B]'
+      ? 'text-white border-transparent shadow-sm font-semibold'
+      : 'text-[#4E6159] hover:border-[#0A261C] hover:text-[#0A261C]'
   }`;
 }
 
@@ -127,7 +128,6 @@ export default function Shop({ onProductClick }: ShopProps) {
 
     if (sortOption === 'newest') {
       list = [...list].sort((a, b) => {
-        // Fall back to product id so items without created_at appear after dated items
         const dateA = a.created_at ? new Date(a.created_at).getTime() : a.id;
         const dateB = b.created_at ? new Date(b.created_at).getTime() : b.id;
         return dateB - dateA;
@@ -174,37 +174,51 @@ export default function Shop({ onProductClick }: ShopProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8F7F2]">
-      {/* ── Hero / Banner ── */}
+    <div className="min-h-screen bg-[#F8F7F2]" dir="rtl">
+      {/* ── 1. Hero / Banner المعدل بالكامل ── */}
       <div
-        className="relative w-full py-16 px-6 flex flex-col items-center justify-center text-center overflow-hidden"
-        style={{ backgroundColor: '#0F3A2B' }}
+        className="relative w-full py-10 px-4 flex flex-col items-center justify-center text-center overflow-hidden border-b border-[#0D3125]/20"
+        style={{ 
+          background: 'linear-gradient(90deg, #071C15 0%, #0A261C 50%, #0D3125 100%)' 
+        }}
       >
-        <div className="absolute inset-0 opacity-10 pointer-events-none"
+        {/* Pattern هندسي متكرر فاخر وخفيف جداً بالخلفية بدون تشتيت (Opacity 4%) */}
+        <div 
+          className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-overlay"
           style={{
-            backgroundImage: 'radial-gradient(circle at 20% 50%, #ffffff 0%, transparent 50%), radial-gradient(circle at 80% 20%, #ffffff 0%, transparent 40%)',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M9 15c.6 0 1-.4 1-1v-4c0-.6-.4-1-1-1s-1 .4-1 1v4c0 .6.4 1 1 1zm30 0c.6 0 1-.4 1-1v-4c0-.6-.4-1-1-1s-1 .4-1 1v4c0 .6.4 1 1 1zM9 45c.6 0 1-.4 1-1v-4c0-.6-.4-1-1-1s-1 .4-1 1v4c0 .6.4 1 1 1zm30 0c.6 0 1-.4 1-1v-4c0-.6-.4-1-1-1s-1 .4-1 1v4c0 .6.4 1 1 1zM0 30h60M30 0v60' stroke='%23ffffff' stroke-width='1.2' fill='none'/%3E%3C/svg%3E")`,
+            backgroundSize: '45px 45px'
           }}
         />
-        <p className="text-[#F8F7F2]/60 text-sm tracking-[0.3em] uppercase font-medium mb-3">
-          MARQAB STORE
-        </p>
-        <h1 className="text-5xl md:text-6xl font-bold text-[#F8F7F2] mb-4 tracking-wide">
-          متجر مرقاب
+
+        {/* العنوان الرئيسي: يحاكي ثقل وفخامة الشعار، بلون حليبي ناعم وتباعد بسيط */}
+        <h1 
+          className="text-3xl md:text-4xl text-[#FBF7EF] mb-2 tracking-[0.05em] select-none"
+          style={{ 
+            fontWeight: 800,
+            textShadow: '0 2px 4px rgba(0,0,0,0.15)'
+          }}
+        >
+          تسوّق الآن
         </h1>
-        <div className="w-16 h-[2px] bg-[#F8F7F2]/30 rounded-full mb-4" />
-        <p className="text-[#F8F7F2]/70 text-base max-w-lg leading-relaxed">
-          أجهزة الدرون والكاميرات والإكسسوارات الاحترافية
+        
+        {/* العبارة الفرعية الصغيرة بلون أفتح وشفافية متزنة */}
+        <p className="text-[#FBF7EF]/70 text-xs md:text-sm font-light max-w-xs md:max-w-md tracking-normal">
+          منتجات مختارة بعناية لعشاق التقنية
         </p>
       </div>
 
-      {/* ── Filters Row ── */}
-      <div className="sticky top-0 z-10 bg-[#F8F7F2]/95 backdrop-blur-sm border-b border-[#E8E4DC] shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap justify-center gap-2.5 lg:flex-1 lg:justify-center">
+      {/* ── 2. شريط التصنيفات والترتيب الذكي (Responsive & Organized) ── */}
+      <div className="sticky top-0 z-10 bg-[#F8F7F2]/95 backdrop-blur-md border-b border-[#E8E4DC] shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3.5 md:py-4">
+          {/* Container مرن يتحكم بالترتيب بين الجوال والكمبيوتر */}
+          <div className="flex flex-col gap-3.5 lg:flex-row lg:items-center lg:justify-between">
+            
+            {/* قسم التصنيفات الرئيسية */}
+            <div className="flex flex-wrap justify-center gap-2 w-full lg:w-auto lg:justify-start">
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={getFilterChipClass(selectedCategory === 'all', 'px-5 py-2 text-sm')}
+                className={getFilterChipClass(selectedCategory === 'all', 'px-4.5 py-1.5 md:px-5 md:py-2 text-xs md:text-sm min-w-[55px] md:min-w-[65px]')}
                 style={getFilterChipStyle(selectedCategory === 'all')}
               >
                 الكل
@@ -213,7 +227,7 @@ export default function Shop({ onProductClick }: ShopProps) {
                 <button
                   key={category.key}
                   onClick={() => setSelectedCategory(category.key)}
-                  className={getFilterChipClass(selectedCategory === category.key, 'px-5 py-2 text-sm')}
+                  className={getFilterChipClass(selectedCategory === category.key, 'px-4.5 py-1.5 md:px-5 md:py-2 text-xs md:text-sm')}
                   style={getFilterChipStyle(selectedCategory === category.key)}
                 >
                   {category.label}
@@ -221,23 +235,28 @@ export default function Shop({ onProductClick }: ShopProps) {
               ))}
             </div>
 
-            <div className="flex flex-wrap justify-end gap-2 lg:ml-auto">
+            {/* خط فاصل ناعم يظهر في الجوال فقط ليفصل التصنيفات عن أدوات الترتيب */}
+            <div className="w-full h-[1px] bg-[#EDE9E1] lg:hidden" />
+
+            {/* قسم أزرار الترتيب والفرز */}
+            <div className="flex flex-wrap justify-center gap-2 w-full lg:w-auto lg:justify-end">
               {sortButtons.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setSortOption(key)}
-                  className={getFilterChipClass(sortOption === key, 'px-3.5 py-1.5 text-xs sm:text-sm')}
+                  className={getFilterChipClass(sortOption === key, 'px-3 py-1.5 text-[11px] md:text-xs')}
                   style={getFilterChipStyle(sortOption === key)}
                 >
                   {label}
                 </button>
               ))}
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* ── Products Section ── */}
+      {/* ── 3. Products Section ── */}
       <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Loading */}
         {loading && (
@@ -245,9 +264,9 @@ export default function Shop({ onProductClick }: ShopProps) {
             <div className="flex flex-col items-center gap-4">
               <div
                 className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin"
-                style={{ borderColor: '#0F3A2B', borderTopColor: 'transparent' }}
+                style={{ borderColor: '#0A261C', borderTopColor: 'transparent' }}
               />
-              <p className="text-base font-medium" style={{ color: '#0F3A2B' }}>
+              <p className="text-base font-medium" style={{ color: '#0A261C' }}>
                 جاري تحميل المنتجات...
               </p>
             </div>
@@ -310,7 +329,7 @@ export default function Shop({ onProductClick }: ShopProps) {
                     {categoryName && (
                       <span
                         className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold"
-                        style={{ backgroundColor: '#0F3A2B', color: '#F8F7F2' }}
+                        style={{ backgroundColor: '#0A261C', color: '#F8F7F2' }}
                       >
                         {categoryName}
                       </span>
@@ -328,7 +347,7 @@ export default function Shop({ onProductClick }: ShopProps) {
                   {/* Info */}
                   <div
                     className="p-4 flex flex-col flex-1"
-                    style={{ backgroundColor: '#0F3A2B' }}
+                    style={{ backgroundColor: '#0A261C' }}
                   >
                     <h3
                       className="text-sm font-bold mb-1 leading-snug line-clamp-2"
@@ -349,7 +368,7 @@ export default function Shop({ onProductClick }: ShopProps) {
                         className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{
                           backgroundColor: isAdded ? '#F8F7F2' : 'transparent',
-                          color: isAdded ? '#0F3A2B' : '#F8F7F2',
+                          color: isAdded ? '#0A261C' : '#F8F7F2',
                           border: '1px solid #F8F7F2',
                         }}
                       >
