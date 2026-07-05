@@ -421,7 +421,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   value={formData.governorate}
                   onValueChange={value => setFormData(prev => ({ ...prev, governorate: value, city: '' }))}
                 >
-                  <SelectTrigger className="h-auto w-full rounded-[22px] border border-[#DDD6C8] bg-[#FFFEFC] px-5 py-3.5 text-[15px] font-medium text-[#0F3A2B] shadow-sm outline-none transition-all duration-200 hover:border-[#BFB6A5] focus:border-[#0F3A2B] focus:shadow-[0_0_0_3px_rgba(15,58,43,0.08)] data-[placeholder]:text-[#7B867F] [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]">
+                  <SelectTrigger className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none flex items-center justify-between text-right shadow-none [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]">
                     <SelectValue placeholder="اختر المحافظة" />
                   </SelectTrigger>
                   <SelectContent
@@ -447,7 +447,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   onValueChange={value => setFormData(prev => ({ ...prev, city: value }))}
                   disabled={!formData.governorate}
                 >
-                  <SelectTrigger className="h-auto w-full rounded-[22px] border border-[#DDD6C8] bg-[#FFFEFC] px-5 py-3.5 text-[15px] font-medium text-[#0F3A2B] shadow-sm outline-none transition-all duration-200 hover:border-[#BFB6A5] focus:border-[#0F3A2B] focus:shadow-[0_0_0_3px_rgba(15,58,43,0.08)] data-[placeholder]:text-[#7B867F] disabled:cursor-not-allowed disabled:border-[#E4DED1] disabled:bg-[#F6F4EE] disabled:text-[#7A8A83] [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]">
+                  <SelectTrigger className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-[#0F3A2B] bg-[#F6F4EE] outline-none flex items-center justify-between text-right shadow-none disabled:cursor-not-allowed disabled:border-[#E4DED1] disabled:bg-[#F6F4EE] disabled:text-[#7A8A83] [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]">
                     <SelectValue placeholder="اختر الولاية / المدينة" />
                   </SelectTrigger>
                   <SelectContent
