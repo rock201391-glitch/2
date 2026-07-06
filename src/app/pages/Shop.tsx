@@ -13,13 +13,40 @@ interface Category {
 }
 
 type SortOption = 'newest' | 'price-desc' | 'price-asc';
-type CategoryFilterKey = 'all' | number;
+type CategoryFilterKey = 'all' | 'drones' | 'cameras' | 'microphones' | 'accessories';
+
+interface CategoryFilterOption {
+  key: Exclude<CategoryFilterKey, 'all'>;
+  label: string;
+  aliases: string[];
+}
 
 // تعديل اللون النشط ليكون أخضر ديواني فخم متناسق مع الخلفيات
 const FILTER_BAR_ACTIVE_COLOR = '#0A261C';
 const FILTER_BAR_INACTIVE_BG = '#FBF7EF';
 const FILTER_BAR_INACTIVE_BORDER = '#EDE9E1';
 const FILTER_BAR_CHIP_BASE_CLASS = 'rounded-full border font-medium whitespace-nowrap transition-all duration-200 text-center';
+
+const categoryFilterOptions: CategoryFilterOption[] = [
+  { key: 'drones', label: 'الدرون', aliases: ['الدرون', 'الدرونات', 'drone', 'drones'] },
+  { key: 'cameras', label: 'الكاميرات', aliases: ['الكاميرات', 'الكاميرا', 'camera', 'cameras'] },
+  { key: 'microphones', label: 'المايكات', aliases: ['المايكات', 'المايك', 'الميكروفونات', 'الميكروفون', 'mic', 'mics', 'microphone', 'microphones'] },
+  { key: 'accessories', label: 'إكسسوارات', aliases: ['إكسسوارات', 'اكسسوارات', 'الإكسسوارات', 'الاكسسوارات', 'الملحقات', 'ملحقات', 'accessory', 'accessories'] },
+];
+
+function normalizeCategoryName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه');
+}
+
+const normalizedCategoryFilterOptions = categoryFilterOptions.map((filter) => ({
+  ...filter,
+  normalizedAliases: filter.aliases.map(normalizeCategoryName),
+}));
 
 function getFilterChipClass(isActive: boolean, sizeClassName: string) {
   return `${FILTER_BAR_CHIP_BASE_CLASS} ${sizeClassName} ${
@@ -65,16 +92,39 @@ export default function Shop({ onProductClick }: ShopProps) {
     return cat?.name || '';
   };
 
+  const resolvedCategoryFilters = useMemo(() => {
+    return normalizedCategoryFilterOptions.map((filter) => {
+      const ids = categories
+        .filter((category) => {
+          const normalizedName = normalizeCategoryName(category.name);
+          return filter.normalizedAliases.some((normalizedAlias) => {
+            return (
+              normalizedName === normalizedAlias ||
+              normalizedName.includes(normalizedAlias) ||
+              normalizedAlias.includes(normalizedName)
+            );
+          });
+        })
+        .map((category) => category.id);
+
+      return { ...filter, ids };
+    });
+  }, [categories]);
+
+  const selectedCategoryIds = useMemo(() => {
+    if (selectedCategory === 'all') return null;
+    return resolvedCategoryFilters.find((filter) => filter.key === selectedCategory)?.ids ?? [];
+  }, [resolvedCategoryFilters, selectedCategory]);
+
   const selectedCategoryLabel = useMemo(() => {
     if (selectedCategory === 'all') return 'الكل';
-    return categories.find((category) => category.id === selectedCategory)?.name ?? 'هذا التصنيف';
-  }, [categories, selectedCategory]);
+    return resolvedCategoryFilters.find((filter) => filter.key === selectedCategory)?.label ?? 'هذا التصنيف';
+  }, [resolvedCategoryFilters, selectedCategory]);
 
   const sortedFilteredProducts = useMemo(() => {
-    let list =
-      selectedCategory !== 'all'
-        ? products.filter((product) => product.category_id === selectedCategory)
-        : products;
+    let list = selectedCategoryIds
+      ? products.filter((product) => product.category_id !== null && selectedCategoryIds.includes(product.category_id))
+      : products;
 
     if (sortOption === 'newest') {
       list = [...list].sort((a, b) => {
@@ -88,7 +138,7 @@ export default function Shop({ onProductClick }: ShopProps) {
       list = [...list].sort((a, b) => a.price - b.price);
     }
     return list;
-  }, [products, selectedCategory, sortOption]);
+  }, [products, selectedCategoryIds, sortOption]);
 
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.stopPropagation();
@@ -125,13 +175,14 @@ export default function Shop({ onProductClick }: ShopProps) {
 
   return (
     <div className="min-h-screen bg-[#F8F7F2]" dir="rtl">
-      {/* ── 1. Hero / Banner ── */}
+      {/* ── 1. Hero / Banner المعدل بالكامل ── */}
       <div
         className="relative w-full py-10 px-4 flex flex-col items-center justify-center text-center overflow-hidden border-b border-[#0D3125]/20"
         style={{ 
           background: 'linear-gradient(90deg, #071C15 0%, #0A261C 50%, #0D3125 100%)' 
         }}
       >
+        {/* Pattern هندسي متكرر فاخر وخفيف جداً بالخلفية بدون تشتيت (Opacity 4%) */}
         <div 
           className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-overlay"
           style={{
@@ -139,21 +190,31 @@ export default function Shop({ onProductClick }: ShopProps) {
             backgroundSize: '45px 45px'
           }}
         />
+
+        {/* العنوان الرئيسي: يحاكي ثقل وفخامة الشعار، بلون حليبي ناعم وتباعد بسيط */}
         <h1 
           className="text-3xl md:text-4xl text-[#FBF7EF] mb-2 tracking-[0.05em] select-none"
-          style={{ fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.15)' }}
+          style={{ 
+            fontWeight: 800,
+            textShadow: '0 2px 4px rgba(0,0,0,0.15)'
+          }}
         >
           تسوّق الآن
         </h1>
+        
+        {/* العبارة الفرعية الصغيرة بلون أفتح وشفافية متزنة */}
         <p className="text-[#FBF7EF]/70 text-xs md:text-sm font-light max-w-xs md:max-w-md tracking-normal">
           منتجات مختارة بعناية لعشاق التقنية
         </p>
       </div>
 
-      {/* ── 2. شريط التصنيفات والترتيب الذكي ── */}
+      {/* ── 2. شريط التصنيفات والترتيب الذكي (Responsive & Organized) ── */}
       <div className="sticky top-0 z-10 bg-[#F8F7F2]/95 backdrop-blur-md border-b border-[#E8E4DC] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3.5 md:py-4">
+          {/* Container مرن يتحكم بالترتيب بين الجوال والكمبيوتر */}
           <div className="flex flex-col gap-3.5 lg:flex-row lg:items-center lg:justify-between">
+            
+            {/* قسم التصنيفات الرئيسية */}
             <div className="flex flex-wrap justify-center gap-2 w-full lg:w-auto lg:justify-start">
               <button
                 onClick={() => setSelectedCategory('all')}
@@ -162,20 +223,22 @@ export default function Shop({ onProductClick }: ShopProps) {
               >
                 الكل
               </button>
-              {categories.map((category) => (
+              {resolvedCategoryFilters.map((category) => (
                 <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={getFilterChipClass(selectedCategory === category.id, 'px-4.5 py-1.5 md:px-5 md:py-2 text-xs md:text-sm')}
-                  style={getFilterChipStyle(selectedCategory === category.id)}
+                  key={category.key}
+                  onClick={() => setSelectedCategory(category.key)}
+                  className={getFilterChipClass(selectedCategory === category.key, 'px-4.5 py-1.5 md:px-5 md:py-2 text-xs md:text-sm')}
+                  style={getFilterChipStyle(selectedCategory === category.key)}
                 >
-                  {category.name}
+                  {category.label}
                 </button>
               ))}
             </div>
 
+            {/* خط فاصل ناعم يظهر في الجوال فقط ليفصل التصنيفات عن أدوات الترتيب */}
             <div className="w-full h-[1px] bg-[#EDE9E1] lg:hidden" />
 
+            {/* قسم أزرار الترتيب والفرز */}
             <div className="flex flex-wrap justify-center gap-2 w-full lg:w-auto lg:justify-end">
               {sortButtons.map(({ key, label }) => (
                 <button
@@ -188,28 +251,59 @@ export default function Shop({ onProductClick }: ShopProps) {
                 </button>
               ))}
             </div>
+
           </div>
         </div>
       </div>
 
       {/* ── 3. Products Section ── */}
       <div className="max-w-7xl mx-auto px-4 py-10">
-        {/* Loading/Error/Empty states ... (kept original) */}
+        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-24">
-             <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#0A261C', borderTopColor: 'transparent' }} />
+            <div className="flex flex-col items-center gap-4">
+              <div
+                className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin"
+                style={{ borderColor: '#0A261C', borderTopColor: 'transparent' }}
+              />
+              <p className="text-base font-medium" style={{ color: '#0A261C' }}>
+                جاري تحميل المنتجات...
+              </p>
+            </div>
           </div>
         )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="flex items-center justify-center py-24">
+            <p className="text-base font-medium text-red-500">
+              حدث خطأ أثناء تحميل المنتجات
+            </p>
+          </div>
+        )}
+
+        {/* Empty */}
         {!loading && !error && sortedFilteredProducts.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-500">
-             <p>{selectedCategory === 'all' ? 'لا توجد منتجات حالياً' : `لا توجد منتجات ضمن ${selectedCategoryLabel} حالياً`}</p>
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center text-4xl"
+              style={{ backgroundColor: '#FBF7EF' }}
+            >
+              📦
+            </div>
+            <p className="text-base font-medium text-gray-500">
+              {selectedCategory === 'all'
+                ? 'لا توجد منتجات حالياً'
+                : `لا توجد منتجات ضمن ${selectedCategoryLabel} حالياً`}
+            </p>
           </div>
         )}
-        
-        {/* Grid ... */}
+
+        {/* Grid */}
         {!loading && !error && sortedFilteredProducts.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {sortedFilteredProducts.map((product) => {
+              const categoryName = getCategoryName(product.category_id);
               const isAdded = addedProducts.has(product.id);
               return (
                 <div
@@ -218,19 +312,58 @@ export default function Shop({ onProductClick }: ShopProps) {
                   style={{ border: '1px solid #EDE9E1' }}
                   onClick={() => handleProductClick(product)}
                 >
-                   {/* ... (Product Card content remains the same) */}
-                   <div className="relative overflow-hidden" style={{ aspectRatio: '1 / 1', backgroundColor: '#FBF7EF' }}>
+                  {/* Image */}
+                  <div className="relative overflow-hidden" style={{ aspectRatio: '1 / 1', backgroundColor: '#FBF7EF' }}>
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-6xl">📦</div>
+                      <div className="w-full h-full flex items-center justify-center text-6xl">
+                        📦
+                      </div>
+                    )}
+
+                    {/* Out of stock badge */}
+                    {product.quantity === 0 && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="bg-white text-gray-800 text-xs font-bold px-3 py-1 rounded-full">
+                          نفذت الكمية
+                        </span>
+                      </div>
                     )}
                   </div>
-                  <div className="p-4 flex flex-col flex-1" style={{ backgroundColor: '#0A261C' }}>
-                    <h3 className="text-sm font-bold mb-1 leading-snug line-clamp-2" style={{ color: '#F8F7F2' }}>{product.name}</h3>
+
+                  {/* Info */}
+                  <div
+                    className="p-4 flex flex-col flex-1"
+                    style={{ backgroundColor: '#0A261C' }}
+                  >
+                    <h3
+                      className="text-sm font-bold mb-1 leading-snug line-clamp-2"
+                      style={{ color: '#F8F7F2' }}
+                    >
+                      {product.name}
+                    </h3>
                     <div className="mt-auto pt-3 flex items-center justify-between">
-                      <span className="text-lg font-bold" style={{ color: '#F8F7F2' }}>{product.price} <span className="text-xs font-medium">ر.ع</span></span>
-                      <button onClick={(e) => handleAddToCart(e, product)} className="text-xs font-semibold px-3 py-1.5 rounded-full border border-[#F8F7F2]" style={{ color: isAdded ? '#0A261C' : '#F8F7F2', backgroundColor: isAdded ? '#F8F7F2' : 'transparent' }}>
+                      <span
+                        className="text-lg font-bold"
+                        style={{ color: '#F8F7F2' }}
+                      >
+                        {product.price} <span className="text-xs font-medium">ر.ع</span>
+                      </span>
+                      <button
+                        onClick={(e) => handleAddToCart(e, product)}
+                        disabled={product.quantity === 0}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{
+                          backgroundColor: isAdded ? '#F8F7F2' : 'transparent',
+                          color: isAdded ? '#0A261C' : '#F8F7F2',
+                          border: '1px solid #F8F7F2',
+                        }}
+                      >
                         {isAdded ? '✓' : '+'}
                       </button>
                     </div>
