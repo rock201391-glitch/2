@@ -337,9 +337,15 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         return;
       }
 
-      if (isCouponApplied && appliedDiscount?.codeId) {
-        supabase.rpc('increment_coupon_used_count', { coupon_id: appliedDiscount.codeId }).catch(() => {});
-      }
+     try {
+  if (isCouponApplied && appliedDiscount?.codeId) {
+    await supabase.rpc('increment_coupon_used_count', {
+      coupon_id: appliedDiscount.codeId,
+    });
+  }
+} catch (couponError) {
+  console.warn('Coupon usage update failed, but order was created:', couponError);
+}
 
       const newOrder = {
         id: Date.now().toString(),
