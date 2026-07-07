@@ -25,10 +25,8 @@ type Page =
   | 'admin';
 
 export default function App() {
-  // الحالة البدئية تبدأ دائماً من الرئيسية كما طلبت
   const [currentPage, setCurrentPage] = useState<Page>('home');
 
-  // فحص الرابط عند تحميل الصفحة لأول مرة وتوجيه الأدمن بشكل معزول ونظيف
   useEffect(() => {
     if (window.location.hash === '#admin') {
       setCurrentPage('admin');
@@ -40,25 +38,24 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // شاشة الترحيب تفتح true فقط إذا لم يكن الرابط الأولي يحتوي على #admin
   const [showSplash, setShowSplash] = useState<boolean>(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#admin') {
       return false;
     }
     return true;
   });
+
   const [splashFade, setSplashFade] = useState<boolean>(true);
 
-  // إدارة مؤقت شاشة الترحيب (تعمل لمرة واحدة فقط عند بداية الزيارة)
   useEffect(() => {
     if (!showSplash) return;
 
     const displayTimeout = setTimeout(() => {
-      setSplashFade(false); // بدء التلاشي الناعم بعد 1.5 ثانية
+      setSplashFade(false);
     }, 1500);
 
     const removeTimeout = setTimeout(() => {
-      setShowSplash(false); // إزالة العنصر تماماً من شجرة الـ DOM بعد ثانيتين
+      setShowSplash(false);
     }, 2000);
 
     return () => {
@@ -67,7 +64,6 @@ export default function App() {
     };
   }, [showSplash]);
 
-  // دالة التنقل المعدلة بدقة التي تمنع ظهور صفحة الأدمن للزبائن وتتحكم بالرابط
   const handleNavigate = (page: string) => {
     if (page === 'admin') {
       window.location.hash = 'admin';
@@ -86,13 +82,14 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Handle buy-now event dispatched from ProductDetail
   useEffect(() => {
     const onCheckout = () => {
       window.history.replaceState(null, '', '/');
       setCurrentPage('checkout');
     };
+
     window.addEventListener('navigate-to-checkout', onCheckout);
+
     return () => {
       window.removeEventListener('navigate-to-checkout', onCheckout);
     };
@@ -169,20 +166,21 @@ export default function App() {
           </>
         );
 
-     case 'admin':
-  if (window.location.hash !== '#admin') {
-    return (
-      <>
-        <HomePage
-          onNavigate={handleNavigate}
-          onProductClick={handleProductClick}
-        />
-        <Footer onNavigate={handleNavigate} />
-      </>
-    );
-  }
+      case 'admin':
+        if (window.location.hash !== '#admin') {
+          return (
+            <>
+              <HomePage
+                onNavigate={handleNavigate}
+                onProductClick={handleProductClick}
+              />
+              <Footer onNavigate={handleNavigate} />
+            </>
+          );
+        }
 
-  return <AdminDashboard />;
+        return <AdminDashboard />;
+
       default:
         return null;
     }
@@ -192,62 +190,110 @@ export default function App() {
     <ProductsProvider>
       <CartProvider>
         <ThemeSettingsProvider>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          <div
-            className="min-h-screen bg-[#F8F7F2] transition-colors duration-500 relative"
-            dir="rtl"
-            lang="ar"
-          >
-            {/* شاشة الترحيب الفخمة لمتجر مرقاب */}
-            {showSplash && (
-              <div
-                className={`fixed inset-0 z-[99999] flex items-center justify-center bg-[#F0EDE3] transition-opacity duration-500 ease-in-out ${
-                  splashFade ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
-              >
-                <img
-                  src="/merqab.png"
-                  alt="مرقاب"
-                  className="w-64 h-64 object-contain"
-                />
-              </div>
-            )}
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+            <style>{`
+              @keyframes splashLogo {
+                0% {
+                  opacity: 0;
+                  transform: scale(0.75);
+                  filter: blur(8px);
+                }
 
-            {/* الهيدر العلوي - يختفي تماماً وبشكل تلقائي في صفحة الأدمن */}
-            {currentPage !== 'admin' && (
-              <Header
-                onNavigate={handleNavigate}
-                onCartClick={() => setIsCartOpen(true)}
-                currentPage={currentPage}
-              />
-            )}
+                55% {
+                  opacity: 1;
+                  transform: scale(1.06);
+                  filter: blur(0px);
+                }
 
-            <main>{renderPage()}</main>
+                100% {
+                  opacity: 1;
+                  transform: scale(1);
+                  filter: blur(0px);
+                }
+              }
 
-            {/* نافذة السلة الجانبية */}
-            {isCartOpen && (
-              <div className="fixed inset-0 z-[9999]">
+              @keyframes splashGlow {
+                0% {
+                  opacity: 0;
+                  transform: scale(0.7);
+                }
+
+                60% {
+                  opacity: 0.35;
+                  transform: scale(1.15);
+                }
+
+                100% {
+                  opacity: 0.18;
+                  transform: scale(1);
+                }
+              }
+
+              .splash-logo {
+                animation: splashLogo 1.2s ease-out forwards;
+              }
+
+              .splash-glow {
+                animation: splashGlow 1.2s ease-out forwards;
+              }
+            `}</style>
+
+            <div
+              className="min-h-screen bg-[#F8F7F2] transition-colors duration-500 relative"
+              dir="rtl"
+              lang="ar"
+            >
+              {showSplash && (
                 <div
-                  className="absolute inset-0 bg-black/35"
-                  onClick={() => setIsCartOpen(false)}
-                />
+                  className={`fixed inset-0 z-[99999] flex items-center justify-center bg-[#F8F7F2] transition-opacity duration-500 ease-in-out ${
+                    splashFade ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                  }`}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <div className="splash-glow absolute w-72 h-72 rounded-full bg-[#0A261C]/20 blur-3xl" />
 
-                <div className="absolute top-0 right-0 h-screen w-full max-w-md bg-[#F8F7F2] shadow-2xl overflow-y-auto">
-                  <Cart
-                    onNavigate={(page) => {
-                      setIsCartOpen(false);
-                      handleNavigate(page);
-                    }}
-                    onCheckout={() => {
-                      setIsCartOpen(false);
-                      setCurrentPage('checkout');
-                    }}
-                  />
+                    <img
+                      src="/merqab.png"
+                      alt="مرقاب"
+                      className="relative z-10 w-64 h-64 object-contain splash-logo"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </ThemeProvider>
+              )}
+
+              {currentPage !== 'admin' && (
+                <Header
+                  onNavigate={handleNavigate}
+                  onCartClick={() => setIsCartOpen(true)}
+                  currentPage={currentPage}
+                />
+              )}
+
+              <main>{renderPage()}</main>
+
+              {isCartOpen && (
+                <div className="fixed inset-0 z-[9999]">
+                  <div
+                    className="absolute inset-0 bg-black/35"
+                    onClick={() => setIsCartOpen(false)}
+                  />
+
+                  <div className="absolute top-0 right-0 h-screen w-full max-w-md bg-[#F8F7F2] shadow-2xl overflow-y-auto">
+                    <Cart
+                      onNavigate={(page) => {
+                        setIsCartOpen(false);
+                        handleNavigate(page);
+                      }}
+                      onCheckout={() => {
+                        setIsCartOpen(false);
+                        setCurrentPage('checkout');
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </ThemeProvider>
         </ThemeSettingsProvider>
       </CartProvider>
     </ProductsProvider>
