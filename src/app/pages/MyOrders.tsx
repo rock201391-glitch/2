@@ -1,11 +1,56 @@
+import { useEffect, useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface MyOrdersProps {
   onNavigate: (page: string) => void;
 }
 
 export default function MyOrders({ onNavigate }: MyOrdersProps) {
-const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  async function fetchOrders() {
+    setLoading(true);
+
+    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+    const ids = savedOrders.map((order: any) => order.id).filter(Boolean);
+
+    if (ids.length === 0) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .in('id', ids)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setOrders(data);
+    }
+
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchOrders();
+
+    const channel = supabase
+      .channel('my-orders-status')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders' },
+        () => fetchOrders()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8F7F2] py-8 px-4">
@@ -14,7 +59,9 @@ const orders = JSON.parse(localStorage.getItem('orders') || '[]');
           مشترياتي
         </h1>
 
-        {orders.length === 0 ? (
+        {loading ? (
+          <p className="text-center text-[#0F3A2B] font-bold">جاري التحميل...</p>
+        ) : orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="bg-white rounded-3xl p-12 max-w-md w-full text-center">
               <ShoppingBag className="w-12 h-12 mx-auto mb-6 text-[#0F3A2B]" />
@@ -41,7 +88,7 @@ const orders = JSON.parse(localStorage.getItem('orders') || '[]');
                   <div>
                     <p className="text-sm text-gray-600">التاريخ</p>
                     <p className="font-bold text-[#0F3A2B]">
-                      {new Date(order.date).toLocaleDateString('ar')}
+                      {new Date(order.created_at || order.date).toLocaleDateString('ar')}
                     </p>
                   </div>
                   <div>
