@@ -14,6 +14,8 @@ interface Product {
   category_id: number | null;
   colors: string[];
   is_active: boolean;
+  is_pinned: boolean;
+  pinned_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +30,8 @@ interface ProductFormData {
   category_id: string;
   colors: string; // comma-separated in UI
   is_active: boolean;
+  is_pinned: boolean;
+  pinned_order: string;
 }
 
 const emptyForm: ProductFormData = {
@@ -40,6 +44,8 @@ const emptyForm: ProductFormData = {
   category_id: "",
   colors: "",
   is_active: true,
+  is_pinned: false,
+  pinned_order: "0",
 };
 
 export default function ProductsManager() {
@@ -104,6 +110,8 @@ export default function ProductsManager() {
       category_id: product.category_id !== null ? String(product.category_id) : "",
       colors: Array.isArray(product.colors) ? product.colors.join(", ") : "",
       is_active: product.is_active,
+      is_pinned: product.is_pinned || false,
+      pinned_order: String(product.pinned_order || 0),
     });
     setUploadSuccess(false);
     setUploadError(null);
@@ -192,6 +200,8 @@ export default function ProductsManager() {
       category_id: form.category_id ? parseInt(form.category_id) : null,
       colors: colorsArray,
       is_active: form.is_active,
+      is_pinned: form.is_pinned,
+      pinned_order: parseInt(form.pinned_order) || 0,
     };
 
     let err;
@@ -265,8 +275,7 @@ export default function ProductsManager() {
                 <th className="p-4 font-bold text-sm">الصورة</th>
                 <th className="p-4 font-bold text-sm">الاسم</th>
                 <th className="p-4 font-bold text-sm">السعر</th>
-                <th className="p-4 font-bold text-sm">الكمية</th>
-                <th className="p-4 font-bold text-sm">التصنيف</th>
+                <th className="p-4 font-bold text-sm">مثبت</th>
                 <th className="p-4 font-bold text-sm">الحالة</th>
                 <th className="p-4 font-bold text-sm">الإجراءات</th>
               </tr>
@@ -291,8 +300,9 @@ export default function ProductsManager() {
                   </td>
                   <td className="p-4 font-medium">{product.name}</td>
                   <td className="p-4 font-bold text-[#0F3A2B]">{product.price} ر.ع</td>
-                  <td className="p-4 text-sm">{product.quantity}</td>
-                  <td className="p-4 text-sm">{getCategoryName(product.category_id)}</td>
+                  <td className="p-4 text-sm font-bold text-[#0F3A2B]">
+                    {product.is_pinned ? "📌 مثبت" : "—"}
+                  </td>
                   <td className="p-4">
                     <span
                       className={`rounded-full px-3 py-0.5 text-xs font-bold border ${
@@ -481,6 +491,30 @@ export default function ProductsManager() {
                 <label htmlFor="prod-is-active" className="text-sm font-semibold">
                   نشط (ظاهر في المتجر)
                 </label>
+              </div>
+
+              {/* التثبيت */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="prod-is-pinned"
+                  checked={form.is_pinned}
+                  onChange={(e) => setForm((f) => ({ ...f, is_pinned: e.target.checked }))}
+                  className="w-4 h-4 accent-[#0F3A2B]"
+                />
+                <label htmlFor="prod-is-pinned" className="text-sm font-semibold">
+                  تثبيت المنتج في الأعلى
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">ترتيب التثبيت</label>
+                <input
+                  type="number"
+                  value={form.pinned_order}
+                  onChange={(e) => setForm((f) => ({ ...f, pinned_order: e.target.value }))}
+                  className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl bg-[#F6F4EE] text-[#0F3A2B]"
+                  placeholder="0"
+                />
               </div>
 
               {error && (
