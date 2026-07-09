@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 interface MyOrdersProps {
   onNavigate: (page: string) => void;
@@ -13,6 +13,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
   async function fetchOrders() {
     setLoading(true);
 
+    // قراءة أرقام الطلبات من localStorage
     const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
     const ids = savedOrders.map((order: any) => order.id).filter(Boolean);
 
@@ -22,6 +23,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
       return;
     }
 
+    // جلب الطلبات الحقيقية من Supabase باستخدام ids
     const { data, error } = await supabase
       .from('orders')
       .select('*')
@@ -38,6 +40,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
   useEffect(() => {
     fetchOrders();
 
+    // الاشتراك في تغييرات Supabase لتحديث الحالة تلقائياً
     const channel = supabase
       .channel('my-orders-status')
       .on(
@@ -88,7 +91,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
                   <div>
                     <p className="text-sm text-gray-600">التاريخ</p>
                     <p className="font-bold text-[#0F3A2B]">
-                      {new Date(order.created_at || order.date).toLocaleDateString('ar')}
+                      {new Date(order.created_at).toLocaleDateString('ar')}
                     </p>
                   </div>
                   <div>
@@ -105,12 +108,10 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
                   </div>
                 </div>
 
-                {order.items?.map((item: any, idx: number) => (
-                  <div key={idx} className="flex justify-between text-sm">
-                    <span>{item.name} x {item.quantity}</span>
-                    <span>{item.price * item.quantity} ر.ع</span>
-                  </div>
-                ))}
+                <div className="text-sm text-[#0F3A2B]">
+                  <p className="font-bold mb-2">المنتجات:</p>
+                  <p>{order.product_name}</p>
+                </div>
               </div>
             ))}
           </div>
