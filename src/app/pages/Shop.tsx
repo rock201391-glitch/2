@@ -126,17 +126,34 @@ export default function Shop({ onProductClick }: ShopProps) {
       ? products.filter((product) => product.category_id !== null && selectedCategoryIds.includes(product.category_id))
       : products;
 
-    if (sortOption === 'newest') {
-      list = [...list].sort((a, b) => {
+    list = [...list].sort((a: any, b: any) => {
+      // 1. الأولوية للمنتجات المثبتة
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+
+      // 2. إذا كلاهما مثبت، الترتيب حسب pinned_order
+      if (a.is_pinned && b.is_pinned) {
+        return (a.pinned_order ?? 0) - (b.pinned_order ?? 0);
+      }
+
+      // 3. إذا كلاهما غير مثبت، نطبق معايير الفرز الأخرى
+      if (sortOption === 'newest') {
         const dateA = a.created_at ? new Date(a.created_at).getTime() : a.id;
         const dateB = b.created_at ? new Date(b.created_at).getTime() : b.id;
         return dateB - dateA;
-      });
-    } else if (sortOption === 'price-desc') {
-      list = [...list].sort((a, b) => b.price - a.price);
-    } else if (sortOption === 'price-asc') {
-      list = [...list].sort((a, b) => a.price - b.price);
-    }
+      }
+
+      if (sortOption === 'price-desc') {
+        return b.price - a.price;
+      }
+
+      if (sortOption === 'price-asc') {
+        return a.price - b.price;
+      }
+
+      return 0;
+    });
+
     return list;
   }, [products, selectedCategoryIds, sortOption]);
 
@@ -175,14 +192,12 @@ export default function Shop({ onProductClick }: ShopProps) {
 
   return (
     <div className="min-h-screen bg-[#F8F7F2]" dir="rtl">
-      {/* ── 1. Hero / Banner المعدل بالكامل ── */}
       <div
         className="relative w-full py-10 px-4 flex flex-col items-center justify-center text-center overflow-hidden border-b border-[#0D3125]/20"
         style={{ 
           background: 'linear-gradient(90deg, #071C15 0%, #0A261C 50%, #0D3125 100%)' 
         }}
       >
-        {/* Pattern هندسي متكرر فاخر وخفيف جداً بالخلفية بدون تشتيت (Opacity 4%) */}
         <div 
           className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-overlay"
           style={{
@@ -190,8 +205,6 @@ export default function Shop({ onProductClick }: ShopProps) {
             backgroundSize: '45px 45px'
           }}
         />
-
-        {/* العنوان الرئيسي: يحاكي ثقل وفخامة الشعار، بلون حليبي ناعم وتباعد بسيط */}
         <h1 
           className="text-3xl md:text-4xl text-[#FBF7EF] mb-2 tracking-[0.05em] select-none"
           style={{ 
@@ -201,20 +214,14 @@ export default function Shop({ onProductClick }: ShopProps) {
         >
           تسوّق الآن
         </h1>
-        
-        {/* العبارة الفرعية الصغيرة بلون أفتح وشفافية متزنة */}
         <p className="text-[#FBF7EF]/70 text-xs md:text-sm font-light max-w-xs md:max-w-md tracking-normal">
           منتجات مختارة بعناية لعشاق التقنية
         </p>
       </div>
 
-      {/* ── 2. شريط التصنيفات والترتيب الذكي (Responsive & Organized) ── */}
       <div className="sticky top-0 z-10 bg-[#F8F7F2]/95 backdrop-blur-md border-b border-[#E8E4DC] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3.5 md:py-4">
-          {/* Container مرن يتحكم بالترتيب بين الجوال والكمبيوتر */}
           <div className="flex flex-col gap-3.5 lg:flex-row lg:items-center lg:justify-between">
-            
-            {/* قسم التصنيفات الرئيسية */}
             <div className="flex flex-wrap justify-center gap-2 w-full lg:w-auto lg:justify-start">
               <button
                 onClick={() => setSelectedCategory('all')}
@@ -235,10 +242,8 @@ export default function Shop({ onProductClick }: ShopProps) {
               ))}
             </div>
 
-            {/* خط فاصل ناعم يظهر في الجوال فقط ليفصل التصنيفات عن أدوات الترتيب */}
             <div className="w-full h-[1px] bg-[#EDE9E1] lg:hidden" />
 
-            {/* قسم أزرار الترتيب والفرز */}
             <div className="flex flex-wrap justify-center gap-2 w-full lg:w-auto lg:justify-end">
               {sortButtons.map(({ key, label }) => (
                 <button
@@ -251,14 +256,11 @@ export default function Shop({ onProductClick }: ShopProps) {
                 </button>
               ))}
             </div>
-
           </div>
         </div>
       </div>
 
-      {/* ── 3. Products Section ── */}
       <div className="max-w-7xl mx-auto px-4 py-10">
-        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-4">
@@ -273,7 +275,6 @@ export default function Shop({ onProductClick }: ShopProps) {
           </div>
         )}
 
-        {/* Error */}
         {!loading && error && (
           <div className="flex items-center justify-center py-24">
             <p className="text-base font-medium text-red-500">
@@ -282,7 +283,6 @@ export default function Shop({ onProductClick }: ShopProps) {
           </div>
         )}
 
-        {/* Empty */}
         {!loading && !error && sortedFilteredProducts.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div
@@ -299,11 +299,9 @@ export default function Shop({ onProductClick }: ShopProps) {
           </div>
         )}
 
-        {/* Grid */}
         {!loading && !error && sortedFilteredProducts.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {sortedFilteredProducts.map((product) => {
-              const categoryName = getCategoryName(product.category_id);
               const isAdded = addedProducts.has(product.id);
               return (
                 <div
@@ -312,7 +310,6 @@ export default function Shop({ onProductClick }: ShopProps) {
                   style={{ border: '1px solid #EDE9E1' }}
                   onClick={() => handleProductClick(product)}
                 >
-                  {/* Image */}
                   <div className="relative overflow-hidden" style={{ aspectRatio: '1 / 1', backgroundColor: '#FBF7EF' }}>
                     {product.image_url ? (
                       <img
@@ -326,7 +323,6 @@ export default function Shop({ onProductClick }: ShopProps) {
                       </div>
                     )}
 
-                    {/* Out of stock badge */}
                     {product.quantity === 0 && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <span className="bg-white text-gray-800 text-xs font-bold px-3 py-1 rounded-full">
@@ -336,7 +332,6 @@ export default function Shop({ onProductClick }: ShopProps) {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div
                     className="p-4 flex flex-col flex-1"
                     style={{ backgroundColor: '#0A261C' }}
