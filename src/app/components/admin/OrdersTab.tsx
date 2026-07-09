@@ -11,6 +11,7 @@ interface Order {
   city?: string;
   shipping_method?: string;
   payment_status?: string;
+  status?: string;
   notes?: string;
   receipt_url?: string;
   created_at?: string;
@@ -42,15 +43,30 @@ export default function OrdersTab() {
 
     const { error } = await supabase
       .from("orders")
-      .update({ payment_status: newStatus })
+      .update({
+        status: newStatus,
+        payment_status: newStatus,
+      })
       .eq("id", orderId);
 
     if (!error) {
-      setOrders(orders.map((o) => (o.id === orderId ? { ...o, payment_status: newStatus } : o)));
-      setSelectedOrder((prev) => (prev ? { ...prev, payment_status: newStatus } : prev));
+      setOrders(
+        orders.map((o) =>
+          o.id === orderId
+            ? { ...o, status: newStatus, payment_status: newStatus }
+            : o
+        )
+      );
+
+      setSelectedOrder((prev) =>
+        prev
+          ? { ...prev, status: newStatus, payment_status: newStatus }
+          : prev
+      );
     } else {
       alert("حدث خطأ أثناء تحديث حالة الطلب، يرجى المحاولة لاحقاً.");
     }
+
     setUpdatingStatus(false);
   }
 
@@ -115,7 +131,7 @@ export default function OrdersTab() {
                   <td className="p-5 text-sm">{getShippingText(order.shipping_method)}</td>
                   <td className="p-5">
                     <span className="rounded-full bg-[#EAF3EE] text-[#0F3A2B] px-4 py-1 text-xs font-bold shadow-sm border border-[#cbe2d5]">
-                      {order.payment_status || "pending"}
+                      {order.status || order.payment_status || "pending"}
                     </span>
                   </td>
                   <td className="p-5 text-xs text-gray-400">
@@ -167,7 +183,7 @@ export default function OrdersTab() {
               <div className="flex items-center gap-2">
                 <b className="shrink-0">الحالة:</b>
                 <select
-                  value={selectedOrder.payment_status || "pending"}
+                  value={selectedOrder.status || selectedOrder.payment_status || "pending"}
                   disabled={updatingStatus}
                   onChange={(e) => handleUpdateStatus(selectedOrder.id, e.target.value)}
                   className="rounded-xl border border-[#D8D2C5] bg-[#F8F7F2] px-3 py-1 text-[#0F3A2B] font-bold outline-none focus:border-[#0F3A2B] cursor-pointer text-xs shadow-sm transition-all"
