@@ -69,7 +69,6 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(FALLBACK_SHIPPING);
   const [bankInfo, setBankInfo] = useState(FALLBACK_BANK);
   
-  // طريقة الدفع الافتراضية
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cash_on_delivery'>('bank_transfer');
 
   useEffect(() => {
@@ -314,7 +313,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
       const { data: publicUrl } = supabase.storage.from('receipts').getPublicUrl(fileName);
 
-      const { error } = await supabase.from('orders').insert([
+      const { data: insertedOrder, error } = await supabase.from('orders').insert([
         {
           customer_name: formData.fullName,
           phone: formData.phone,
@@ -328,7 +327,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           shipping_method: formData.shippingMethod,
           payment_method: paymentMethod, 
         },
-      ]);
+      ]).select('id').single();
 
       if (error) {
         alert('فشل الطلب: ' + error.message);
@@ -337,30 +336,23 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         return;
       }
 
-     try {
-  if (isCouponApplied && appliedDiscount?.codeId) {
-    await supabase.rpc('increment_coupon_used_count', {
-      coupon_id: appliedDiscount.codeId,
-    });
-  }
-} catch (couponError) {
-  console.warn('Coupon usage update failed, but order was created:', couponError);
-}
+      try {
+        if (isCouponApplied && appliedDiscount?.codeId) {
+          await supabase.rpc('increment_coupon_used_count', {
+            coupon_id: appliedDiscount.codeId,
+          });
+        }
+      } catch (couponError) {
+        console.warn('Coupon usage update failed, but order was created:', couponError);
+      }
 
-      const newOrder = {
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-        status: 'قيد المراجعة',
-        items: items.map(item => ({
-          name: item.name,
-          quantity: item.quantity || 1,
-          price: item.price,
-        })),
-        total,
-      };
+      const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
 
-      const oldOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-      localStorage.setItem('orders', JSON.stringify([newOrder, ...oldOrders]));
+      savedOrders.push({
+        id: insertedOrder.id
+      });
+
+      localStorage.setItem('orders', JSON.stringify(savedOrders));
 
       clearCart();
       alert('تم إرسال الطلب بنجاح');
@@ -499,61 +491,60 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {shippingOptions.map(option => {
-                    const isSelected = formData.shippingMethod === option.key;
-                    return (
-                      <label
-                        key={option.key}
-                        className={`rounded-2xl border-2 px-5 py-5 cursor-pointer transition-all duration-200 ${
-                          isSelected
-                            ? 'border-[#0F3A2B] bg-[#F6F1E6] shadow-[0_8px_20px_rgba(15,58,43,0.08)]'
-                            : 'border-[#E5DDCE] bg-[#FEFCF7] hover:border-[#CFC5B3] hover:shadow-[0_4px_12px_rgba(15,58,43,0.06)]'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`inline-flex items-center justify-center w-10 h-10 rounded-xl border ${
-                                isSelected
-                                  ? 'border-[#0F3A2B] bg-[#0F3A2B] text-white'
-                                  : 'border-[#D9D0BE] bg-white text-[#0F3A2B]'
-                              }`}
-                            >
-                              {option.key === 'office' ? <Building2 className="w-5 h-5" /> : <House className="w-5 h-5" />}
-                            </span>
-                            <span className="font-bold text-[15px] text-[#0F3A2B]">{option.label}</span>
-                          </div>
-
-                          <input
-                            type="radio"
-                            name="shippingMethod"
-                            value={option.key}
-                            checked={isSelected}
-                            onChange={handleInputChange}
-                            className="sr-only"
-                          />
+                  const isSelected = formData.shippingMethod === option.key;
+                  return (
+                    <label
+                      key={option.key}
+                      className={`rounded-2xl border-2 px-5 py-5 cursor-pointer transition-all duration-200 ${
+                        isSelected
+                          ? 'border-[#0F3A2B] bg-[#F6F1E6] shadow-[0_8px_20px_rgba(15,58,43,0.08)]'
+                          : 'border-[#E5DDCE] bg-[#FEFCF7] hover:border-[#CFC5B3] hover:shadow-[0_4px_12px_rgba(15,58,43,0.06)]'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-3">
                           <span
-                            className={`mt-1 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                            className={`inline-flex items-center justify-center w-10 h-10 rounded-xl border ${
                               isSelected
-                                ? 'border-[#0F3A2B] bg-[#0F3A2B]'
-                                : 'border-[#B0A99A] bg-white'
+                                ? 'border-[#0F3A2B] bg-[#0F3A2B] text-white'
+                                : 'border-[#D9D0BE] bg-white text-[#0F3A2B]'
                             }`}
                           >
-                            {isSelected && <span className="w-2 h-2 rounded-full bg-white block" />}
+                            {option.key === 'office' ? <Building2 className="w-5 h-5" /> : <House className="w-5 h-5" />}
                           </span>
+                          <span className="font-bold text-[15px] text-[#0F3A2B]">{option.label}</span>
                         </div>
 
-                        <div className="flex items-center justify-between gap-3 mb-2 text-[#0F3A2B]">
-                          <span className="text-sm font-medium">رسوم الشحن</span>
-                          <span className="font-semibold">{formatPrice(option.price)}</span>
-                        </div>
+                        <input
+                          type="radio"
+                          name="shippingMethod"
+                          value={option.key}
+                          checked={isSelected}
+                          onChange={handleInputChange}
+                          className="sr-only"
+                        />
+                        <span
+                          className={`mt-1 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                            isSelected
+                              ? 'border-[#0F3A2B] bg-[#0F3A2B]'
+                              : 'border-[#B0A99A] bg-white'
+                          }`}
+                        >
+                          {isSelected && <span className="w-2 h-2 rounded-full bg-white block" />}
+                        </span>
+                      </div>
 
-                        {option.duration && (
-                          <p className="text-sm text-[#2F4D42]">مدة التوصيل: {option.duration}</p>
-                        )}
-                      </label>
-                    );
-                  }
-                )}
+                      <div className="flex items-center justify-between gap-3 mb-2 text-[#0F3A2B]">
+                        <span className="text-sm font-medium">رسوم الشحن</span>
+                        <span className="font-semibold">{formatPrice(option.price)}</span>
+                      </div>
+
+                      {option.duration && (
+                        <p className="text-sm text-[#2F4D42]">مدة التوصيل: {option.duration}</p>
+                      )}
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
