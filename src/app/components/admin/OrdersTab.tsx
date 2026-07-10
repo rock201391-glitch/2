@@ -64,7 +64,8 @@ export default function OrdersTab() {
           : prev
       );
     } else {
-      alert("حدث خطأ أثناء تحديث حالة الطلب، يرجى المحاولة لاحقاً.");
+      alert(error?.message || JSON.stringify(error));
+console.error(error);
     }
 
     setUpdatingStatus(false);
