@@ -231,6 +231,7 @@ export default function Auctions() {
 
     const bidderName = bidForm.bidder_name.trim();
     const bidderPhone = bidForm.bidder_phone.trim();
+    const cleanPhone = bidderPhone.replace(/\D/g, "");
     const bidAmount = Number(bidForm.bid_amount);
 
     const currentPrice = Number(
@@ -245,8 +246,13 @@ export default function Auctions() {
       return;
     }
 
-    if (!bidderPhone) {
+    if (!cleanPhone) {
       setMessage("اكتب رقم الهاتف");
+      return;
+    }
+
+    if (cleanPhone.length < 8) {
+      setMessage("رقم الهاتف يجب أن يكون 8 أرقام على الأقل");
       return;
     }
 
@@ -270,7 +276,7 @@ export default function Auctions() {
     const { data, error } = await supabase.rpc("place_bid", {
       p_auction_id: selectedAuction.id,
       p_bidder_name: bidderName,
-      p_bidder_phone: bidderPhone,
+      p_bidder_phone: cleanPhone,
       p_bid_amount: bidAmount,
     });
 
@@ -581,6 +587,7 @@ export default function Auctions() {
 
                   <input
                     type="tel"
+                    minLength={8}
                     value={bidForm.bidder_phone}
                     onChange={(event) =>
                       setBidForm((current) => ({
