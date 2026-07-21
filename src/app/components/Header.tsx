@@ -1,5 +1,14 @@
+import {
+  ShoppingBag,
+  Menu,
+  X,
+  Home,
+  Box,
+  MapPin,
+  ChevronLeft,
+  Gavel
+} from 'lucide-react';
 import { useState } from 'react';
-import { ShoppingBag, Menu, X, Home, Box, MapPin, ChevronLeft } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 
 interface HeaderProps {
@@ -19,6 +28,7 @@ export default function Header({
   const navItems = [
     { label: 'الرئيسية', id: 'home' },
     { label: 'المتجر', id: 'shop' },
+    { label: 'المزادات', id: 'auctions' },
     { label: 'مشترياتي', id: 'my-orders' },
     { label: 'تتبع الطلب', id: 'track-order' },
   ];
@@ -113,7 +123,7 @@ style={{ color: item.id === currentPage ? '#0F3A2B' : '#F7F5EF' }}
         <img
           src="/merqab.png"
           alt="مرقاب"
-         className="h-28 mx-auto object-contain"
+          className="h-28 mx-auto object-contain"
         />
         
         <p className="mt-2 text-sm tracking-widest text-[#9AA69F]">
@@ -133,6 +143,8 @@ style={{ color: item.id === currentPage ? '#0F3A2B' : '#F7F5EF' }}
                 ? Home
                 : item.id === 'shop'
                 ? Box
+                : item.id === 'auctions'
+                ? Gavel
                 : item.id === 'my-orders'
                 ? ShoppingBag
                 : MapPin;
@@ -181,4 +193,3 @@ style={{ color: item.id === currentPage ? '#0F3A2B' : '#F7F5EF' }}
     </header>
   );
 }
-
