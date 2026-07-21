@@ -7,7 +7,7 @@ import {
   User,
   RefreshCw,
 } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 interface Auction {
   id: string;
