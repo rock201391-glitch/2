@@ -6,6 +6,7 @@ import {
   Phone,
   User,
   RefreshCw,
+  Award,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
@@ -17,10 +18,13 @@ interface Auction {
   starting_price: number;
   current_price: number;
   minimum_bid: number;
-  starts_at: string;
-  ends_at: string;
-  status: "draft" | "active" | "ended" | "cancelled";
+  starts_at: string | null;
+  ends_at: string | null;
+  status: "upcoming" | "active" | "paused" | "ended" | "cancelled" | "draft";
   is_active: boolean;
+  winner_name?: string | null;
+  winner_phone?: string | null;
+  winner_amount?: number | null;
   created_at: string;
 }
 
@@ -36,7 +40,11 @@ const initialBidForm: BidForm = {
   bid_amount: "",
 };
 
-function getRemainingTime(endDate: string) {
+function getRemainingTime(endDate: string | null) {
+  if (!endDate) {
+    return { expired: false, text: "مستمر" };
+  }
+
   const difference = new Date(endDate).getTime() - Date.now();
 
   if (difference <= 0) {
@@ -66,6 +74,45 @@ function getRemainingTime(endDate: string) {
   };
 }
 
+function getAuctionStatus(auction: Auction) {
+  if (auction.winner_name) {
+    return {
+      text: "تم إعلان الفائز",
+      className: "bg-purple-100 text-purple-700",
+    };
+  }
+
+  if (
+    auction.status === "ended" ||
+    (auction.ends_at &&
+      new Date(auction.ends_at).getTime() <= Date.now())
+  ) {
+    return {
+      text: "انتهى هذا المزاد",
+      className: "bg-red-100 text-red-700",
+    };
+  }
+
+  if (auction.status === "paused") {
+    return {
+      text: "موقوف مؤقتًا",
+      className: "bg-yellow-100 text-yellow-700",
+    };
+  }
+
+  if (auction.status === "active" && auction.is_active) {
+    return {
+      text: "مباشر الآن",
+      className: "bg-green-100 text-green-700",
+    };
+  }
+
+  return {
+    text: "قادم",
+    className: "bg-blue-100 text-blue-700",
+  };
+}
+
 export default function Auctions() {
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +126,25 @@ export default function Auctions() {
 
   useEffect(() => {
     fetchAuctions();
+
+    const channel = supabase
+      .channel("public-auctions-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "auctions",
+        },
+        () => {
+          fetchAuctions();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -98,7 +164,6 @@ export default function Auctions() {
     const { data, error } = await supabase
       .from("auctions")
       .select("*")
-      .eq("is_active", true)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -106,7 +171,17 @@ export default function Auctions() {
       setMessage("حدث خطأ أثناء تحميل المزادات");
       setAuctions([]);
     } else {
-      setAuctions((data as Auction[]) || []);
+      const loadedAuctions = (data as Auction[]) || [];
+      setAuctions(loadedAuctions);
+      setSelectedAuction((currentAuction) => {
+        if (!currentAuction) return null;
+
+        return (
+          loadedAuctions.find(
+            (auction) => auction.id === currentAuction.id,
+          ) || null
+        );
+      });
     }
 
     setLoading(false);
@@ -138,6 +213,21 @@ export default function Auctions() {
     event.preventDefault();
 
     if (!selectedAuction) return;
+
+    if (
+      selectedAuction.status !== "active" ||
+      !selectedAuction.is_active ||
+      selectedAuction.winner_name
+    ) {
+      setMessage(
+        selectedAuction.winner_name
+          ? "تم إعلان الفائز في هذا المزاد"
+          : selectedAuction.status === "paused"
+            ? "المزاد موقوف مؤقتًا"
+            : "هذا المزاد غير متاح للمزايدة",
+      );
+      return;
+    }
 
     const bidderName = bidForm.bidder_name.trim();
     const bidderPhone = bidForm.bidder_phone.trim();
@@ -227,13 +317,9 @@ export default function Auctions() {
     setSubmittingBid(false);
   }
 
-  const activeAuctions = useMemo(() => {
+  const visibleAuctions = useMemo(() => {
     return auctions.filter((auction) => {
-      return (
-        auction.is_active &&
-        auction.status !== "cancelled" &&
-        auction.status !== "draft"
-      );
+      return auction.status !== "cancelled" && auction.status !== "draft";
     });
   }, [auctions]);
 
@@ -286,7 +372,7 @@ export default function Auctions() {
               جاري تحميل المزادات...
             </div>
           </div>
-        ) : activeAuctions.length === 0 ? (
+        ) : visibleAuctions.length === 0 ? (
           <div className="rounded-[2rem] border border-[#D8D2C5] bg-white p-14 text-center shadow-sm">
             <Gavel className="mx-auto mb-4 h-12 w-12 opacity-40" />
             <h2 className="text-xl font-black">لا توجد مزادات حالياً</h2>
@@ -296,87 +382,118 @@ export default function Auctions() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {activeAuctions.map((auction) => {
+            {visibleAuctions.map((auction) => {
               const remaining = getRemainingTime(auction.ends_at);
+              const statusInfo = getAuctionStatus(auction);
               const currentPrice = Number(
                 auction.current_price || auction.starting_price || 0
               );
 
+              const canBid =
+                auction.status === "active" &&
+                auction.is_active &&
+                !remaining.expired &&
+                !auction.winner_name;
+
               return (
                 <article
                   key={auction.id}
-                  className="overflow-hidden rounded-[2rem] border border-[#D8D2C5] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="overflow-hidden rounded-[2rem] border border-[#D8D2C5] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between"
                 >
-                  <div className="relative aspect-square overflow-hidden bg-[#FBF7EF]">
-                    {auction.image_url ? (
-                      <img
-                        src={auction.image_url}
-                        alt={auction.title}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <Gavel className="h-20 w-20 opacity-20" />
-                      </div>
-                    )}
+                  <div>
+                    <div className="relative aspect-square overflow-hidden bg-[#FBF7EF]">
+                      {auction.image_url ? (
+                        <img
+                          src={auction.image_url}
+                          alt={auction.title}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <Gavel className="h-20 w-20 opacity-20" />
+                        </div>
+                      )}
 
-                    <div
-                      className={`absolute right-4 top-4 rounded-full px-4 py-2 text-xs font-black shadow ${
-                        remaining.expired
-                          ? "bg-red-100 text-red-700"
-                          : "bg-[#0F3A2B] text-white"
-                      }`}
-                    >
-                      {remaining.expired ? "منتهي" : "مزاد مباشر"}
+                      <span
+                        className={`absolute right-4 top-4 rounded-full px-4 py-2 text-xs font-black shadow ${statusInfo.className}`}
+                      >
+                        {statusInfo.text}
+                      </span>
+                    </div>
+
+                    <div className="p-6">
+                      <h2 className="line-clamp-2 min-h-14 text-xl font-black">
+                        {auction.title}
+                      </h2>
+
+                      {auction.description && (
+                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
+                          {auction.description}
+                        </p>
+                      )}
+
+                      <div className="mt-5 rounded-2xl bg-[#F8F7F2] p-4">
+                        <p className="text-xs font-semibold text-gray-500">
+                          أعلى مزايدة
+                        </p>
+
+                        <p className="mt-1 text-2xl font-black">
+                          {currentPrice.toFixed(3)}
+                          <span className="mr-1 text-sm">ر.ع</span>
+                        </p>
+
+                        <p className="mt-2 text-xs text-gray-500">
+                          أقل زيادة:{" "}
+                          {Number(auction.minimum_bid || 0).toFixed(3)} ر.ع
+                        </p>
+                      </div>
+
+                      {auction.winner_name && (
+                        <div className="mt-3 rounded-2xl border border-purple-200 bg-purple-50 p-3">
+                          <div className="text-sm font-bold text-purple-800 flex items-center gap-1.5">
+                            <Award className="h-4 w-4" />
+                            الفائز: {auction.winner_name}
+                          </div>
+
+                          <div className="mt-1 text-xs text-purple-700">
+                            المبلغ الفائز:{" "}
+                            {Number(auction.winner_amount || auction.current_price).toFixed(3)} ر.ع
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mt-4 flex items-center gap-2 rounded-2xl border border-[#D8D2C5] px-4 py-3">
+                        <Clock3 className="h-5 w-5 shrink-0" />
+
+                        <div>
+                          <p className="text-xs text-gray-500">الوقت المتبقي</p>
+                          <p className="font-black">{remaining.text}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-6">
-                    <h2 className="line-clamp-2 min-h-14 text-xl font-black">
-                      {auction.title}
-                    </h2>
-
-                    {auction.description && (
-                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
-                        {auction.description}
-                      </p>
-                    )}
-
-                    <div className="mt-5 rounded-2xl bg-[#F8F7F2] p-4">
-                      <p className="text-xs font-semibold text-gray-500">
-                        أعلى مزايدة
-                      </p>
-
-                      <p className="mt-1 text-2xl font-black">
-                        {currentPrice.toFixed(3)}
-                        <span className="mr-1 text-sm">ر.ع</span>
-                      </p>
-
-                      <p className="mt-2 text-xs text-gray-500">
-                        أقل زيادة:{" "}
-                        {Number(auction.minimum_bid || 0).toFixed(3)} ر.ع
-                      </p>
-                    </div>
-
-                    <div className="mt-4 flex items-center gap-2 rounded-2xl border border-[#D8D2C5] px-4 py-3">
-                      <Clock3 className="h-5 w-5 shrink-0" />
-
-                      <div>
-                        <p className="text-xs text-gray-500">الوقت المتبقي</p>
-                        <p className="font-black">{remaining.text}</p>
-                      </div>
-                    </div>
-
+                  <div className="p-6 pt-0">
                     <button
                       type="button"
-                      disabled={remaining.expired}
+                      disabled={!canBid}
                       onClick={() => openAuction(auction)}
-                      className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[#0F3A2B] px-5 py-3.5 font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                      className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 font-black transition ${
+                        canBid
+                          ? "bg-[#0F3A2B] text-white hover:opacity-90"
+                          : "cursor-not-allowed bg-gray-200 text-gray-500"
+                      }`}
                     >
                       <Gavel className="h-5 w-5" />
-                      {remaining.expired ? "انتهى المزاد" : "زايد الآن"}
+                      {canBid
+                        ? "زايد الآن"
+                        : auction.winner_name
+                          ? "تم إعلان الفائز"
+                          : auction.status === "paused"
+                            ? "المزاد موقوف مؤقتًا"
+                            : "انتهى المزاد"}
                     </button>
                   </div>
                 </article>
