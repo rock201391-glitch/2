@@ -46,16 +46,26 @@ export default function AuctionsManager() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold">إدارة المزادات</h2>
+  <h2 className="text-2xl font-bold">إدارة المزادات</h2>
 
-        <button
-          type="button"
-          onClick={fetchAuctions}
-          className="rounded-full bg-[#0F3A2B] px-5 py-2 text-sm font-semibold text-white"
-        >
-          تحديث
-        </button>
-      </div>
+  <div className="flex items-center gap-3">
+    <button
+      type="button"
+      onClick={() => alert("بنضيف النموذج في الخطوة الجاية")}
+      className="rounded-full bg-[#0F3A2B] px-5 py-2 text-sm font-semibold text-white"
+    >
+      + إضافة مزاد
+    </button>
+
+    <button
+      type="button"
+      onClick={fetchAuctions}
+      className="rounded-full border border-[#0F3A2B] px-5 py-2 text-sm font-semibold text-[#0F3A2B]"
+    >
+      تحديث
+    </button>
+  </div>
+</div>
 
       {error && (
         <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
