@@ -1,17 +1,27 @@
 import { useEffect, useState } from "react";
 import OrdersTab from "../components/admin/OrdersTab";
 import ProductsManager from "../components/admin/ProductsManager";
+import AuctionsManager from "../components/admin/AuctionsManager";
 import CategoriesManager from "../components/admin/CategoriesManager";
 import DiscountCodesManager from "../components/admin/DiscountCodesManager";
 import ShippingManager from "../components/admin/ShippingManager";
 import SettingsManager from "../components/admin/SettingsManager";
 import ThemeManager from "../components/admin/ThemeManager";
 
-type AdminTab = "orders" | "products" | "categories" | "discounts" | "shipping" | "settings" | "theme";
+type AdminTab =
+  | "orders"
+  | "products"
+  | "auctions"
+  | "categories"
+  | "discounts"
+  | "shipping"
+  | "settings"
+  | "theme";
 
 const TABS: { id: AdminTab; label: string }[] = [
   { id: "orders",    label: "الطلبات" },
   { id: "products",  label: "المنتجات" },
+  { id: "auctions", label: "المزادات" },
   { id: "categories", label: "الأقسام" },
   { id: "discounts", label: "كوبونات الخصم" },
   { id: "shipping",  label: "الشحن" },
@@ -150,6 +160,7 @@ export default function AdminDashboard() {
         <main className="flex-1 px-6 py-8 overflow-x-auto">
           {activeTab === "orders"     && <OrdersTab />}
           {activeTab === "products"   && <ProductsManager />}
+          {activeTab === "auctions" && <AuctionsManager />}
           {activeTab === "categories" && <CategoriesManager />}
           {activeTab === "discounts"  && <DiscountCodesManager />}
           {activeTab === "shipping"   && <ShippingManager />}
