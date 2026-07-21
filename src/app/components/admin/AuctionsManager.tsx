@@ -549,35 +549,69 @@ export default function AuctionsManager() {
   }
 
   async function toggleBidderBlock(bid: Bid) {
-    clearMessages();
+  clearMessages();
 
-    try {
+  const cleanPhone = bid.bidder_phone.replace(/\D/g, "");
+
+  try {
+    if (bid.is_blocked) {
+      const { error: deleteBlockError } = await supabase
+        .from("blocked_bidders")
+        .delete()
+        .eq("phone", cleanPhone);
+
+      if (deleteBlockError) {
+        throw deleteBlockError;
+      }
+
       const { error: updateError } = await supabase
         .from("bids")
-        .update({
-          is_blocked: !Boolean(bid.is_blocked),
-        })
-        .eq("id", bid.id);
+        .update({ is_blocked: false })
+        .eq("bidder_phone", bid.bidder_phone);
 
       if (updateError) {
         throw updateError;
       }
 
-      setSuccess(
-        bid.is_blocked
-          ? "تم إلغاء حظر المزايد."
-          : "تم حظر المزايد.",
-      );
+      setSuccess("تم إلغاء حظر الرقم.");
+    } else {
+      const { error: blockError } = await supabase
+        .from("blocked_bidders")
+        .upsert(
+          {
+            phone: cleanPhone,
+            reason: "محظور من لوحة إدارة المزادات",
+          },
+          {
+            onConflict: "phone",
+          },
+        );
 
-      await fetchBids();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "تعذر تغيير حالة المزايد. تأكد من وجود عمود is_blocked في جدول bids.",
-      );
+      if (blockError) {
+        throw blockError;
+      }
+
+      const { error: updateError } = await supabase
+        .from("bids")
+        .update({ is_blocked: true })
+        .eq("bidder_phone", bid.bidder_phone);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setSuccess("تم حظر الرقم ولن يستطيع المزايدة مرة أخرى.");
     }
+
+    await fetchBids();
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "تعذر تغيير حالة الحظر",
+    );
   }
+}
 
   function exportBidsCsv() {
     const rows = [
