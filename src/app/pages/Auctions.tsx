@@ -255,7 +255,23 @@ export default function Auctions() {
       setMessage("رقم الهاتف يجب أن يكون 8 أرقام على الأقل");
       return;
     }
+const { data: blockedPhone, error: blockedPhoneError } =
+  await supabase
+    .from("blocked_bidders")
+    .select("id")
+    .eq("phone", cleanPhone)
+    .maybeSingle();
 
+if (blockedPhoneError) {
+  console.error(blockedPhoneError);
+  setMessage("تعذر التحقق من رقم الهاتف");
+  return;
+}
+
+if (blockedPhone) {
+  setMessage("هذا الرقم محظور من المشاركة في المزادات");
+  return;
+}
     if (!Number.isFinite(bidAmount) || bidAmount < minimumBidAmount) {
       setMessage(
         `يجب أن تكون المزايدة ${minimumBidAmount.toFixed(3)} ر.ع أو أكثر`
