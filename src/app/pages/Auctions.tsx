@@ -161,10 +161,11 @@ export default function Auctions() {
     setLoading(true);
     setMessage("");
 
-    const { data, error } = await supabase
-      .from("auctions")
-      .select("*")
-      .order("created_at", { ascending: false });
+   const { data, error } = await supabase
+  .from("auctions")
+  .select("*")
+  .eq("is_visible", true)
+  .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Fetch auctions error:", error);
