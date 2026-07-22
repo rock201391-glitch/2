@@ -596,7 +596,7 @@ export default function Auctions() {
             <form onSubmit={handleSubmitBid} className="mt-6 space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-bold">
-                  اسم المزايد
+                  الاسم الثلاثي
                 </label>
 
                 <div className="flex items-center gap-2 rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4">
