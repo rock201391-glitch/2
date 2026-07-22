@@ -163,9 +163,9 @@ export default function Auctions() {
 
    const { data, error } = await supabase
   .from("auctions")
-  .select("*")
-  .eq("is_visible", true)
-  .order("created_at", { ascending: false });
+.select("*")
+.eq("is_visible", true)
+.order("created_at", { ascending: false });
 
     if (error) {
       console.error("Fetch auctions error:", error);
