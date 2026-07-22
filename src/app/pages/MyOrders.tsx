@@ -1,121 +1,255 @@
-import { useEffect, useState } from 'react';
-import { ShoppingBag } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { useEffect, useState } from "react";
+import { Loader2, Phone, Search, ShoppingBag } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 interface MyOrdersProps {
   onNavigate: (page: string) => void;
 }
 
+interface Order {
+  id: number | string;
+  customer_name?: string | null;
+  phone?: string | null;
+  product_name?: string | null;
+  total?: number | null;
+  status?: string | null;
+  created_at: string;
+}
+
 export default function MyOrders({ onNavigate }: MyOrdersProps) {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [phone, setPhone] = useState("");
+  const [searchedPhone, setSearchedPhone] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [message, setMessage] = useState("");
 
-  async function fetchOrders() {
-    setLoading(true);
+  function getPhoneVariants(value: string) {
+    const cleanPhone = value.replace(/\D/g, "");
 
-    // قراءة أرقام الطلبات من localStorage
-    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    const ids = savedOrders.map((order: any) => order.id).filter(Boolean);
+    if (cleanPhone.startsWith("968") && cleanPhone.length > 8) {
+      const localPhone = cleanPhone.slice(3);
 
-    if (ids.length === 0) {
+      return [
+        cleanPhone,
+        localPhone,
+        `+${cleanPhone}`,
+        `968${localPhone}`,
+        `+968${localPhone}`,
+      ];
+    }
+
+    return [
+      cleanPhone,
+      `968${cleanPhone}`,
+      `+968${cleanPhone}`,
+    ];
+  }
+
+  async function fetchOrdersByPhone(phoneNumber: string) {
+    const cleanPhone = phoneNumber.replace(/\D/g, "");
+
+    if (!cleanPhone) {
+      setMessage("اكتب رقم الهاتف");
       setOrders([]);
-      setLoading(false);
       return;
     }
 
-    // جلب الطلبات الحقيقية من Supabase باستخدام ids
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .in('id', ids)
-      .order('created_at', { ascending: false });
+    if (cleanPhone.length < 8) {
+      setMessage("رقم الهاتف يجب أن يكون 8 أرقام على الأقل");
+      setOrders([]);
+      return;
+    }
 
-    if (!error && data) {
-      setOrders(data);
+    setLoading(true);
+    setMessage("");
+    setSearched(true);
+
+    const phoneVariants = [...new Set(getPhoneVariants(phoneNumber))];
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .in("phone", phoneVariants)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Fetch orders error:", error);
+      setMessage("حدث خطأ أثناء البحث عن الطلبات");
+      setOrders([]);
+    } else {
+      setOrders((data as Order[]) || []);
+      setSearchedPhone(phoneNumber);
     }
 
     setLoading(false);
   }
 
-  useEffect(() => {
-    fetchOrders();
+  function handleSearch(event: React.FormEvent) {
+    event.preventDefault();
+    void fetchOrdersByPhone(phone);
+  }
 
-    // الاشتراك في تغييرات Supabase لتحديث الحالة تلقائياً
+  useEffect(() => {
+    if (!searchedPhone) return;
+
     const channel = supabase
-      .channel('my-orders-status')
+      .channel("customer-orders-status")
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders' },
-        () => fetchOrders()
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+        },
+        () => {
+          void fetchOrdersByPhone(searchedPhone);
+        },
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [searchedPhone]);
 
   return (
-    <div className="min-h-screen bg-[#F8F7F2] py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-12 text-center text-[#0F3A2B]">
+    <div
+      className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#0F3A2B]"
+      dir="rtl"
+    >
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-4 text-center text-4xl font-bold">
           مشترياتي
         </h1>
 
+        <p className="mb-10 text-center text-sm text-gray-600">
+          أدخل رقم الهاتف المستخدم عند الطلب لعرض جميع طلباتك
+        </p>
+
+        <form
+          onSubmit={handleSearch}
+          className="mx-auto mb-10 max-w-2xl rounded-3xl bg-white p-5 shadow-sm"
+        >
+          <label className="mb-2 block text-sm font-bold">
+            رقم الهاتف
+          </label>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div
+              className="flex flex-1 items-center gap-3 rounded-full border border-[#D8D2C5] bg-[#F8F7F2] px-5"
+              dir="ltr"
+            >
+              <Phone className="h-5 w-5 text-[#0F3A2B]" />
+
+              <input
+                type="tel"
+                value={phone}
+                onChange={(event) => {
+                  setPhone(event.target.value);
+                  setMessage("");
+                }}
+                placeholder="968XXXXXXXX"
+                className="w-full bg-transparent py-4 text-left outline-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center justify-center gap-2 rounded-full bg-[#0F3A2B] px-8 py-4 font-bold text-white disabled:opacity-60"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري البحث...
+                </>
+              ) : (
+                <>
+                  <Search className="h-5 w-5" />
+                  بحث
+                </>
+              )}
+            </button>
+          </div>
+
+          {message && (
+            <div className="mt-4 rounded-2xl bg-red-50 p-3 text-center text-sm font-bold text-red-700">
+              {message}
+            </div>
+          )}
+        </form>
+
         {loading ? (
-          <p className="text-center text-[#0F3A2B] font-bold">جاري التحميل...</p>
-        ) : orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="bg-white rounded-3xl p-12 max-w-md w-full text-center">
-              <ShoppingBag className="w-12 h-12 mx-auto mb-6 text-[#0F3A2B]" />
-              <h2 className="text-2xl font-bold mb-4 text-[#0F3A2B]">
-                لا توجد طلبات محفوظة
+          <div className="flex items-center justify-center gap-3 py-16 font-bold">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            جاري تحميل الطلبات...
+          </div>
+        ) : searched && orders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-full max-w-md rounded-3xl bg-white p-10 text-center">
+              <ShoppingBag className="mx-auto mb-5 h-12 w-12" />
+
+              <h2 className="mb-3 text-2xl font-bold">
+                لا توجد طلبات بهذا الرقم
               </h2>
+
+              <p className="mb-6 text-sm text-gray-500">
+                تأكد أنك كتبت نفس رقم الهاتف المستخدم عند تقديم الطلب.
+              </p>
+
               <button
-                onClick={() => onNavigate('shop')}
-                className="w-full py-4 rounded-full text-white font-bold bg-[#0F3A2B]"
+                type="button"
+                onClick={() => onNavigate("shop")}
+                className="w-full rounded-full bg-[#0F3A2B] py-4 font-bold text-white"
               >
                 تصفح المتجر
               </button>
             </div>
           </div>
-        ) : (
+        ) : orders.length > 0 ? (
           <div className="space-y-6">
-            {orders.map((order: any) => (
-              <div key={order.id} className="bg-white rounded-3xl p-6 md:p-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 pb-6 border-b">
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="rounded-3xl bg-white p-6 shadow-sm md:p-8"
+              >
+                <div className="mb-6 grid grid-cols-1 gap-5 border-b pb-6 sm:grid-cols-2 md:grid-cols-4">
                   <div>
                     <p className="text-sm text-gray-600">رقم الطلب</p>
-                    <p className="font-bold text-[#0F3A2B]">#{order.id}</p>
+                    <p className="font-bold">#{order.id}</p>
                   </div>
+
                   <div>
                     <p className="text-sm text-gray-600">التاريخ</p>
-                    <p className="font-bold text-[#0F3A2B]">
-                      {new Date(order.created_at).toLocaleDateString('ar')}
+                    <p className="font-bold">
+                      {new Date(order.created_at).toLocaleDateString("ar-OM")}
                     </p>
                   </div>
+
                   <div>
                     <p className="text-sm text-gray-600">الحالة</p>
-                    <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold bg-[#FFF3E0] text-[#E65100]">
-                      {order.status || 'قيد المراجعة'}
+                    <span className="mt-1 inline-block rounded-full bg-[#FFF3E0] px-4 py-2 text-sm font-semibold text-[#E65100]">
+                      {order.status || "قيد المراجعة"}
                     </span>
                   </div>
+
                   <div>
                     <p className="text-sm text-gray-600">الإجمالي</p>
-                    <p className="text-xl font-bold text-[#0F3A2B]">
-                      {order.total} ر.ع
+                    <p className="text-xl font-bold">
+                      {Number(order.total || 0).toFixed(3)} ر.ع
                     </p>
                   </div>
                 </div>
 
-                <div className="text-sm text-[#0F3A2B]">
-                  <p className="font-bold mb-2">المنتجات:</p>
-                  <p>{order.product_name}</p>
+                <div className="text-sm">
+                  <p className="mb-2 font-bold">المنتجات:</p>
+                  <p>{order.product_name || "لا توجد تفاصيل للمنتجات"}</p>
                 </div>
               </div>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
