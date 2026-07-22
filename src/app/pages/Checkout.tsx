@@ -15,15 +15,6 @@ interface CheckoutProps {
   onSuccess: () => void;
 }
 
-interface BuyNowItem {
-  id: string;
-  auction_id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-}
-
 interface ShippingOption {
   key: string;
   label: string;
@@ -74,39 +65,6 @@ const formatPrice = (amount: number) => `${amount.toFixed(2)} ر.ع`;
 
 export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const { items, getTotal, clearCart } = useCart();
-  const [buyNowItem, setBuyNowItem] = useState<BuyNowItem | null>(null);
-
-  useEffect(() => {
-    try {
-      const savedItem = localStorage.getItem('mergab_buy_now_item');
-
-      if (!savedItem) return;
-
-      const parsedItem = JSON.parse(savedItem) as BuyNowItem;
-
-      if (
-        parsedItem?.auction_id &&
-        parsedItem?.name &&
-        Number(parsedItem?.price) > 0
-      ) {
-        setBuyNowItem({
-          id: parsedItem.id || `auction-${parsedItem.auction_id}`,
-          auction_id: parsedItem.auction_id,
-          name: parsedItem.name,
-          price: Number(parsedItem.price),
-          quantity: 1,
-          image: parsedItem.image || '',
-        });
-      } else {
-        localStorage.removeItem('mergab_buy_now_item');
-      }
-    } catch (error) {
-      console.error('Invalid buy-now item:', error);
-      localStorage.removeItem('mergab_buy_now_item');
-    }
-  }, []);
-
-  const checkoutItems = buyNowItem ? [buyNowItem] : items;
 
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(FALLBACK_SHIPPING);
   const [bankInfo, setBankInfo] = useState(FALLBACK_BANK);
@@ -168,10 +126,10 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const [appliedDiscount, setAppliedDiscount] = useState<{ amount: number; label: string; codeId?: number } | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
-  const subtotal = buyNowItem ? buyNowItem.price : getTotal();
+  const subtotal = getTotal();
   const selectedShipping = shippingOptions.find(s => s.key === formData.shippingMethod) ?? shippingOptions[0];
   const shippingCost = selectedShipping?.price ?? 0;
-  const discountAmount = buyNowItem ? 0 : (appliedDiscount?.amount ?? 0);
+  const discountAmount = appliedDiscount?.amount ?? 0;
   const total = subtotal - discountAmount + shippingCost;
   const wilayahOptions = governorateToWilayah[formData.governorate] || [];
 
@@ -311,8 +269,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
     if (isSubmitting) return;
 
-    if (checkoutItems.length === 0) {
-      alert('لا يوجد منتج لإتمام الطلب');
+    if (items.length === 0) {
+      alert('السلة فارغة');
       return;
     }
 
@@ -329,9 +287,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     setIsSubmitting(true);
 
     try {
-      const productNames = checkoutItems
-        .map(item => `${item.name} × ${item.quantity || 1}`)
-        .join('، ');
+      const productNames = items.map(item => `${item.name} × ${item.quantity || 1}`).join('، ');
       
       const paymentMethodNote = paymentMethod === 'cash_on_delivery' 
         ? 'العربون 5 ر.ع والباقي عند الاستلام' 
@@ -341,12 +297,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         `طريقة الدفع: ${paymentMethodNote}`,
         formData.addressDetails ? `تفاصيل العنوان: ${formData.addressDetails}` : '',
         formData.notes ? `ملاحظات الطلب: ${formData.notes}` : '',
-        !buyNowItem && isCouponApplied && appliedDiscount
-          ? `كوبون الخصم: ${appliedDiscount.label}`
-          : '',
-        buyNowItem
-          ? `شراء مباشر من المزاد رقم: ${buyNowItem.auction_id}`
-          : '',
+        isCouponApplied && appliedDiscount ? `كوبون الخصم: ${appliedDiscount.label}` : '',
       ].filter(Boolean);
 
       const fileName = `${Date.now()}-${receiptImage.name}`;
@@ -386,25 +337,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       }
 
       try {
-        if (buyNowItem) {
-          const { error: auctionUpdateError } = await supabase
-            .from('auctions')
-            .update({
-              status: 'ended',
-              is_active: false,
-              buy_now_enabled: false,
-            })
-            .eq('id', buyNowItem.auction_id);
-
-          if (auctionUpdateError) {
-            console.warn(
-              'تم إنشاء الطلب، لكن تعذر إغلاق المزاد تلقائيًا:',
-              auctionUpdateError,
-            );
-          }
-        }
-
-        if (!buyNowItem && isCouponApplied && appliedDiscount?.codeId) {
+        if (isCouponApplied && appliedDiscount?.codeId) {
           await supabase.rpc('increment_coupon_used_count', {
             coupon_id: appliedDiscount.codeId,
           });
@@ -421,13 +354,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
       localStorage.setItem('orders', JSON.stringify(savedOrders));
 
-      if (buyNowItem) {
-        localStorage.removeItem('mergab_buy_now_item');
-        setBuyNowItem(null);
-      } else {
-        clearCart();
-      }
-
+      clearCart();
       alert('تم إرسال الطلب بنجاح');
       onSuccess();
     } catch (err) {
@@ -443,9 +370,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-center gap-2 cursor-pointer" onClick={onBack}>
           <ChevronRight className="text-[#0F3A2B]" />
-          <span className="font-semibold text-[#0F3A2B]">
-            {buyNowItem ? 'العودة للمزادات' : 'العودة للسلة'}
-          </span>
+          <span className="font-semibold text-[#0F3A2B]">العودة للسلة</span>
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-bold mb-10 text-center text-[#0F3A2B]">إتمام الطلب</h1>
@@ -746,20 +671,14 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
               <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">ملخص الطلب</h2>
 
               <div className="space-y-4 mb-6 text-[#0F3A2B]">
-                {checkoutItems.map(item => (
+                {items.map(item => (
                   <div key={item.id} className="flex items-center justify-between border-b border-gray-200 pb-3 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={`صورة المنتج ${item.name}`}
-                          className="w-14 h-14 rounded-xl object-cover border border-[#E8E3D9] bg-[#F7F3EA]"
-                        />
-                      ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[#E8E3D9] bg-[#F7F3EA] text-xs font-bold">
-                          مزاد
-                        </div>
-                      )}
+                      <img
+                        src={item.image}
+                        alt={`صورة المنتج ${item.name}`}
+                        className="w-14 h-14 rounded-xl object-cover border border-[#E8E3D9] bg-[#F7F3EA]"
+                      />
                       <div className="min-w-0">
                         <p className="font-semibold truncate">{item.name}</p>
                         <p className="text-sm text-[#4F665D]">الكمية: {item.quantity || 1}</p>
@@ -770,9 +689,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 ))}
               </div>
 
-              {!buyNowItem && (
-                <div className="rounded-2xl border border-[#E8E3D9] bg-[#FBF7EF] p-4 mb-5">
-                  <label className="block font-semibold mb-2">كوبون الخصم</label>
+              <div className="rounded-2xl border border-[#E8E3D9] bg-[#FBF7EF] p-4 mb-5">
+                <label className="block font-semibold mb-2">كوبون الخصم</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -800,26 +718,17 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                     <p className="text-sm mt-2 text-red-600">{couponStatus}</p>
                   )
                 )}
-                </div>
-              )}
-
-              {buyNowItem && (
-                <div className="mb-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-800">
-                  هذا طلب شراء مباشر من المزاد بالسعر المحدد.
-                </div>
-              )}
+              </div>
 
               <div className="flex justify-between mb-3 text-[#0F3A2B]">
                 <span>المنتجات:</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
 
-              {!buyNowItem && (
-                <div className="flex justify-between mb-3 text-[#0F3A2B]">
-                  <span>الخصم:</span>
-                  <span>-{formatPrice(discountAmount)}</span>
-                </div>
-              )}
+              <div className="flex justify-between mb-3 text-[#0F3A2B]">
+                <span>الخصم:</span>
+                <span>-{formatPrice(discountAmount)}</span>
+              </div>
 
               <div className="flex justify-between mb-6 text-[#0F3A2B]">
                 <span>رسوم التوصيل:</span>
