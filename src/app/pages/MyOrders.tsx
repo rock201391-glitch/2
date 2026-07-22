@@ -24,28 +24,6 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
   const [searched, setSearched] = useState(false);
   const [message, setMessage] = useState("");
 
-  function getPhoneVariants(value: string) {
-    const cleanPhone = value.replace(/\D/g, "");
-
-    if (cleanPhone.startsWith("968") && cleanPhone.length > 8) {
-      const localPhone = cleanPhone.slice(3);
-
-      return [
-        cleanPhone,
-        localPhone,
-        `+${cleanPhone}`,
-        `968${localPhone}`,
-        `+968${localPhone}`,
-      ];
-    }
-
-    return [
-      cleanPhone,
-      `968${cleanPhone}`,
-      `+968${cleanPhone}`,
-    ];
-  }
-
   async function fetchOrdersByPhone(phoneNumber: string) {
     const cleanPhone = phoneNumber.replace(/\D/g, "");
 
@@ -65,12 +43,11 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
     setMessage("");
     setSearched(true);
 
-    const phoneVariants = [...new Set(getPhoneVariants(phoneNumber))];
+    const lastEightDigits = cleanPhone.replace(/^968/, "").slice(-8);
 
     const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .in("phone", phoneVariants)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -78,7 +55,15 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
       setMessage("حدث خطأ أثناء البحث عن الطلبات");
       setOrders([]);
     } else {
-      setOrders((data as Order[]) || []);
+      const matchingOrders = ((data as Order[]) || []).filter((order) => {
+        const savedPhone = String(order.phone || "")
+          .replace(/\D/g, "")
+          .replace(/^968/, "");
+
+        return savedPhone.slice(-8) === lastEightDigits;
+      });
+
+      setOrders(matchingOrders);
       setSearchedPhone(phoneNumber);
     }
 
@@ -119,9 +104,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
       dir="rtl"
     >
       <div className="mx-auto max-w-7xl">
-        <h1 className="mb-4 text-center text-4xl font-bold">
-          مشترياتي
-        </h1>
+        <h1 className="mb-4 text-center text-4xl font-bold">مشترياتي</h1>
 
         <p className="mb-10 text-center text-sm text-gray-600">
           أدخل رقم الهاتف المستخدم عند الطلب لعرض جميع طلباتك
@@ -131,9 +114,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
           onSubmit={handleSearch}
           className="mx-auto mb-10 max-w-2xl rounded-3xl bg-white p-5 shadow-sm"
         >
-          <label className="mb-2 block text-sm font-bold">
-            رقم الهاتف
-          </label>
+          <label className="mb-2 block text-sm font-bold">رقم الهاتف</label>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <div
