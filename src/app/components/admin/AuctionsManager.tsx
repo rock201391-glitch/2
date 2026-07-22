@@ -672,7 +672,43 @@ async function toggleAuctionVisibility(auction: Auction) {
   .order("bid_amount", { ascending: false })
   .order("created_at", { ascending: false })
   .limit(1);
+const { data: remainingBids, error: remainingBidsError } =
+  await supabase
+    .from("bids")
+    .select("bid_amount, bidder_name, created_at")
+    .eq("auction_id", bid.auction_id)
+    .order("bid_amount", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(1);
 
+if (remainingBidsError) {
+  throw remainingBidsError;
+}
+
+const highestRemainingBid =
+  remainingBids && remainingBids.length > 0
+    ? remainingBids[0]
+    : null;
+
+const newPrice = highestRemainingBid
+  ? Number(highestRemainingBid.bid_amount)
+  : Number(auction.starting_price);
+
+const newHighestBidderName = highestRemainingBid
+  ? highestRemainingBid.bidder_name?.trim() || null
+  : null;
+
+const { error: updateAuctionError } = await supabase
+  .from("auctions")
+  .update({
+    current_price: newPrice,
+    highest_bidder_name: newHighestBidderName,
+  })
+  .eq("id", bid.auction_id);
+
+if (updateAuctionError) {
+  throw updateAuctionError;
+}
     const newPrice =
       data && data.length
         ? Number(data[0].bid_amount)
