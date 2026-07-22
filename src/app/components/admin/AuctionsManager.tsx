@@ -665,13 +665,7 @@ async function toggleAuctionVisibility(auction: Auction) {
 
     if (deleteError) throw deleteError;
 
-    const { data } = await supabase
-  .from("bids")
-  .select("bid_amount, bidder_name")
-  .eq("auction_id", bid.auction_id)
-  .order("bid_amount", { ascending: false })
-  .order("created_at", { ascending: false })
-  .limit(1);
+   
 const { data: remainingBids, error: remainingBidsError } =
   await supabase
     .from("bids")
@@ -709,19 +703,6 @@ const { error: updateAuctionError } = await supabase
 if (updateAuctionError) {
   throw updateAuctionError;
 }
-    const newPrice =
-      data && data.length
-        ? Number(data[0].bid_amount)
-        : auction.starting_price;
-
-    await supabase
-  .from("auctions")
-  .update({
-    current_price: newPrice,
-    highest_bidder_name:
-      data && data.length ? data[0].bidder_name : null,
-  })
-      .eq("id", auction.id);
 
     await Promise.all([
       fetchAuctions(),
