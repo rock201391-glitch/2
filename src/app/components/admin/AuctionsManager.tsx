@@ -22,6 +22,7 @@ interface Auction {
   ends_at: string | null;
   status: AuctionStatus;
   is_active: boolean;
+  is_visible: boolean;
   is_pinned?: boolean;
   views?: number;
   winner_bid_id?: string | null;
@@ -612,7 +613,35 @@ export default function AuctionsManager() {
     );
   }
 }
+async function toggleAuctionVisibility(auction: Auction) {
+  clearMessages();
 
+  try {
+    const { error } = await supabase
+      .from("auctions")
+      .update({
+        is_visible: !auction.is_visible,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", auction.id);
+
+    if (error) throw error;
+
+    setSuccess(
+      auction.is_visible
+        ? "تم إخفاء المزاد من الموقع."
+        : "تم عرض المزاد في الموقع."
+    );
+
+    await fetchAuctions();
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "تعذر تغيير ظهور المزاد"
+    );
+  }
+}
   function exportBidsCsv() {
     const rows = [
       [
@@ -928,7 +957,17 @@ export default function AuctionsManager() {
                               إنهاء
                             </button>
                           )}
-
+<button
+  type="button"
+  onClick={() => void toggleAuctionVisibility(auction)}
+  className={`rounded-xl px-3 py-2 text-xs font-bold ${
+    auction.is_visible
+      ? "bg-orange-100 text-orange-700"
+      : "bg-green-100 text-green-700"
+  }`}
+>
+  {auction.is_visible ? "إخفاء من الموقع" : "عرض في الموقع"}
+</button>
                           <button
                             type="button"
                             onClick={() => openEditModal(auction)}
