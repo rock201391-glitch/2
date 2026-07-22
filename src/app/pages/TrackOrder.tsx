@@ -28,21 +28,11 @@ export default function TrackOrder() {
     setSearched(true);
     setMessage('');
 
-    const phoneVariants = [
-      cleanPhone,
-      `968${cleanPhone}`,
-      `+968${cleanPhone}`,
-    ];
-
-    if (cleanPhone.startsWith('968')) {
-      phoneVariants.push(cleanPhone.slice(3));
-      phoneVariants.push(`+${cleanPhone}`);
-    }
+    const lastEightDigits = cleanPhone.replace(/^968/, "").slice(-8);
 
     const { data, error } = await supabase
       .from('orders')
       .select('*')
-      .in('phone', [...new Set(phoneVariants)])
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -50,7 +40,14 @@ export default function TrackOrder() {
       setMessage('حدث خطأ أثناء البحث');
       setOrders([]);
     } else {
-      setOrders(data || []);
+      const matchingOrders = (data || []).filter((order: any) => {
+        const savedPhone = String(order.phone || '')
+          .replace(/\D/g, '')
+          .replace(/^968/, '');
+        return savedPhone.slice(-8) === lastEightDigits;
+      });
+
+      setOrders(matchingOrders);
     }
 
     setLoading(false);
