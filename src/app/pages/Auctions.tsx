@@ -17,6 +17,7 @@ interface Auction {
   image_url?: string | null;
   starting_price: number;
   current_price: number;
+  highest_bidder_name?: string | null;
   minimum_bid: number;
   starts_at: string | null;
   ends_at: string | null;
@@ -376,6 +377,7 @@ export default function Auctions() {
           ? {
               ...auction,
               current_price: updatedPrice,
+              highest_bidder_name: formattedName,
             }
           : auction
       )
@@ -386,6 +388,7 @@ export default function Auctions() {
         ? {
             ...currentAuction,
             current_price: updatedPrice,
+            highest_bidder_name: formattedName,
           }
         : currentAuction
     );
@@ -535,6 +538,12 @@ export default function Auctions() {
                           {currentPrice.toFixed(3)}
                           <span className="mr-1 text-sm">ر.ع</span>
                         </p>
+
+                        {auction.highest_bidder_name && (
+                          <p className="mt-2 text-sm font-bold text-[#0F3A2B]">
+                            بواسطة: {auction.highest_bidder_name}
+                          </p>
+                        )}
 
                         <p className="mt-2 text-xs text-gray-500">
                           أقل زيادة:{" "}
