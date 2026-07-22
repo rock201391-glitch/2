@@ -45,27 +45,26 @@ export default function OrdersTab() {
       .from("orders")
       .update({
         status: newStatus,
-        payment_status: newStatus,
       })
       .eq("id", orderId);
 
     if (!error) {
-      setOrders(
-        orders.map((o) =>
+      setOrders((currentOrders) =>
+        currentOrders.map((o) =>
           o.id === orderId
-            ? { ...o, status: newStatus, payment_status: newStatus }
+            ? { ...o, status: newStatus }
             : o
         )
       );
 
       setSelectedOrder((prev) =>
         prev
-          ? { ...prev, status: newStatus, payment_status: newStatus }
+          ? { ...prev, status: newStatus }
           : prev
       );
     } else {
       alert(error?.message || JSON.stringify(error));
-console.error(error);
+      console.error(error);
     }
 
     setUpdatingStatus(false);
@@ -132,7 +131,7 @@ console.error(error);
                   <td className="p-5 text-sm">{getShippingText(order.shipping_method)}</td>
                   <td className="p-5">
                     <span className="rounded-full bg-[#EAF3EE] text-[#0F3A2B] px-4 py-1 text-xs font-bold shadow-sm border border-[#cbe2d5]">
-                      {order.status || order.payment_status || "pending"}
+                      {order.status || "قيد المراجعة"}
                     </span>
                   </td>
                   <td className="p-5 text-xs text-gray-400">
@@ -184,15 +183,18 @@ console.error(error);
               <div className="flex items-center gap-2">
                 <b className="shrink-0">الحالة:</b>
                 <select
-                  value={selectedOrder.status || selectedOrder.payment_status || "pending"}
+                  value={selectedOrder.status || "قيد المراجعة"}
                   disabled={updatingStatus}
-                  onChange={(e) => handleUpdateStatus(selectedOrder.id, e.target.value)}
+                  onChange={(e) =>
+                    handleUpdateStatus(selectedOrder.id, e.target.value)
+                  }
                   className="rounded-xl border border-[#D8D2C5] bg-[#F8F7F2] px-3 py-1 text-[#0F3A2B] font-bold outline-none focus:border-[#0F3A2B] cursor-pointer text-xs shadow-sm transition-all"
                 >
-                  <option value="pending">pending</option>
                   <option value="قيد المراجعة">قيد المراجعة</option>
-                  <option value="جاري التوصيل">جاري التوصيل</option>
-                  <option value="تم التوصيل">تم التوصيل</option>
+                  <option value="تم تأكيد الطلب">تم تأكيد الطلب</option>
+                  <option value="جاري التحضير">جاري التحضير</option>
+                  <option value="قيد التوصيل">قيد التوصيل</option>
+                  <option value="تم الاستلام">تم الاستلام</option>
                   <option value="ملغي">ملغي</option>
                 </select>
               </div>
