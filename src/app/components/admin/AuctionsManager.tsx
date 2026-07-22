@@ -642,6 +642,58 @@ async function toggleAuctionVisibility(auction: Auction) {
     );
   }
 }
+  async function deleteBidAndRecalculate(bid: Bid) {
+  const auction = auctions.find(
+    (item) => item.id === bid.auction_id
+  );
+
+  if (!auction) return;
+
+  const confirmed = window.confirm(
+    `هل تريد حذف هذه المزايدة؟`
+  );
+
+  if (!confirmed) return;
+
+  clearMessages();
+
+  try {
+    const { error: deleteError } = await supabase
+      .from("bids")
+      .delete()
+      .eq("id", bid.id);
+
+    if (deleteError) throw deleteError;
+
+    const { data } = await supabase
+      .from("bids")
+      .select("bid_amount")
+      .eq("auction_id", bid.auction_id)
+      .order("bid_amount", { ascending: false })
+      .limit(1);
+
+    const newPrice =
+      data && data.length
+        ? Number(data[0].bid_amount)
+        : auction.starting_price;
+
+    await supabase
+      .from("auctions")
+      .update({
+        current_price: newPrice,
+      })
+      .eq("id", auction.id);
+
+    await Promise.all([
+      fetchAuctions(),
+      fetchBids(),
+    ]);
+
+    setSuccess("تم حذف المزايدة وتعديل السعر.");
+  } catch (err) {
+    setError("حدث خطأ.");
+  }
+}
   function exportBidsCsv() {
     const rows = [
       [
@@ -1104,7 +1156,13 @@ async function toggleAuctionVisibility(auction: Auction) {
                             >
                               نسخ الرقم
                             </button>
-
+<button
+  type="button"
+  onClick={() => void deleteBidAndRecalculate(bid)}
+  className="rounded-xl bg-orange-100 px-3 py-2 text-xs font-bold text-orange-700"
+>
+  حذف المزايدة
+</button>
                             <button
                               type="button"
                               onClick={() =>
