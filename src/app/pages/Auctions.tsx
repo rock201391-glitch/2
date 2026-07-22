@@ -108,6 +108,50 @@ function getRemainingTime(endDate: string | null) {
   };
 }
 
+function getTimeUntilStart(startDate: string | null) {
+  if (!startDate) {
+    return {
+      started: false,
+      text: "سيتم تحديد وقت البداية قريبًا",
+    };
+  }
+
+  const difference = new Date(startDate).getTime() - Date.now();
+
+  if (difference <= 0) {
+    return {
+      started: true,
+      text: "بدأ المزاد",
+    };
+  }
+
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+
+  const hours = Math.floor(
+    (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+  );
+
+  const minutes = Math.floor(
+    (difference % (1000 * 60 * 60)) / (1000 * 60),
+  );
+
+  const seconds = Math.floor(
+    (difference % (1000 * 60)) / 1000,
+  );
+
+  return {
+    started: false,
+    text:
+      days > 0
+        ? `${days} يوم ${hours} ساعة ${minutes} دقيقة`
+        : `${hours.toString().padStart(2, "0")}:${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds
+            .toString()
+            .padStart(2, "0")}`,
+  };
+}
+
 function getAuctionStatus(auction: Auction) {
   if (auction.winner_name) {
     return {
@@ -479,6 +523,13 @@ export default function Auctions() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {visibleAuctions.map((auction) => {
               const remaining = getRemainingTime(auction.ends_at);
+              const timeUntilStart = getTimeUntilStart(auction.starts_at);
+              const isUpcoming =
+                auction.status === "upcoming" ||
+                Boolean(
+                  auction.starts_at &&
+                    new Date(auction.starts_at).getTime() > Date.now(),
+                );
               const statusInfo = getAuctionStatus(auction);
               const currentPrice = Number(
                 auction.current_price || auction.starting_price || 0
@@ -487,6 +538,7 @@ export default function Auctions() {
               const canBid =
                 auction.status === "active" &&
                 auction.is_active &&
+                !isUpcoming &&
                 !remaining.expired &&
                 !auction.winner_name;
 
@@ -569,8 +621,13 @@ export default function Auctions() {
                         <Clock3 className="h-5 w-5 shrink-0" />
 
                         <div>
-                          <p className="text-xs text-gray-500">الوقت المتبقي</p>
-                          <p className="font-black">{remaining.text}</p>
+                          <p className="text-xs text-gray-500">
+                            {isUpcoming ? "يبدأ المزاد بعد" : "الوقت المتبقي"}
+                          </p>
+
+                          <p className="font-black">
+                            {isUpcoming ? timeUntilStart.text : remaining.text}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -592,9 +649,11 @@ export default function Auctions() {
                         ? "زايد الآن"
                         : auction.winner_name
                           ? "تم إعلان الفائز"
-                          : auction.status === "paused"
-                            ? "المزاد موقوف مؤقتًا"
-                            : "انتهى المزاد"}
+                          : isUpcoming
+                            ? "المزاد لم يبدأ بعد"
+                            : auction.status === "paused"
+                              ? "المزاد موقوف مؤقتًا"
+                              : "انتهى المزاد"}
                     </button>
                   </div>
                 </article>
