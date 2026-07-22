@@ -161,11 +161,11 @@ export default function Auctions() {
     setLoading(true);
     setMessage("");
 
-   const { data, error } = await supabase
-  .from("auctions")
-.select("*")
-.eq("is_visible", true)
-.order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("auctions")
+      .select("*")
+      .eq("is_visible", true)
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Fetch auctions error:", error);
@@ -246,6 +246,30 @@ export default function Auctions() {
       setMessage("اكتب اسم المزايد");
       return;
     }
+    const fullName = bidderName.trim().split(/\s+/);
+    if (fullName.length < 2) {
+      setMessage("يرجى كتابة الاسم الثنائي (الاسم الأول واسم العائلة)");
+      return;
+    }
+
+    if (/\d/.test(bidderName)) {
+      setMessage("الاسم لا يجب أن يحتوي على أرقام");
+      return;
+    }
+
+    if (!/^[\p{L}\s]+$/u.test(bidderName)) {
+      setMessage("الاسم يحتوي على أحرف غير مسموحة");
+      return;
+    }
+
+    const formattedName = bidderName
+      .split(" ")
+      .map(
+        (word) =>
+          word.charAt(0).toUpperCase() +
+          word.slice(1).toLowerCase(),
+      )
+      .join(" ");
 
     if (!cleanPhone) {
       setMessage("اكتب رقم الهاتف");
@@ -256,23 +280,25 @@ export default function Auctions() {
       setMessage("رقم الهاتف يجب أن يكون 8 أرقام على الأقل");
       return;
     }
-const { data: blockedPhone, error: blockedPhoneError } =
-  await supabase
-    .from("blocked_bidders")
-    .select("id")
-    .eq("phone", cleanPhone)
-    .maybeSingle();
 
-if (blockedPhoneError) {
-  console.error(blockedPhoneError);
-  setMessage("تعذر التحقق من رقم الهاتف");
-  return;
-}
+    const { data: blockedPhone, error: blockedPhoneError } =
+      await supabase
+        .from("blocked_bidders")
+        .select("id")
+        .eq("phone", cleanPhone)
+        .maybeSingle();
 
-if (blockedPhone) {
-  setMessage("هذا الرقم محظور من المشاركة في المزادات");
-  return;
-}
+    if (blockedPhoneError) {
+      console.error(blockedPhoneError);
+      setMessage("تعذر التحقق من رقم الهاتف");
+      return;
+    }
+
+    if (blockedPhone) {
+      setMessage("هذا الرقم محظور من المشاركة في المزادات");
+      return;
+    }
+
     if (!Number.isFinite(bidAmount) || bidAmount < minimumBidAmount) {
       setMessage(
         `يجب أن تكون المزايدة ${minimumBidAmount.toFixed(3)} ر.ع أو أكثر`
@@ -292,7 +318,7 @@ if (blockedPhone) {
 
     const { data, error } = await supabase.rpc("place_bid", {
       p_auction_id: selectedAuction.id,
-      p_bidder_name: bidderName,
+      p_bidder_name: formattedName,
       p_bidder_phone: cleanPhone,
       p_bid_amount: bidAmount,
     });
@@ -578,14 +604,16 @@ if (blockedPhone) {
 
                   <input
                     type="text"
+                    minLength={5}
+                    maxLength={50}
                     value={bidForm.bidder_name}
                     onChange={(event) =>
                       setBidForm((current) => ({
                         ...current,
-                        bidder_name: event.target.value,
+                        bidder_name: event.target.value.replace(/\s+/g, " "),
                       }))
                     }
-                    placeholder="اكتب اسمك"
+                    placeholder="مثال: حمد عبدالله"
                     className="w-full bg-transparent py-4 outline-none"
                   />
                 </div>
