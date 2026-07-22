@@ -222,6 +222,24 @@ export default function TrackOrder() {
                           </div>
                         );
                       })}
+
+                      {currentStatus === "ملغي" && (
+                        <div className="flex items-start gap-4 mt-6">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white bg-red-600">
+                            ✕
+                          </div>
+
+                          <div className="pt-2">
+                            <p className="font-semibold text-red-600">
+                              تم إلغاء الطلب
+                            </p>
+
+                            <p className="text-sm text-gray-600 mt-1">
+                              تم إلغاء هذا الطلب ولن يتم إكمال المراحل التالية.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
