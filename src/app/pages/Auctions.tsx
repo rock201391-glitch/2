@@ -40,6 +40,39 @@ const initialBidForm: BidForm = {
   bid_amount: "",
 };
 
+const BIDDER_STORAGE_KEY = "mergab_bidder_details";
+
+function getSavedBidderDetails() {
+  try {
+    const savedDetails = localStorage.getItem(BIDDER_STORAGE_KEY);
+
+    if (!savedDetails) {
+      return {
+        bidder_name: "",
+        bidder_phone: "",
+      };
+    }
+
+    const parsedDetails = JSON.parse(savedDetails);
+
+    return {
+      bidder_name:
+        typeof parsedDetails.bidder_name === "string"
+          ? parsedDetails.bidder_name
+          : "",
+      bidder_phone:
+        typeof parsedDetails.bidder_phone === "string"
+          ? parsedDetails.bidder_phone
+          : "",
+    };
+  } catch {
+    return {
+      bidder_name: "",
+      bidder_phone: "",
+    };
+  }
+}
+
 function getRemainingTime(endDate: string | null) {
   if (!endDate) {
     return { expired: false, text: "مستمر" };
@@ -193,10 +226,12 @@ export default function Auctions() {
       Number(auction.current_price || auction.starting_price || 0) +
       Number(auction.minimum_bid || 0);
 
+    const savedBidder = getSavedBidderDetails();
+
     setSelectedAuction(auction);
     setBidForm({
-      bidder_name: "",
-      bidder_phone: "",
+      bidder_name: savedBidder.bidder_name,
+      bidder_phone: savedBidder.bidder_phone,
       bid_amount: minimumAmount.toFixed(3),
     });
     setMessage("");
@@ -361,6 +396,14 @@ export default function Auctions() {
         updatedPrice + Number(selectedAuction.minimum_bid || 0)
       ).toFixed(3),
     }));
+
+    localStorage.setItem(
+      BIDDER_STORAGE_KEY,
+      JSON.stringify({
+        bidder_name: formattedName,
+        bidder_phone: cleanPhone,
+      }),
+    );
 
     setMessage("تم تسجيل مزايدتك بنجاح");
     setSubmittingBid(false);
