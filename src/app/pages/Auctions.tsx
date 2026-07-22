@@ -26,6 +26,8 @@ interface Auction {
   winner_name?: string | null;
   winner_phone?: string | null;
   winner_amount?: number | null;
+  buy_now_enabled?: boolean;
+  buy_now_price?: number | null;
   created_at: string;
 }
 
@@ -655,6 +657,15 @@ export default function Auctions() {
                               ? "المزاد موقوف مؤقتًا"
                               : "انتهى المزاد"}
                     </button>
+
+                    {auction.buy_now_enabled && auction.buy_now_price && (
+                      <button
+                        type="button"
+                        className="mt-3 flex w-full items-center justify-center rounded-full border-2 border-[#0F3A2B] px-5 py-3.5 font-black text-[#0F3A2B]"
+                      >
+                        اشتري الآن • {Number(auction.buy_now_price).toFixed(3)} ر.ع
+                      </button>
+                    )}
                   </div>
                 </article>
               );
