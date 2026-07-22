@@ -31,6 +31,8 @@ interface Auction {
   winner_amount?: number | null;
   ended_at?: string | null;
   admin_notes?: string | null;
+  buy_now_enabled?: boolean;
+  buy_now_price?: number | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -54,6 +56,8 @@ interface AuctionForm {
   starts_at: string;
   ends_at: string;
   is_pinned: boolean;
+  buy_now_enabled: boolean;
+  buy_now_price: string;
   admin_notes: string;
 }
 
@@ -66,6 +70,8 @@ const emptyForm: AuctionForm = {
   starts_at: "",
   ends_at: "",
   is_pinned: false,
+  buy_now_enabled: false,
+  buy_now_price: "",
   admin_notes: "",
 };
 
@@ -250,6 +256,10 @@ export default function AuctionsManager() {
       starts_at: dateToInput(auction.starts_at),
       ends_at: dateToInput(auction.ends_at),
       is_pinned: Boolean(auction.is_pinned),
+      buy_now_enabled: Boolean(auction.buy_now_enabled),
+      buy_now_price: auction.buy_now_price != null
+        ? String(auction.buy_now_price)
+        : "",
       admin_notes: auction.admin_notes || "",
     });
 
@@ -334,6 +344,9 @@ export default function AuctionsManager() {
 
     const startingPrice = Number(formData.starting_price);
     const minimumBid = Number(formData.minimum_bid);
+    const buyNowPrice = formData.buy_now_price.trim()
+      ? Number(formData.buy_now_price)
+      : null;
 
     if (!formData.title.trim()) {
       setError("اكتب اسم المزاد.");
@@ -347,6 +360,23 @@ export default function AuctionsManager() {
 
     if (!Number.isFinite(minimumBid) || minimumBid <= 0) {
       setError("أقل زيادة يجب أن تكون أكبر من صفر.");
+      return;
+    }
+
+    if (
+      formData.buy_now_enabled &&
+      (buyNowPrice === null || !Number.isFinite(buyNowPrice) || buyNowPrice <= 0)
+    ) {
+      setError("اكتب سعر شراء مباشر صحيحًا وأكبر من صفر.");
+      return;
+    }
+
+    if (
+      formData.buy_now_enabled &&
+      buyNowPrice !== null &&
+      buyNowPrice < startingPrice
+    ) {
+      setError("سعر الشراء المباشر يجب ألا يكون أقل من سعر البداية.");
       return;
     }
 
@@ -384,6 +414,8 @@ export default function AuctionsManager() {
           starts_at: startsAt.toISOString(),
           ends_at: endsAt.toISOString(),
           is_pinned: formData.is_pinned,
+          buy_now_enabled: formData.buy_now_enabled,
+          buy_now_price: formData.buy_now_enabled ? buyNowPrice : null,
           admin_notes: formData.admin_notes.trim() || null,
           updated_at: new Date().toISOString(),
         };
@@ -411,6 +443,8 @@ export default function AuctionsManager() {
           status: "upcoming" as AuctionStatus,
           is_active: false,
           is_pinned: formData.is_pinned,
+          buy_now_enabled: formData.buy_now_enabled,
+          buy_now_price: formData.buy_now_enabled ? buyNowPrice : null,
           views: 0,
           admin_notes: formData.admin_notes.trim() || null,
         };
@@ -950,6 +984,17 @@ if (updateAuctionError) {
                             </div>
                           </div>
 
+                          {auction.buy_now_enabled && (
+                            <div>
+                              <div className="text-xs text-gray-500">
+                                الشراء المباشر
+                              </div>
+                              <div className="font-bold text-[#0F3A2B]">
+                                {formatMoney(auction.buy_now_price)}
+                              </div>
+                            </div>
+                          )}
+
                           <div>
                             <div className="text-xs text-gray-500">
                               عدد المزايدات
@@ -1333,6 +1378,57 @@ if (updateAuctionError) {
                     placeholder="1.000"
                   />
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] p-4">
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={formData.buy_now_enabled}
+                    onChange={(event) =>
+                      setFormData({
+                        ...formData,
+                        buy_now_enabled: event.target.checked,
+                        buy_now_price: event.target.checked
+                          ? formData.buy_now_price
+                          : "",
+                      })
+                    }
+                    className="h-5 w-5 accent-[#0F3A2B]"
+                  />
+
+                  <span className="text-sm font-bold text-[#0F3A2B]">
+                    تفعيل الشراء المباشر
+                  </span>
+                </label>
+
+                {formData.buy_now_enabled && (
+                  <div className="mt-4">
+                    <label className="mb-2 block text-sm font-bold">
+                      سعر الشراء المباشر
+                    </label>
+
+                    <input
+                      type="number"
+                      required={formData.buy_now_enabled}
+                      min="0.001"
+                      step="0.001"
+                      value={formData.buy_now_price}
+                      onChange={(event) =>
+                        setFormData({
+                          ...formData,
+                          buy_now_price: event.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-[#D8D2C5] bg-white px-4 py-3 outline-none focus:border-[#0F3A2B]"
+                      placeholder="مثال: 420.000"
+                    />
+
+                    <p className="mt-2 text-xs text-gray-500">
+                      هذا السعر سيظهر للعميل بجانب زر الشراء المباشر.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
