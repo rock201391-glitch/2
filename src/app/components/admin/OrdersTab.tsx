@@ -76,6 +76,31 @@ export default function OrdersTab() {
     return method || "-";
   };
 
+  const getStatusStyle = (status?: string) => {
+    switch (status) {
+      case "قيد المراجعة":
+        return "bg-yellow-100 text-yellow-800 border border-yellow-300";
+
+      case "تم تأكيد الطلب":
+        return "bg-blue-100 text-blue-800 border border-blue-300";
+
+      case "جاري التحضير":
+        return "bg-orange-100 text-orange-800 border border-orange-300";
+
+      case "قيد التوصيل":
+        return "bg-purple-100 text-purple-800 border border-purple-300";
+
+      case "تم الاستلام":
+        return "bg-green-100 text-green-800 border border-green-300";
+
+      case "ملغي":
+        return "bg-red-100 text-red-800 border border-red-300";
+
+      default:
+        return "bg-gray-100 text-gray-700 border border-gray-300";
+    }
+  };
+
   return (
     <div>
       {/* شريط الأدوات العلوي */}
@@ -130,7 +155,11 @@ export default function OrdersTab() {
                   <td className="p-5 text-sm">{order.city || "-"}</td>
                   <td className="p-5 text-sm">{getShippingText(order.shipping_method)}</td>
                   <td className="p-5">
-                    <span className="rounded-full bg-[#EAF3EE] text-[#0F3A2B] px-4 py-1 text-xs font-bold shadow-sm border border-[#cbe2d5]">
+                    <span
+                      className={`rounded-full px-4 py-1 text-xs font-bold shadow-sm ${getStatusStyle(
+                        order.status
+                      )}`}
+                    >
                       {order.status || "قيد المراجعة"}
                     </span>
                   </td>
