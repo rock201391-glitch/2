@@ -689,7 +689,7 @@ export default function Auctions() {
                         <button
                           type="button"
                           onClick={() => handleBuyNow(auction)}
-                          className="mt-3 flex w-full items-center justify-center rounded-full border-2 border-[#0F3A2B] px-5 py-3.5 font-black text-[#0F3A2B] transition hover:bg-[#0F3A2B] hover:text-white"
+                          className="mt-3 flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#0F3A2B] to-[#1A5A42] px-5 py-3.5 font-black text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:from-[#144734] hover:to-[#21664B] active:scale-[0.98]"
                         >
                           اشتري الآن • {Number(auction.buy_now_price).toFixed(3)} ر.ع
                         </button>
