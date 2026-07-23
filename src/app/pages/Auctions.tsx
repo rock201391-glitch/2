@@ -28,6 +28,7 @@ interface Auction {
   winner_amount?: number | null;
   buy_now_enabled?: boolean;
   buy_now_price?: number | null;
+  sold_via_buy_now?: boolean;
   created_at: string;
 }
 
@@ -155,6 +156,13 @@ function getTimeUntilStart(startDate: string | null) {
 }
 
 function getAuctionStatus(auction: Auction) {
+  if (auction.sold_via_buy_now) {
+    return {
+      text: "تم البيع بالشراء المباشر",
+      className: "bg-emerald-100 text-emerald-700",
+    };
+  }
+
   if (auction.winner_name) {
     return {
       text: "تم إعلان الفائز",
@@ -325,14 +333,17 @@ export default function Auctions() {
     if (
       selectedAuction.status !== "active" ||
       !selectedAuction.is_active ||
-      selectedAuction.winner_name
+      selectedAuction.winner_name ||
+      selectedAuction.sold_via_buy_now
     ) {
       setMessage(
-        selectedAuction.winner_name
-          ? "تم إعلان الفائز في هذا المزاد"
-          : selectedAuction.status === "paused"
-            ? "المزاد موقوف مؤقتًا"
-            : "هذا المزاد غير متاح للمزايدة",
+        selectedAuction.sold_via_buy_now
+          ? "تم بيع هذا المنتج بالشراء المباشر"
+          : selectedAuction.winner_name
+            ? "تم إعلان الفائز في هذا المزاد"
+            : selectedAuction.status === "paused"
+              ? "المزاد موقوف مؤقتًا"
+              : "هذا المزاد غير متاح للمزايدة",
       );
       return;
     }
@@ -563,6 +574,7 @@ export default function Auctions() {
               );
 
               const canBid =
+                !auction.sold_via_buy_now &&
                 auction.status === "active" &&
                 auction.is_active &&
                 !isUpcoming &&
@@ -630,7 +642,19 @@ export default function Auctions() {
                         </p>
                       </div>
 
-                      {auction.winner_name && (
+                      {auction.sold_via_buy_now && (
+                        <div className="mt-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-center">
+                          <p className="text-sm font-black text-green-800">
+                            تم بيع هذا المنتج بالشراء المباشر
+                          </p>
+
+                          <p className="mt-1 text-lg font-black text-green-900">
+                            {Number(auction.buy_now_price || 0).toFixed(3)} ر.ع
+                          </p>
+                        </div>
+                      )}
+
+                      {auction.winner_name && !auction.sold_via_buy_now && (
                         <div className="mt-3 rounded-2xl border border-purple-200 bg-purple-50 p-3">
                           <div className="text-sm font-bold text-purple-800 flex items-center gap-1.5">
                             <Award className="h-4 w-4" />
@@ -674,22 +698,25 @@ export default function Auctions() {
                       <Gavel className="h-5 w-5" />
                       {canBid
                         ? "زايد الآن"
-                        : auction.winner_name
-                          ? "تم إعلان الفائز"
-                          : isUpcoming
-                            ? "المزاد لم يبدأ بعد"
-                            : auction.status === "paused"
-                              ? "المزاد موقوف مؤقتًا"
-                              : "انتهى المزاد"}
+                        : auction.sold_via_buy_now
+                          ? "تم البيع بالشراء المباشر"
+                          : auction.winner_name
+                            ? "تم إعلان الفائز"
+                            : isUpcoming
+                              ? "المزاد لم يبدأ بعد"
+                              : auction.status === "paused"
+                                ? "المزاد موقوف مؤقتًا"
+                                : "انتهى المزاد"}
                     </button>
 
-                    {auction.buy_now_enabled &&
+                    {!auction.sold_via_buy_now &&
+                      auction.buy_now_enabled &&
                       auction.buy_now_price &&
                       Number(auction.buy_now_price) > 0 && (
                         <button
                           type="button"
                           onClick={() => handleBuyNow(auction)}
-                          className="mt-3 flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#0F3A2B] to-[#1A5A42] px-5 py-3.5 font-black text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:from-[#144734] hover:to-[#21664B] active:scale-[0.98]"
+                          className="mt-3 flex w-full items-center justify-center rounded-full bg-[#0F3A2B] px-5 py-3.5 font-black text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
                         >
                           اشتري الآن • {Number(auction.buy_now_price).toFixed(3)} ر.ع
                         </button>
