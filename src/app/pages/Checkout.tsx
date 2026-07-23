@@ -74,34 +74,37 @@ const formatPrice = (amount: number) => `${amount.toFixed(2)} ر.ع`;
 
 export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const { items, getTotal, clearCart } = useCart();
+  const [buyNowItem, setBuyNowItem] = useState<BuyNowItem | null>(null);
 
-  const [buyNowItem, setBuyNowItem] = useState<BuyNowItem | null>(() => {
+  useEffect(() => {
     try {
       const savedItem = localStorage.getItem('mergab_buy_now_item');
-      if (!savedItem) return null;
+
+      if (!savedItem) return;
 
       const parsedItem = JSON.parse(savedItem) as BuyNowItem;
-      const price = Number(parsedItem?.price);
 
-      if (!parsedItem?.auction_id || !parsedItem?.name || !Number.isFinite(price) || price <= 0) {
+      if (
+        parsedItem?.auction_id &&
+        parsedItem?.name &&
+        Number(parsedItem?.price) > 0
+      ) {
+        setBuyNowItem({
+          id: parsedItem.id || `auction-${parsedItem.auction_id}`,
+          auction_id: parsedItem.auction_id,
+          name: parsedItem.name,
+          price: Number(parsedItem.price),
+          quantity: 1,
+          image: parsedItem.image || '',
+        });
+      } else {
         localStorage.removeItem('mergab_buy_now_item');
-        return null;
       }
-
-      return {
-        id: parsedItem.id || `auction-${parsedItem.auction_id}`,
-        auction_id: parsedItem.auction_id,
-        name: parsedItem.name,
-        price,
-        quantity: 1,
-        image: parsedItem.image || '',
-      };
     } catch (error) {
       console.error('Invalid buy-now item:', error);
       localStorage.removeItem('mergab_buy_now_item');
-      return null;
     }
-  });
+  }, []);
 
   const checkoutItems = buyNowItem ? [buyNowItem] : items;
 
@@ -326,7 +329,9 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     setIsSubmitting(true);
 
     try {
-      const productNames = checkoutItems.map(item => `${item.name} × ${item.quantity || 1}`).join('، ');
+      const productNames = checkoutItems
+        .map(item => `${item.name} × ${item.quantity || 1}`)
+        .join('، ');
       
       const paymentMethodNote = paymentMethod === 'cash_on_delivery' 
         ? 'العربون 5 ر.ع والباقي عند الاستلام' 
@@ -336,8 +341,12 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         `طريقة الدفع: ${paymentMethodNote}`,
         formData.addressDetails ? `تفاصيل العنوان: ${formData.addressDetails}` : '',
         formData.notes ? `ملاحظات الطلب: ${formData.notes}` : '',
-        !buyNowItem && isCouponApplied && appliedDiscount ? `كوبون الخصم: ${appliedDiscount.label}` : '',
-        buyNowItem ? `شراء مباشر من المزاد رقم: ${buyNowItem.auction_id}` : '',
+        !buyNowItem && isCouponApplied && appliedDiscount
+          ? `كوبون الخصم: ${appliedDiscount.label}`
+          : '',
+        buyNowItem
+          ? `شراء مباشر من المزاد رقم: ${buyNowItem.auction_id}`
+          : '',
       ].filter(Boolean);
 
       const fileName = `${Date.now()}-${receiptImage.name}`;
@@ -388,7 +397,10 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
             .eq('id', buyNowItem.auction_id);
 
           if (auctionUpdateError) {
-            console.warn('تم إنشاء الطلب، لكن تعذر إغلاق المزاد تلقائيًا:', auctionUpdateError);
+            console.warn(
+              'تم إنشاء الطلب، لكن تعذر إغلاق المزاد تلقائيًا:',
+              auctionUpdateError,
+            );
           }
         }
 
@@ -431,7 +443,9 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-center gap-2 cursor-pointer" onClick={onBack}>
           <ChevronRight className="text-[#0F3A2B]" />
-          <span className="font-semibold text-[#0F3A2B]">{buyNowItem ? 'العودة للمزادات' : 'العودة للسلة'}</span>
+          <span className="font-semibold text-[#0F3A2B]">
+            {buyNowItem ? 'العودة للمزادات' : 'العودة للسلة'}
+          </span>
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-bold mb-10 text-center text-[#0F3A2B]">إتمام الطلب</h1>
@@ -791,7 +805,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
               {buyNowItem && (
                 <div className="mb-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-800">
-                  شراء مباشر من المزاد بالسعر المحدد.
+                  هذا طلب شراء مباشر من المزاد بالسعر المحدد.
                 </div>
               )}
 
