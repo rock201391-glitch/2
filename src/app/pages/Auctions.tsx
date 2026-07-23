@@ -292,6 +292,31 @@ export default function Auctions() {
     setMessage("");
   }
 
+  function handleBuyNow(auction: Auction) {
+    if (
+      !auction.buy_now_enabled ||
+      !auction.buy_now_price ||
+      Number(auction.buy_now_price) <= 0
+    ) {
+      setMessage("الشراء المباشر غير متاح لهذا المزاد");
+      return;
+    }
+
+    localStorage.setItem(
+      "mergab_buy_now_item",
+      JSON.stringify({
+        id: `auction-${auction.id}`,
+        auction_id: auction.id,
+        name: auction.title,
+        price: Number(auction.buy_now_price),
+        quantity: 1,
+        image: auction.image_url || "",
+      }),
+    );
+
+    window.dispatchEvent(new Event("navigate-to-checkout"));
+  }
+
   async function handleSubmitBid(event: React.FormEvent) {
     event.preventDefault();
 
@@ -658,14 +683,17 @@ export default function Auctions() {
                               : "انتهى المزاد"}
                     </button>
 
-                    {auction.buy_now_enabled && auction.buy_now_price && (
-                      <button
-                        type="button"
-                        className="mt-3 flex w-full items-center justify-center rounded-full border-2 border-[#0F3A2B] px-5 py-3.5 font-black text-[#0F3A2B]"
-                      >
-                        اشتري الآن • {Number(auction.buy_now_price).toFixed(3)} ر.ع
-                      </button>
-                    )}
+                    {auction.buy_now_enabled &&
+                      auction.buy_now_price &&
+                      Number(auction.buy_now_price) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleBuyNow(auction)}
+                          className="mt-3 flex w-full items-center justify-center rounded-full border-2 border-[#0F3A2B] px-5 py-3.5 font-black text-[#0F3A2B] transition hover:bg-[#0F3A2B] hover:text-white"
+                        >
+                          اشتري الآن • {Number(auction.buy_now_price).toFixed(3)} ر.ع
+                        </button>
+                      )}
                   </div>
                 </article>
               );
