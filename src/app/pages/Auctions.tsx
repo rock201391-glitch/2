@@ -9,6 +9,7 @@ import {
   Award,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { useCart } from "../../context/CartContext";
 
 interface Auction {
   id: string;
@@ -45,6 +46,16 @@ const initialBidForm: BidForm = {
 };
 
 const BIDDER_STORAGE_KEY = "mergab_bidder_details";
+
+function getAuctionCartId(auctionId: string) {
+  let hash = 0;
+
+  for (let index = 0; index < auctionId.length; index += 1) {
+    hash = (hash * 31 + auctionId.charCodeAt(index)) | 0;
+  }
+
+  return -Math.abs(hash || 1);
+}
 
 function getSavedBidderDetails() {
   try {
@@ -202,6 +213,7 @@ function getAuctionStatus(auction: Auction) {
 }
 
 export default function Auctions() {
+  const { addItem } = useCart();
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAuction, setSelectedAuction] =
@@ -310,19 +322,30 @@ export default function Auctions() {
       return;
     }
 
-    localStorage.setItem(
-      "mergab_buy_now_item",
-      JSON.stringify({
-        id: `auction-${auction.id}`,
-        auction_id: auction.id,
-        name: auction.title,
-        price: Number(auction.buy_now_price),
-        quantity: 1,
-        image: auction.image_url || "",
-      }),
-    );
+    if (
+      auction.sold_via_buy_now ||
+      auction.winner_name ||
+      auction.status === "ended" ||
+      auction.status === "cancelled"
+    ) {
+      setMessage("هذا المنتج لم يعد متاحًا للشراء المباشر");
+      return;
+    }
 
-    window.dispatchEvent(new Event("navigate-to-checkout"));
+    addItem({
+      id: getAuctionCartId(auction.id),
+      name: auction.title,
+      price: Number(auction.buy_now_price),
+      quantity: 1,
+      image: auction.image_url || "",
+      auction_id: auction.id,
+      is_auction_buy_now: true,
+    } as any);
+
+    localStorage.removeItem("mergab_buy_now_item");
+
+    setMessage("تمت إضافة منتج المزاد إلى السلة");
+    window.dispatchEvent(new Event("open-cart"));
   }
 
   async function handleSubmitBid(event: React.FormEvent) {
