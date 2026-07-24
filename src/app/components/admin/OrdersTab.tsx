@@ -11,6 +11,7 @@ interface Order {
   city?: string;
   shipping_method?: string;
   payment_status?: string;
+  payment_method?: string;
   status?: string;
   notes?: string;
   receipt_url?: string;
@@ -100,6 +101,12 @@ export default function OrdersTab() {
     return method || "-";
   };
 
+  const getPaymentText = (method?: string) => {
+    if (method === "bank_transfer") return "تحويل بنكي";
+    if (method === "cash_on_delivery") return "الدفع عند الاستلام";
+    return method || "-";
+  };
+
   const getStatusStyle = (status?: string) => {
     switch (status) {
       case "قيد المراجعة":
@@ -159,6 +166,7 @@ export default function OrdersTab() {
                 <th className="p-5 font-bold text-sm">المحافظة</th>
                 <th className="p-5 font-bold text-sm">الولاية</th>
                 <th className="p-5 font-bold text-sm">التوصيل</th>
+                <th className="p-5 font-bold text-sm">طريقة الدفع</th>
                 <th className="p-5 font-bold text-sm">الحالة</th>
                 <th className="p-5 font-bold text-sm">التاريخ</th>
                 <th className="p-5 font-bold text-sm">التفاصيل</th>
@@ -178,6 +186,19 @@ export default function OrdersTab() {
                   <td className="p-5 text-sm">{order.governorate || "-"}</td>
                   <td className="p-5 text-sm">{order.city || "-"}</td>
                   <td className="p-5 text-sm">{getShippingText(order.shipping_method)}</td>
+                  <td className="p-5 text-sm">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${
+                        order.payment_method === "bank_transfer"
+                          ? "bg-blue-100 text-blue-800 border border-blue-300"
+                          : order.payment_method === "cash_on_delivery"
+                          ? "bg-orange-100 text-orange-800 border border-orange-300"
+                          : "bg-gray-100 text-gray-700 border border-gray-300"
+                      }`}
+                    >
+                      {getPaymentText(order.payment_method)}
+                    </span>
+                  </td>
                   <td className="p-5">
                     <span
                       className={`rounded-full px-4 py-1 text-xs font-bold shadow-sm ${getStatusStyle(
@@ -232,6 +253,7 @@ export default function OrdersTab() {
               <p><b>المحافظة:</b> {selectedOrder.governorate || "-"}</p>
               <p><b>الولاية:</b> {selectedOrder.city || "-"}</p>
               <p><b>طريقة التوصيل:</b> {getShippingText(selectedOrder.shipping_method)}</p>
+              <p><b>طريقة الدفع:</b> {getPaymentText(selectedOrder.payment_method)}</p>
 
               <div className="flex items-center gap-2">
                 <b className="shrink-0">الحالة:</b>
