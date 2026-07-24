@@ -61,7 +61,94 @@ export default function ProductDetail({ product, onBack, onProductClick }: Produ
       .slice(0, 4);
   }, [products, product.id, product.category_id]);
 
-  const handleAddToCart = () => {
+
+  const animateProductToCart = (
+    sourceElement: HTMLElement,
+    onComplete?: () => void,
+  ) => {
+    const cartTarget = document.querySelector<HTMLElement>(
+      '[data-cart-target="true"]',
+    );
+
+    const productImage = document.querySelector<HTMLImageElement>(
+      '[data-main-product-image="true"]',
+    );
+
+    if (!cartTarget || !productImage) {
+      onComplete?.();
+      return;
+    }
+
+    const imageRect = productImage.getBoundingClientRect();
+    const cartRect = cartTarget.getBoundingClientRect();
+
+    const flyingImage = document.createElement('img');
+    flyingImage.src = currentImage || product.image_url || product.image || '';
+    flyingImage.alt = product.name;
+
+    Object.assign(flyingImage.style, {
+      position: 'fixed',
+      left: `${imageRect.left}px`,
+      top: `${imageRect.top}px`,
+      width: `${imageRect.width}px`,
+      height: `${imageRect.height}px`,
+      objectFit: 'cover',
+      borderRadius: '20px',
+      zIndex: '100000',
+      pointerEvents: 'none',
+      boxShadow: '0 18px 45px rgba(15, 58, 43, 0.28)',
+      opacity: '1',
+      transform: 'scale(1) rotate(0deg)',
+      transition:
+        'left 760ms cubic-bezier(0.22, 1, 0.36, 1), top 760ms cubic-bezier(0.22, 1, 0.36, 1), width 760ms cubic-bezier(0.22, 1, 0.36, 1), height 760ms cubic-bezier(0.22, 1, 0.36, 1), opacity 760ms ease, transform 760ms cubic-bezier(0.22, 1, 0.36, 1)',
+    });
+
+    document.body.appendChild(flyingImage);
+
+    sourceElement.animate(
+      [
+        { transform: 'scale(1)' },
+        { transform: 'scale(0.94)' },
+        { transform: 'scale(1)' },
+      ],
+      {
+        duration: 260,
+        easing: 'ease-out',
+      },
+    );
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flyingImage.style.left = `${cartRect.left + cartRect.width / 2 - 18}px`;
+        flyingImage.style.top = `${cartRect.top + cartRect.height / 2 - 18}px`;
+        flyingImage.style.width = '36px';
+        flyingImage.style.height = '36px';
+        flyingImage.style.opacity = '0.2';
+        flyingImage.style.transform = 'scale(0.18) rotate(14deg)';
+      });
+    });
+
+    window.setTimeout(() => {
+      flyingImage.remove();
+
+      cartTarget.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.3) rotate(-8deg)' },
+          { transform: 'scale(0.92) rotate(5deg)' },
+          { transform: 'scale(1)' },
+        ],
+        {
+          duration: 480,
+          easing: 'ease-out',
+        },
+      );
+
+      onComplete?.();
+    }, 780);
+  };
+
+  const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
     addItem({
       id: product.id,
       name: product.name,
@@ -71,9 +158,14 @@ export default function ProductDetail({ product, onBack, onProductClick }: Produ
     });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
+
+    animateProductToCart(
+      event.currentTarget,
+      () => window.dispatchEvent(new Event('open-cart')),
+    );
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = (event: React.MouseEvent<HTMLButtonElement>) => {
     addItem({
       id: product.id,
       name: product.name,
@@ -81,8 +173,10 @@ export default function ProductDetail({ product, onBack, onProductClick }: Produ
       quantity,
       image: product.image_url || product.image || '',
     });
-    // Dispatch custom event so App.tsx navigates to checkout
-    window.dispatchEvent(new CustomEvent('navigate-to-checkout'));
+    animateProductToCart(
+      event.currentTarget,
+      () => window.dispatchEvent(new CustomEvent('navigate-to-checkout')),
+    );
   };
 
   const handleSimilarProductClick = (p: any) => {
@@ -125,6 +219,7 @@ export default function ProductDetail({ product, onBack, onProductClick }: Produ
                 <img
                   src={currentImage}
                   alt={product.name}
+                  data-main-product-image="true"
                   className="w-full h-full object-cover"
                 />
               ) : (
