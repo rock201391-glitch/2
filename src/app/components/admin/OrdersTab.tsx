@@ -70,6 +70,30 @@ export default function OrdersTab() {
     setUpdatingStatus(false);
   }
 
+  async function handleDeleteOrder(orderId: string | number) {
+    const confirmed = window.confirm(
+      "هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن العملية."
+    );
+
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", orderId);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setOrders((current) => current.filter((o) => o.id !== orderId));
+
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder(null);
+    }
+  }
+
   const getShippingText = (method?: string) => {
     if (method === "home") return "توصيل للمنزل";
     if (method === "office") return "استلام من المكتب";
@@ -261,6 +285,16 @@ export default function OrdersTab() {
               ) : (
                 <p className="text-sm text-gray-400 italic">لا توجد صورة إيصال مرفقة لهذا الطلب</p>
               )}
+            </div>
+
+            {/* زر حذف الطلب */}
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={() => handleDeleteOrder(selectedOrder.id)}
+                className="rounded-xl bg-red-600 px-5 py-3 text-white font-bold hover:bg-red-700 transition-all text-sm shadow"
+              >
+                🗑️ حذف الطلب
+              </button>
             </div>
           </div>
         </div>
