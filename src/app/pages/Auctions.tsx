@@ -312,7 +312,89 @@ export default function Auctions() {
     setMessage("");
   }
 
-  function handleBuyNow(auction: Auction) {
+  function animateProductToCart(
+    auction: Auction,
+    sourceElement: HTMLElement,
+  ) {
+    const cartTarget = document.querySelector<HTMLElement>(
+      '[data-cart-target="true"]',
+    );
+
+    const productCard = sourceElement.closest("article");
+    const productImage = productCard?.querySelector<HTMLImageElement>("img");
+
+    if (!cartTarget || !productImage) {
+      window.dispatchEvent(new Event("open-cart"));
+      return;
+    }
+
+    const imageRect = productImage.getBoundingClientRect();
+    const cartRect = cartTarget.getBoundingClientRect();
+
+    const flyingImage = document.createElement("img");
+    flyingImage.src = auction.image_url || productImage.src;
+    flyingImage.alt = auction.title;
+
+    Object.assign(flyingImage.style, {
+      position: "fixed",
+      left: `${imageRect.left}px`,
+      top: `${imageRect.top}px`,
+      width: `${imageRect.width}px`,
+      height: `${imageRect.height}px`,
+      objectFit: "cover",
+      borderRadius: "24px",
+      zIndex: "100000",
+      pointerEvents: "none",
+      boxShadow: "0 18px 45px rgba(15, 58, 43, 0.28)",
+      transition:
+        "left 760ms cubic-bezier(0.22, 1, 0.36, 1), top 760ms cubic-bezier(0.22, 1, 0.36, 1), width 760ms cubic-bezier(0.22, 1, 0.36, 1), height 760ms cubic-bezier(0.22, 1, 0.36, 1), opacity 760ms ease, transform 760ms cubic-bezier(0.22, 1, 0.36, 1)",
+      transform: "scale(1) rotate(0deg)",
+      opacity: "1",
+    });
+
+    document.body.appendChild(flyingImage);
+
+    sourceElement.animate(
+      [
+        { transform: "scale(1)" },
+        { transform: "scale(0.96)" },
+        { transform: "scale(1)" },
+      ],
+      { duration: 260, easing: "ease-out" },
+    );
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flyingImage.style.left = `${cartRect.left + cartRect.width / 2 - 18}px`;
+        flyingImage.style.top = `${cartRect.top + cartRect.height / 2 - 18}px`;
+        flyingImage.style.width = "36px";
+        flyingImage.style.height = "36px";
+        flyingImage.style.opacity = "0.25";
+        flyingImage.style.transform = "scale(0.2) rotate(12deg)";
+      });
+    });
+
+    window.setTimeout(() => {
+      flyingImage.remove();
+
+      cartTarget.animate(
+        [
+          { transform: "scale(1)" },
+          { transform: "scale(1.28) rotate(-8deg)" },
+          { transform: "scale(0.92) rotate(5deg)" },
+          { transform: "scale(1)" },
+        ],
+        { duration: 480, easing: "ease-out" },
+      );
+
+      window.dispatchEvent(new Event("open-cart"));
+    }, 780);
+  }
+
+  function handleBuyNow(
+    auction: Auction,
+    sourceElement: HTMLElement,
+  ) {
     if (
       !auction.buy_now_enabled ||
       !auction.buy_now_price ||
@@ -343,9 +425,9 @@ export default function Auctions() {
     } as any);
 
     localStorage.removeItem("mergab_buy_now_item");
-
     setMessage("تمت إضافة منتج المزاد إلى السلة");
-    window.dispatchEvent(new Event("open-cart"));
+
+    animateProductToCart(auction, sourceElement);
   }
 
   async function handleSubmitBid(event: React.FormEvent) {
@@ -738,7 +820,7 @@ export default function Auctions() {
                       Number(auction.buy_now_price) > 0 && (
                         <button
                           type="button"
-                          onClick={() => handleBuyNow(auction)}
+                          onClick={(event) => handleBuyNow(auction, event.currentTarget)}
                           className="mt-3 flex w-full items-center justify-center rounded-full bg-[#0F3A2B] px-5 py-3.5 font-black text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
                         >
                           اشتري الآن • {Number(auction.buy_now_price).toFixed(3)} ر.ع
