@@ -714,56 +714,53 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 ))}
               </div>
 
-              {
+             
                 <div className="rounded-2xl border border-[#E8E3D9] bg-[#FBF7EF] p-4 mb-5">
-                  <label className="block font-semibold mb-2">كوبون الخصم</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={handleCouponChange}
-                    className="flex-1 px-3 py-2 border border-[#D9D2C3] rounded-xl bg-white outline-none focus:border-[#0F3A2B]"
-                    placeholder="أدخل كود الخصم"
-                  />
-                  <button
-                    type="button"
-                    onClick={applyCoupon}
-                    disabled={isApplyingCoupon}
-                    className="px-4 py-2 rounded-xl bg-[#0F3A2B] text-white font-semibold disabled:opacity-60"
-                  >
-                    {isApplyingCoupon ? '...' : 'تطبيق'}
-                  </button>
-                </div>
-                {couponStatus && (
-                  isCouponApplied ? (
-                    <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm">
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-green-700" />
-                      <span>{couponStatus}</span>
-                    </div>
-                  ) : (
-                    <p className="text-sm mt-2 text-red-600">{couponStatus}</p>
-                  )
-                )}
-                </div>
-              )}
+  <label className="block font-semibold mb-2">كوبون الخصم</label>
 
-              {false && (
-                <div className="mb-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-800">
-                  هذا طلب شراء مباشر من المزاد بالسعر المحدد.
-                </div>
-              )}
+  <div className="flex gap-2">
+    <input
+      type="text"
+      value={couponCode}
+      onChange={handleCouponChange}
+      className="flex-1 px-3 py-2 border border-[#D9D2C3] rounded-xl bg-white outline-none focus:border-[#0F3A2B]"
+      placeholder="أدخل كود الخصم"
+    />
+
+    <button
+      type="button"
+      onClick={applyCoupon}
+      disabled={isApplyingCoupon}
+      className="px-4 py-2 rounded-xl bg-[#0F3A2B] text-white font-semibold disabled:opacity-60"
+    >
+      {isApplyingCoupon ? '...' : 'تطبيق'}
+    </button>
+  </div>
+
+  {couponStatus && (
+    isCouponApplied ? (
+      <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm">
+        <CheckCircle2 className="w-4 h-4 shrink-0 text-green-700" />
+        <span>{couponStatus}</span>
+      </div>
+    ) : (
+      <p className="text-sm mt-2 text-red-600">{couponStatus}</p>
+    )
+  )}
+</div>
+
+             
 
               <div className="flex justify-between mb-3 text-[#0F3A2B]">
                 <span>المنتجات:</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
 
-              {
-                <div className="flex justify-between mb-3 text-[#0F3A2B]">
-                  <span>الخصم:</span>
-                  <span>-{formatPrice(discountAmount)}</span>
-                </div>
-              )}
+              
+               <div className="flex justify-between mb-3 text-[#0F3A2B]">
+  <span>الخصم:</span>
+  <span>-{formatPrice(discountAmount)}</span>
+</div>
 
               <div className="flex justify-between mb-6 text-[#0F3A2B]">
                 <span>رسوم التوصيل:</span>
