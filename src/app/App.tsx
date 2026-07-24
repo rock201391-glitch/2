@@ -302,18 +302,16 @@ export default function App() {
 
                   <div className="absolute top-0 right-0 h-screen w-full max-w-md bg-[#F8F7F2] shadow-2xl overflow-y-auto">
                     <Cart
-                     <Cart
-  onNavigate={(page) => {
-    setIsCartOpen(false);
-    handleNavigate(page);
-  }}
-  onCheckout={() => {
-    setIsCartOpen(false);
-    setCurrentPage('checkout');
-  }}
-  onClose={() => setIsCartOpen(false)}
-/>
-                  
+                      onNavigate={(page) => {
+                        setIsCartOpen(false);
+                        handleNavigate(page);
+                      }}
+                      onCheckout={() => {
+                        setIsCartOpen(false);
+                        setCurrentPage('checkout');
+                      }}
+                      onClose={() => setIsCartOpen(false)}
+                    />
                   </div>
                 </div>
               )}
