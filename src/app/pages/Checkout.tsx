@@ -14,16 +14,6 @@ interface CheckoutProps {
   onBack: () => void;
   onSuccess: () => void;
 }
-
-interface BuyNowItem {
-  id: string;
-  auction_id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-}
-
 interface ShippingOption {
   key: string;
   label: string;
@@ -74,39 +64,7 @@ const formatPrice = (amount: number) => `${amount.toFixed(2)} ر.ع`;
 
 export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const { items, getTotal, clearCart } = useCart();
-  const [buyNowItem, setBuyNowItem] = useState<BuyNowItem | null>(null);
-
-  useEffect(() => {
-    try {
-      const savedItem = localStorage.getItem('mergab_buy_now_item');
-
-      if (!savedItem) return;
-
-      const parsedItem = JSON.parse(savedItem) as BuyNowItem;
-
-      if (
-        parsedItem?.auction_id &&
-        parsedItem?.name &&
-        Number(parsedItem?.price) > 0
-      ) {
-        setBuyNowItem({
-          id: parsedItem.id || `auction-${parsedItem.auction_id}`,
-          auction_id: parsedItem.auction_id,
-          name: parsedItem.name,
-          price: Number(parsedItem.price),
-          quantity: 1,
-          image: parsedItem.image || '',
-        });
-      } else {
-        localStorage.removeItem('mergab_buy_now_item');
-      }
-    } catch (error) {
-      console.error('Invalid buy-now item:', error);
-      localStorage.removeItem('mergab_buy_now_item');
-    }
-  }, []);
-
-  const checkoutItems = buyNowItem ? [buyNowItem] : items;
+  const checkoutItems = items;
 
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(FALLBACK_SHIPPING);
   const [bankInfo, setBankInfo] = useState(FALLBACK_BANK);
@@ -168,10 +126,10 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const [appliedDiscount, setAppliedDiscount] = useState<{ amount: number; label: string; codeId?: number } | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
-  const subtotal = buyNowItem ? buyNowItem.price : getTotal();
+  const subtotal = getTotal();
   const selectedShipping = shippingOptions.find(s => s.key === formData.shippingMethod) ?? shippingOptions[0];
   const shippingCost = selectedShipping?.price ?? 0;
-  const discountAmount = buyNowItem ? 0 : (appliedDiscount?.amount ?? 0);
+  const discountAmount = appliedDiscount?.amount ?? 0;
   const total = subtotal - discountAmount + shippingCost;
   const wilayahOptions = governorateToWilayah[formData.governorate] || [];
 
@@ -341,12 +299,10 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         `طريقة الدفع: ${paymentMethodNote}`,
         formData.addressDetails ? `تفاصيل العنوان: ${formData.addressDetails}` : '',
         formData.notes ? `ملاحظات الطلب: ${formData.notes}` : '',
-        !buyNowItem && isCouponApplied && appliedDiscount
+        isCouponApplied && appliedDiscount
           ? `كوبون الخصم: ${appliedDiscount.label}`
           : '',
-        buyNowItem
-          ? `شراء مباشر من المزاد رقم: ${buyNowItem.auction_id}`
-          : '',
+
       ].filter(Boolean);
 
       const fileName = `${Date.now()}-${receiptImage.name}`;
@@ -386,25 +342,18 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       }
 
       try {
-        if (buyNowItem) {
-          const { error: auctionUpdateError } = await supabase
-            .from('auctions')
-            .update({
-              status: 'ended',
-              is_active: false,
-              buy_now_enabled: false,
-            })
-            .eq('id', buyNowItem.auction_id);
-
-          if (auctionUpdateError) {
-            console.warn(
-              'تم إنشاء الطلب، لكن تعذر إغلاق المزاد تلقائيًا:',
-              auctionUpdateError,
-            );
+        for (const item of checkoutItems as any[]) {
+          if (item.is_auction_buy_now && item.auction_id) {
+            await supabase.from('auctions').update({
+              status:'ended',
+              is_active:false,
+              buy_now_enabled:false,
+              sold_via_buy_now:true
+            }).eq('id', item.auction_id);
           }
         }
 
-        if (!buyNowItem && isCouponApplied && appliedDiscount?.codeId) {
+        if (isCouponApplied && appliedDiscount?.codeId) {
           await supabase.rpc('increment_coupon_used_count', {
             coupon_id: appliedDiscount.codeId,
           });
@@ -421,12 +370,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
       localStorage.setItem('orders', JSON.stringify(savedOrders));
 
-      if (buyNowItem) {
-        localStorage.removeItem('mergab_buy_now_item');
-        setBuyNowItem(null);
-      } else {
-        clearCart();
-      }
+      clearCart();
 
       alert('تم إرسال الطلب بنجاح');
       onSuccess();
@@ -444,7 +388,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         <div className="mb-8 flex items-center gap-2 cursor-pointer" onClick={onBack}>
           <ChevronRight className="text-[#0F3A2B]" />
           <span className="font-semibold text-[#0F3A2B]">
-            {buyNowItem ? 'العودة للمزادات' : 'العودة للسلة'}
+            العودة للسلة
           </span>
         </div>
 
@@ -770,7 +714,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 ))}
               </div>
 
-              {!buyNowItem && (
+              {
                 <div className="rounded-2xl border border-[#E8E3D9] bg-[#FBF7EF] p-4 mb-5">
                   <label className="block font-semibold mb-2">كوبون الخصم</label>
                 <div className="flex gap-2">
@@ -803,7 +747,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 </div>
               )}
 
-              {buyNowItem && (
+              {false && (
                 <div className="mb-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-800">
                   هذا طلب شراء مباشر من المزاد بالسعر المحدد.
                 </div>
@@ -814,7 +758,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                 <span>{formatPrice(subtotal)}</span>
               </div>
 
-              {!buyNowItem && (
+              {
                 <div className="flex justify-between mb-3 text-[#0F3A2B]">
                   <span>الخصم:</span>
                   <span>-{formatPrice(discountAmount)}</span>
