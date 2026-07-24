@@ -9,7 +9,7 @@ import {
   Award,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../contexts/CartContext";
 
 interface Auction {
   id: string;
