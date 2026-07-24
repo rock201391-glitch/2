@@ -97,6 +97,18 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const openCart = () => {
+      setIsCartOpen(true);
+    };
+
+    window.addEventListener('open-cart', openCart);
+
+    return () => {
+      window.removeEventListener('open-cart', openCart);
+    };
+  }, []);
+
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
