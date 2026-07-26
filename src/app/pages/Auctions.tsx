@@ -981,6 +981,10 @@ export default function Auctions() {
                   </>
                 )}
               </button>
+              <p className="mt-3 text-center text-[11px] leading-5 text-red-600">
+  ⚠️ هذا المزاد تحت إشراف المحامية فريدة البلوشية. المزايدة الوهمية أو عدم
+  إتمام الشراء بعد رسو المزاد يعرّض صاحبها للإجراءات القانونية.
+</p>
             </form>
           </div>
         </div>
