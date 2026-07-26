@@ -48,7 +48,7 @@ export default function Footer() {
             <div className="mt-4 flex items-center justify-center gap-3 md:justify-start">
               {/* واتساب */}
               <a
-                href="https://wa.me/96894353535"
+                href="https://wa.me/96871979631"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
@@ -79,7 +79,7 @@ export default function Footer() {
             <div className="mt-3 space-y-4">
               {/* الرقم */}
               <a
-                href="https://wa.me/96894353535"
+                href="https://wa.me/96871979631"
                 target="_blank"
                 rel="noopener noreferrer"
                 dir="ltr"
@@ -88,7 +88,7 @@ export default function Footer() {
                 <MessageCircle className="h-5 w-5" />
 
                 <span className="whitespace-nowrap">
-                  +968 9435 3535
+                  +968 7197 9631
                 </span>
               </a>
 
