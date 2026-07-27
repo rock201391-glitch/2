@@ -680,7 +680,7 @@ export default function Auctions() {
               return (
                 <article
                   key={auction.id}
-                  className="overflow-hidden rounded-[2rem] border border-[#D8D2C5] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between scale-[0.8] origin-top my-[-10%]"
+                  className="overflow-hidden rounded-[2rem] border border-[#D8D2C5] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between scale-[0.8] origin-top translate-y-6"
                 >
                   <div>
                     <div className="relative aspect-square overflow-hidden bg-[#FBF7EF]">
