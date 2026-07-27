@@ -578,7 +578,7 @@ export default function Auctions() {
       }),
     );
 
-    // إغلاق النافذة وتصفية الحقول وإظهار رسالة النجاح بشكل مؤقت
+    // إغلاق النافذة وتصفية الحقول وإظهار رسالة النجاح في منتصف الشاشة مؤقتاً
     setSelectedAuction(null);
     setBidForm(initialBidForm);
     setSubmittingBid(false);
@@ -600,10 +600,12 @@ export default function Auctions() {
       className="min-h-screen bg-[#F8F7F2] px-4 py-10 text-[#0F3A2B]"
       dir="rtl"
     >
-      {/* رسالة التنبيه العلوية المؤقتة */}
+      {/* رسالة النجاح في منتصف الشاشة تماماً */}
       {message && (
-        <div className="fixed top-24 left-1/2 z-[99999] -translate-x-1/2 rounded-2xl bg-[#0F3A2B] px-6 py-3 font-bold text-white shadow-xl">
-          {message}
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center pointer-events-none">
+          <div className="rounded-2xl bg-[#0F3A2B] px-8 py-4 text-lg font-bold text-white shadow-2xl">
+            {message}
+          </div>
         </div>
       )}
 
@@ -943,7 +945,7 @@ export default function Auctions() {
                 </div>
               </div>
 
-              {message && (
+              {message && selectedAuction && (
                 <div
                   className={`rounded-2xl p-4 text-center text-sm font-bold ${
                     message.includes("بنجاح")
