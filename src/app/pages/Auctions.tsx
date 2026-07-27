@@ -578,7 +578,6 @@ export default function Auctions() {
       }),
     );
 
-    // إغلاق النافذة وتصفية الحقول وإظهار رسالة النجاح في منتصف الشاشة مؤقتاً
     setSelectedAuction(null);
     setBidForm(initialBidForm);
     setSubmittingBid(false);
@@ -600,7 +599,6 @@ export default function Auctions() {
       className="min-h-screen bg-[#F8F7F2] px-4 py-10 text-[#0F3A2B]"
       dir="rtl"
     >
-      {/* رسالة النجاح في منتصف الشاشة تماماً */}
       {message && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center pointer-events-none">
           <div className="rounded-2xl bg-[#0F3A2B] px-8 py-4 text-lg font-bold text-white shadow-2xl">
@@ -682,7 +680,7 @@ export default function Auctions() {
               return (
                 <article
                   key={auction.id}
-                  className="overflow-hidden rounded-[2rem] border border-[#D8D2C5] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between"
+                  className="overflow-hidden rounded-[2rem] border border-[#D8D2C5] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between scale-[0.8] origin-top my-[-10%]"
                 >
                   <div>
                     <div className="relative aspect-square overflow-hidden bg-[#FBF7EF]">
