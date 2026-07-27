@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 import OrdersTab from "../components/admin/OrdersTab";
 import ProductsManager from "../components/admin/ProductsManager";
 import AuctionsManager from "../components/admin/AuctionsManager";
@@ -21,7 +22,7 @@ type AdminTab =
 const TABS: { id: AdminTab; label: string }[] = [
   { id: "orders",    label: "الطلبات" },
   { id: "products",  label: "المنتجات" },
-  { id: "auctions", label: "المزادات" },
+  { id: "auctions",  label: "المزادات" },
   { id: "categories", label: "الأقسام" },
   { id: "discounts", label: "كوبونات الخصم" },
   { id: "shipping",  label: "الشحن" },
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [activeTab, setActiveTab] = useState<AdminTab>("orders");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -119,8 +121,15 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#F8F7F2] text-[#0F3A2B] flex flex-col" dir="rtl">
       {/* Top bar */}
-      <header className="bg-[#0F3A2B] text-white px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#0F3A2B] text-white px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="lg:hidden flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
           <h1 className="text-xl font-bold tracking-wide">مِرقاب</h1>
           <span className="text-xs bg-white/20 px-3 py-1 rounded-full font-medium">لوحة التحكم</span>
         </div>
@@ -139,8 +148,8 @@ export default function AdminDashboard() {
 
       {/* Body: sidebar + content */}
       <div className="flex flex-1">
-        {/* Sidebar */}
-        <aside className="w-52 shrink-0 bg-white border-l border-[#E8E3D9] shadow-sm flex flex-col py-6 gap-1 px-3">
+        {/* Sidebar Desktop */}
+        <aside className="hidden lg:flex w-52 shrink-0 bg-white border-l border-[#E8E3D9] shadow-sm flex-col py-6 gap-1 px-3">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -156,16 +165,64 @@ export default function AdminDashboard() {
           ))}
         </aside>
 
+        {/* Sidebar Mobile */}
+        {isMobileSidebarOpen && (
+          <div className="fixed inset-0 z-[9999] lg:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="absolute inset-0 w-full h-full bg-black/40"
+              aria-label="إغلاق القائمة"
+            />
+
+            <aside className="absolute top-0 right-0 h-full w-[82%] max-w-xs bg-white px-4 py-5 shadow-2xl overflow-y-auto">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-xl font-bold">لوحة التحكم</h2>
+
+                <button
+                  type="button"
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  className="h-10 w-10 rounded-full bg-[#F8F7F2] flex items-center justify-center"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`w-full text-right rounded-2xl px-4 py-3 font-semibold text-sm transition-all ${
+                      activeTab === tab.id
+                        ? "bg-[#0F3A2B] text-white shadow"
+                        : "text-[#0F3A2B] hover:bg-[#EAF3EE]"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </aside>
+          </div>
+        )}
+
         {/* Main content */}
-        <main className="flex-1 px-6 py-8 overflow-x-auto">
-          {activeTab === "orders"     && <OrdersTab />}
-          {activeTab === "products"   && <ProductsManager />}
-          {activeTab === "auctions" && <AuctionsManager />}
-          {activeTab === "categories" && <CategoriesManager />}
-          {activeTab === "discounts"  && <DiscountCodesManager />}
-          {activeTab === "shipping"   && <ShippingManager />}
-          {activeTab === "settings"   && <SettingsManager />}
-          {activeTab === "theme"      && <ThemeManager />}
+        <main className="min-w-0 flex-1 px-3 sm:px-5 lg:px-6 py-4 sm:py-6 lg:py-8">
+          <div className="w-full min-w-0 overflow-x-auto">
+            {activeTab === "orders"     && <OrdersTab />}
+            {activeTab === "products"   && <ProductsManager />}
+            {activeTab === "auctions"   && <AuctionsManager />}
+            {activeTab === "categories" && <CategoriesManager />}
+            {activeTab === "discounts"  && <DiscountCodesManager />}
+            {activeTab === "shipping"   && <ShippingManager />}
+            {activeTab === "settings"   && <SettingsManager />}
+            {activeTab === "theme"      && <ThemeManager />}
+          </div>
         </main>
       </div>
     </div>
