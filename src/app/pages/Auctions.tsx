@@ -570,23 +570,6 @@ export default function Auctions() {
       )
     );
 
-    setSelectedAuction((currentAuction) =>
-      currentAuction
-        ? {
-            ...currentAuction,
-            current_price: updatedPrice,
-            highest_bidder_name: formattedName,
-          }
-        : currentAuction
-    );
-
-    setBidForm((currentForm) => ({
-      ...currentForm,
-      bid_amount: (
-        updatedPrice + Number(selectedAuction.minimum_bid || 0)
-      ).toFixed(3),
-    }));
-
     localStorage.setItem(
       BIDDER_STORAGE_KEY,
       JSON.stringify({
@@ -595,8 +578,15 @@ export default function Auctions() {
       }),
     );
 
-    setMessage("تم تسجيل مزايدتك بنجاح");
+    // إغلاق النافذة وتصفية الحقول وإظهار رسالة النجاح بشكل مؤقت
+    setSelectedAuction(null);
+    setBidForm(initialBidForm);
     setSubmittingBid(false);
+    setMessage("تم تأكيد مزايدتك بنجاح");
+
+    window.setTimeout(() => {
+      setMessage("");
+    }, 3000);
   }
 
   const visibleAuctions = useMemo(() => {
@@ -610,6 +600,13 @@ export default function Auctions() {
       className="min-h-screen bg-[#F8F7F2] px-4 py-10 text-[#0F3A2B]"
       dir="rtl"
     >
+      {/* رسالة التنبيه العلوية المؤقتة */}
+      {message && (
+        <div className="fixed top-24 left-1/2 z-[99999] -translate-x-1/2 rounded-2xl bg-[#0F3A2B] px-6 py-3 font-bold text-white shadow-xl">
+          {message}
+        </div>
+      )}
+
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 flex flex-col gap-5 rounded-[2rem] bg-[#0F3A2B] p-7 text-white shadow-xl md:flex-row md:items-center md:justify-between">
           <div>
@@ -640,12 +637,6 @@ export default function Auctions() {
             تحديث المزادات
           </button>
         </div>
-
-        {message && !selectedAuction && (
-          <div className="mb-6 rounded-2xl border border-[#D8D2C5] bg-white p-4 text-center font-semibold">
-            {message}
-          </div>
-        )}
 
         {loading ? (
           <div className="flex min-h-[300px] items-center justify-center rounded-[2rem] border border-[#D8D2C5] bg-white shadow-sm">
@@ -982,9 +973,9 @@ export default function Auctions() {
                 )}
               </button>
               <p className="mt-3 text-center text-[11px] leading-5 text-red-600">
-  ⚠️ هذا المزاد تحت إشراف المحامية فريدة البلوشية. المزايدة الوهمية أو عدم
-  إتمام الشراء بعد رسو المزاد يعرّض صاحبها للإجراءات القانونية.
-</p>
+                ⚠️ هذا المزاد تحت إشراف المحامية فريدة البلوشية. المزايدة الوهمية أو عدم
+                إتمام الشراء بعد رسو المزاد يعرّض صاحبها للإجراءات القانونية.
+              </p>
             </form>
           </div>
         </div>
