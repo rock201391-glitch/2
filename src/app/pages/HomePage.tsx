@@ -83,16 +83,24 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <button
                 type="button"
                 onClick={() => onNavigate('workshop')}
-                className="group inline-flex items-center gap-2 rounded-full border-2 px-7 py-3.5 font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
+                className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full px-8 py-4 font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] hover:shadow-[0_14px_30px_rgba(15,58,43,0.28)] active:translate-y-0 active:scale-95"
                 style={{
-                  borderColor: '#0F3A2B',
-                  color: '#0F3A2B',
-                  backgroundColor: '#F8F7F2',
+                  background:
+                    'linear-gradient(135deg, #173F31 0%, #0F3A2B 55%, #08271D 100%)',
+                  border: '1px solid rgba(216,201,155,0.65)',
                 }}
               >
-                <span>الدخول إلى الورشة</span>
+                <span className="absolute inset-0 translate-x-full bg-gradient-to-l from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:-translate-x-full" />
 
-                <Wrench className="h-5 w-5 transition-transform group-hover:rotate-12" />
+                <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#D8C99B]/15 ring-1 ring-[#D8C99B]/35">
+                  <Wrench className="h-4 w-4 text-[#E5D8AA] transition-transform duration-300 group-hover:rotate-12" />
+                </span>
+
+                <span className="relative z-10">
+                  الدخول إلى الورشة
+                </span>
+
+                <ChevronLeft className="relative z-10 h-5 w-5 text-[#E5D8AA] transition-transform duration-300 group-hover:-translate-x-1" />
               </button>
             </div>
           </div>
