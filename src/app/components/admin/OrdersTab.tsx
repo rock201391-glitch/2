@@ -60,9 +60,7 @@ export default function OrdersTab() {
         .select("*")
         .order("created_at", { ascending: false }),
 
-      supabase
-        .from("products")
-        .select("*"),
+      supabase.from("products").select("*"),
     ]);
 
     if (ordersResult.error) {
