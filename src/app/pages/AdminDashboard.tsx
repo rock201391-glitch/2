@@ -159,8 +159,6 @@ export default function AdminDashboard() {
         <div className="pointer-events-none absolute -bottom-40 -left-40 h-[450px] w-[450px] rounded-full bg-[#8FA99C]/15 blur-3xl" />
 
         <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-white/10 bg-[#08271D]/95 shadow-[0_30px_100px_rgba(0,0,0,0.38)] backdrop-blur-xl">
-          <div className="h-1.5 w-full bg-gradient-to-l from-[#D9CFB1] via-[#7F9B8D] to-[#1C5A43]" />
-
           <div className="px-7 py-9 sm:px-10">
             <div className="mb-9 text-center">
               <h1 className="text-4xl font-black tracking-tight text-[#F3EAD2]">
@@ -235,6 +233,67 @@ export default function AdminDashboard() {
       dir="rtl"
       className="min-h-screen bg-[#021A13] text-[#F2EBD8]"
     >
+
+      <style>{`
+        .admin-content {
+          color: #163F31;
+        }
+
+        .admin-content :where(
+          h1,
+          h2,
+          h3,
+          h4,
+          h5,
+          h6,
+          p,
+          label,
+          th,
+          td,
+          a,
+          small
+        ) {
+          color: #163F31 !important;
+        }
+
+        .admin-content :where(
+          div,
+          span
+        ):not(button):not(button *) {
+          color: #163F31;
+        }
+
+        .admin-content :where(
+          input,
+          textarea,
+          select
+        ) {
+          color: #163F31 !important;
+          background-color: #FBF8F0;
+          border-color: #CFC7B8;
+        }
+
+        .admin-content :where(
+          input,
+          textarea
+        )::placeholder {
+          color: #78867E !important;
+          opacity: 1;
+        }
+
+        .admin-content table {
+          color: #163F31;
+        }
+
+        .admin-content thead,
+        .admin-content thead th {
+          color: #F8F3E7 !important;
+        }
+
+        .admin-content button {
+          isolation: isolate;
+        }
+      `}</style>
       {/* الهيدر العلوي */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#031F17]/95 text-white shadow-[0_10px_35px_rgba(0,0,0,0.34)] backdrop-blur-xl">
         <div className="flex h-[72px] items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -419,9 +478,7 @@ export default function AdminDashboard() {
             </div>
 
             <section className="relative min-w-0 overflow-hidden rounded-[30px] border border-white/10 bg-[#F3EDE0] shadow-[0_24px_70px_rgba(0,0,0,0.30)]">
-              <div className="h-1.5 w-full bg-gradient-to-l from-[#0A3E2D] via-[#537564] to-[#CFC5AA]" />
-
-              <div className="w-full min-w-0 p-3 sm:p-5">
+              <div className="admin-content w-full min-w-0 p-3 sm:p-5">
                 {activeTab === "orders" && <OrdersTab />}
                 {activeTab === "accounts" && <StoreAccountsManager />}
                 {activeTab === "products" && <ProductsManager />}
