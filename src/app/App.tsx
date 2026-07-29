@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout';
 import TrackOrder from './pages/TrackOrder';
 import MyOrders from './pages/MyOrders';
 import Auctions from './pages/Auctions';
+import Workshop from './pages/Workshop';
 import Footer from './components/Footer';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -24,6 +25,7 @@ type Page =
   | 'track-order'
   | 'my-orders'
   | 'auctions'
+  | 'workshop'
   | 'admin';
 
 export default function App() {
@@ -184,6 +186,14 @@ export default function App() {
         return (
           <>
             <Auctions />
+            <Footer onNavigate={handleNavigate} />
+          </>
+        );
+
+      case 'workshop':
+        return (
+          <>
+            <Workshop onNavigate={handleNavigate} />
             <Footer onNavigate={handleNavigate} />
           </>
         );
