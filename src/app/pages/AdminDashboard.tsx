@@ -14,9 +14,11 @@ import {
   LogOut,
   ShieldCheck,
   ChevronLeft,
+  WalletCards,
 } from "lucide-react";
 
 import OrdersTab from "../components/admin/OrdersTab";
+import StoreAccountsManager from "../components/admin/StoreAccountsManager";
 import ProductsManager from "../components/admin/ProductsManager";
 import AuctionsManager from "../components/admin/AuctionsManager";
 import CategoriesManager from "../components/admin/CategoriesManager";
@@ -28,6 +30,7 @@ import WorkshopRequestsManager from "../components/admin/WorkshopRequestsManager
 
 type AdminTab =
   | "orders"
+  | "accounts"
   | "products"
   | "auctions"
   | "workshop"
@@ -50,6 +53,12 @@ const TABS: TabItem[] = [
     label: "الطلبات",
     description: "إدارة ومتابعة طلبات العملاء",
     icon: ShoppingBag,
+  },
+  {
+    id: "accounts",
+    label: "حسابات المتجر",
+    description: "المبيعات والأرباح الشهرية",
+    icon: WalletCards,
   },
   {
     id: "products",
@@ -428,6 +437,7 @@ export default function AdminDashboard() {
 
               <div className="w-full min-w-0 p-3 sm:p-5">
                 {activeTab === "orders" && <OrdersTab />}
+                {activeTab === "accounts" && <StoreAccountsManager />}
                 {activeTab === "products" && <ProductsManager />}
                 {activeTab === "auctions" && <AuctionsManager />}
                 {activeTab === "workshop" && <WorkshopRequestsManager />}
