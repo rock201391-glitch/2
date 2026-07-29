@@ -1,5 +1,21 @@
 import { useEffect, useState } from "react";
-import { Menu, X, LogOut, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  Menu,
+  X,
+  ShoppingBag,
+  Package,
+  Gavel,
+  Layers3,
+  TicketPercent,
+  Truck,
+  Landmark,
+  Palette,
+  Wrench,
+  LogOut,
+  ShieldCheck,
+  ChevronLeft,
+} from "lucide-react";
+
 import OrdersTab from "../components/admin/OrdersTab";
 import ProductsManager from "../components/admin/ProductsManager";
 import AuctionsManager from "../components/admin/AuctionsManager";
@@ -21,16 +37,68 @@ type AdminTab =
   | "theme"
   | "workshop";
 
-const TABS: { id: AdminTab; label: string }[] = [
-  { id: "orders",     label: "الطلبات الملكية" },
-  { id: "products",   label: "إدارة المنتجات" },
-  { id: "auctions",   label: "المزادات الحية" },
-  { id: "categories", label: "الأقسام والتصنيفات" },
-  { id: "discounts",  label: "كوبونات الخصم" },
-  { id: "shipping",   label: "شركات الشحن" },
-  { id: "settings",   label: "إعدادات البنك" },
-  { id: "theme",      label: "هوية الثيم" },
-  { id: "workshop",   label: "طلبات الورشة" },
+type TabItem = {
+  id: AdminTab;
+  label: string;
+  description: string;
+  icon: React.ElementType;
+};
+
+const TABS: TabItem[] = [
+  {
+    id: "orders",
+    label: "الطلبات",
+    description: "إدارة ومتابعة طلبات العملاء",
+    icon: ShoppingBag,
+  },
+  {
+    id: "products",
+    label: "المنتجات",
+    description: "الأسعار والمخزون والمنتجات",
+    icon: Package,
+  },
+  {
+    id: "auctions",
+    label: "المزادات",
+    description: "إنشاء وإدارة المزادات",
+    icon: Gavel,
+  },
+  {
+    id: "categories",
+    label: "الأقسام والتصنيفات",
+    description: "ترتيب أقسام المتجر",
+    icon: Layers3,
+  },
+  {
+    id: "discounts",
+    label: "كوبونات الخصم",
+    description: "إدارة العروض والكوبونات",
+    icon: TicketPercent,
+  },
+  {
+    id: "shipping",
+    label: "شركات الشحن",
+    description: "خيارات وأسعار التوصيل",
+    icon: Truck,
+  },
+  {
+    id: "settings",
+    label: "إعدادات البنك",
+    description: "بيانات التحويل والدفع",
+    icon: Landmark,
+  },
+  {
+    id: "theme",
+    label: "هوية المتجر",
+    description: "ألوان وبنرات المتجر",
+    icon: Palette,
+  },
+  {
+    id: "workshop",
+    label: "طلبات الورشة",
+    description: "متابعة الصيانة والخدمات",
+    icon: Wrench,
+  },
 ];
 
 export default function AdminDashboard() {
@@ -42,231 +110,375 @@ export default function AdminDashboard() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const loggedInStatus = sessionStorage.getItem("adminLoggedIn");
-      if (loggedInStatus === "true") {
-        setIsLoggedIn(true);
-      }
+    const loggedInStatus = sessionStorage.getItem("adminLoggedIn");
+
+    if (loggedInStatus === "true") {
+      setIsLoggedIn(true);
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (username === "ro0ak" && password === "99s551905") {
       sessionStorage.setItem("adminLoggedIn", "true");
       setIsLoggedIn(true);
       setLoginError("");
-    } else {
-      setLoginError("بيانات الاعتماد غير مطابقة للأرشيف الملكي");
+      return;
     }
+
+    setLoginError("اسم المستخدم أو كلمة المرور غير صحيحة");
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem("adminLoggedIn");
     setIsLoggedIn(false);
-    window.location.reload();
+    setUsername("");
+    setPassword("");
   };
 
-  // ── شاشة تسجيل الدخول الملكية الفاخرة ────────────────────────────────────────────
+  const currentTab = TABS.find((tab) => tab.id === activeTab) ?? TABS[0];
+
+  const handleTabChange = (tabId: AdminTab) => {
+    setActiveTab(tabId);
+    setIsMobileSidebarOpen(false);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   if (!isLoggedIn) {
     return (
-      <div className="fixed inset-0 z-[99999] min-h-screen bg-[#071F17] flex flex-col items-center justify-center px-4 text-[#F8F7F2] relative overflow-hidden" dir="rtl">
-        {/* تأثيرات الإضاءة الفضائية والخلفية الفاخرة */}
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#0F3A2B] rounded-full blur-[120px] opacity-60 pointer-events-none"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#D8C99B]/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div
+        dir="rtl"
+        className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-hidden bg-[#F4F1E9] px-4"
+      >
+        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#0F3A2B]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -left-40 h-[450px] w-[450px] rounded-full bg-[#C9A85C]/15 blur-3xl" />
 
-        <div className="max-w-md w-full bg-[#0B2E22]/80 backdrop-blur-2xl rounded-[36px] p-8 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] border border-[#D8C99B]/20 text-center relative z-10">
-          
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D8C99B] to-[#B8A774] text-[#0F3A2B] shadow-lg shadow-[#D8C99B]/10">
-            <ShieldCheck className="h-8 w-8" />
-          </div>
+        <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-[#DED8CA] bg-white shadow-[0_30px_100px_rgba(15,58,43,0.18)]">
+          <div className="h-2 w-full bg-gradient-to-l from-[#0F3A2B] via-[#315E4C] to-[#C9A85C]" />
 
-          <div className="mb-8">
-            <h2 className="text-4xl font-black tracking-wider text-[#F8F7F2] font-serif">مِرقاب</h2>
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <Sparkles className="h-3.5 w-3.5 text-[#D8C99B]" />
-              <p className="text-[11px] text-[#D8C99B] tracking-[0.25em] uppercase font-semibold">بوابة الإدارة العليا</p>
-              <Sparkles className="h-3.5 w-3.5 text-[#D8C99B]" />
-            </div>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-5 text-right">
-            <div>
-              <label className="block text-xs font-bold mb-2 mr-2 text-[#D8C99B] tracking-wide">اسم المستخدم</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="أدخل اسم المستخدم"
-                className="w-full rounded-2xl border border-[#D8C99B]/30 bg-[#071F17]/70 px-5 py-4 text-[#F8F7F2] outline-none focus:border-[#D8C99B] focus:ring-4 focus:ring-[#D8C99B]/10 transition-all text-left font-mono text-sm placeholder:text-[#6E7F76]"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold mb-2 mr-2 text-[#D8C99B] tracking-wide">كلمة المرور</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full rounded-2xl border border-[#D8C99B]/30 bg-[#071F17]/70 px-5 py-4 text-[#F8F7F2] outline-none focus:border-[#D8C99B] focus:ring-4 focus:ring-[#D8C99B]/10 transition-all text-left font-mono text-sm placeholder:text-[#6E7F76]"
-                required
-              />
-            </div>
-
-            {loginError && (
-              <div className="text-red-400 text-xs font-semibold text-center mt-3 bg-red-950/40 py-3 px-4 rounded-2xl border border-red-900/50 backdrop-blur-md">
-                {loginError}
+          <div className="px-7 py-9 sm:px-10">
+            <div className="mb-9 text-center">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[25px] bg-[#0F3A2B] text-3xl font-black text-[#F8F4E8] shadow-[0_15px_35px_rgba(15,58,43,0.28)]">
+                م
               </div>
-            )}
 
-            <button
-              type="submit"
-              className="w-full mt-4 rounded-2xl bg-gradient-to-r from-[#D8C99B] to-[#C5B484] py-4 text-[#0F3A2B] font-black text-base hover:opacity-95 shadow-[0_10px_25px_-5px_rgba(216,201,155,0.3)] transition-all active:scale-[0.98]"
-            >
-              دخول إلى لوحة التحكم
-            </button>
-          </form>
+              <h1 className="text-4xl font-black tracking-tight text-[#0F3A2B]">
+                مِرقاب
+              </h1>
+
+              <div className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-[#69766F]">
+                <ShieldCheck className="h-4 w-4 text-[#B08B3E]" />
+                <span>لوحة إدارة المتجر</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-[#173F31]">
+                  اسم المستخدم
+                </label>
+
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="أدخل اسم المستخدم"
+                  autoComplete="username"
+                  className="h-14 w-full rounded-2xl border border-[#D9D4C8] bg-[#FAF8F3] px-5 text-right text-[#173F31] outline-none transition placeholder:text-[#A6AAA7] focus:border-[#0F3A2B] focus:bg-white focus:ring-4 focus:ring-[#0F3A2B]/10"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-[#173F31]">
+                  كلمة المرور
+                </label>
+
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="أدخل كلمة المرور"
+                  autoComplete="current-password"
+                  className="h-14 w-full rounded-2xl border border-[#D9D4C8] bg-[#FAF8F3] px-5 text-right text-[#173F31] outline-none transition placeholder:text-[#A6AAA7] focus:border-[#0F3A2B] focus:bg-white focus:ring-4 focus:ring-[#0F3A2B]/10"
+                  required
+                />
+              </div>
+
+              {loginError && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-700">
+                  {loginError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#0F3A2B] text-base font-black text-white shadow-[0_14px_30px_rgba(15,58,43,0.24)] transition hover:-translate-y-0.5 hover:bg-[#174C39] active:translate-y-0"
+              >
+                <ShieldCheck className="h-5 w-5" />
+                دخول لوحة الإدارة
+              </button>
+            </form>
+
+            <p className="mt-7 text-center text-xs font-medium text-[#979C98]">
+              دخول مخصص لإدارة متجر مرقاب
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
-  // ── لوحة التحكم الرئيسية بتصميم فضاء فاخر وأخضر ملكي ────────────────────────
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0b3124] via-[#071f17] to-[#04120e] text-[#F8F7F2] flex flex-col selection:bg-[#D8C99B] selection:text-[#0F3A2B]" dir="rtl">
-      
-      {/* شريط علوي زجاجي فاخر */}
-      <header className="sticky top-0 z-40 bg-[#0F3A2B]/80 backdrop-blur-xl border-b border-[#D8C99B]/15 px-4 sm:px-8 py-4 flex items-center justify-between shadow-2xl">
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => setIsMobileSidebarOpen(true)}
-            className="lg:hidden flex h-11 w-11 items-center justify-center rounded-2xl border border-[#D8C99B]/20 bg-white/5 text-[#D8C99B] hover:bg-white/10 transition-all"
-            aria-label="فتح القائمة"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          
+    <div
+      dir="rtl"
+      className="min-h-screen bg-[#F4F1E9] text-[#153E30]"
+    >
+      {/* الهيدر */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0F3A2B] text-white shadow-[0_10px_30px_rgba(15,58,43,0.18)]">
+        <div className="flex h-[76px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black tracking-wider font-serif bg-gradient-to-r from-[#F8F7F2] via-[#F8F7F2] to-[#D8C99B] bg-clip-text text-transparent">مِرقاب</h1>
-            <span className="text-[11px] bg-[#D8C99B]/15 border border-[#D8C99B]/30 px-3.5 py-1 rounded-full font-bold text-[#D8C99B] tracking-wider hidden sm:inline-block">
-              المركز الملكي للإدارة
-            </span>
-          </div>
-        </div>
+            <button
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 transition hover:bg-white/15 lg:hidden"
+              aria-label="فتح القائمة"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="hidden sm:flex items-center gap-2 text-xs bg-white/5 border border-white/10 px-4 py-2 rounded-2xl font-semibold backdrop-blur-md">
-            <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></div>
-            <span className="text-gray-300">المسؤول:</span>
-            <span className="text-[#D8C99B] font-mono">ro0ak</span>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F6F1E5] text-xl font-black text-[#0F3A2B] shadow-lg">
+              م
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black tracking-wide">مِرقاب</h1>
+
+                <span className="hidden rounded-full border border-[#E0C77B]/30 bg-[#E0C77B]/15 px-2.5 py-1 text-[10px] font-bold text-[#F3DF9F] sm:inline-flex">
+                  الإدارة
+                </span>
+              </div>
+
+              <p className="mt-0.5 hidden text-xs text-white/55 sm:block">
+                إدارة المتجر والطلبات
+              </p>
+            </div>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 rounded-2xl bg-red-950/30 border border-red-500/30 px-5 py-2.5 font-bold hover:bg-red-900/40 transition-all text-xs text-red-300 shadow-lg shadow-red-950/20 active:scale-95"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>خروج آمن</span>
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-4 py-2 sm:flex">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]" />
+              <span className="text-xs font-bold text-white/90">
+                المسؤول: ro0ak
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex h-11 items-center gap-2 rounded-2xl border border-red-300/20 bg-red-400/10 px-3.5 text-sm font-bold text-red-100 transition hover:bg-red-400/20 sm:px-5"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">تسجيل الخروج</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* الجسم الرئيسي: الشريط الجانبي والمحتوى */}
-      <div className="flex flex-1 relative">
-        
-        {/* الشريط الجانبي لسطح المكتب (فاخر وزجاجي) */}
-        <aside className="hidden lg:flex w-64 shrink-0 bg-[#071F17]/60 backdrop-blur-2xl border-l border-[#D8C99B]/10 shadow-[5px_0_30px_rgba(0,0,0,0.3)] flex-col py-8 gap-2 px-4 sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto">
-          <div className="px-3 mb-2">
-            <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#D8C99B]/70">أقسام الإدارة</p>
+      <div className="flex min-h-[calc(100vh-76px)]">
+        {/* القائمة الجانبية للكمبيوتر */}
+        <aside className="sticky top-[76px] hidden h-[calc(100vh-76px)] w-[285px] shrink-0 flex-col overflow-y-auto border-l border-[#DDD7CA] bg-[#FBFAF6] px-4 py-6 lg:flex">
+          <div className="mb-6 px-3">
+            <p className="text-xs font-black tracking-wider text-[#B08B3E]">
+              لوحة مرقاب
+            </p>
+
+            <h2 className="mt-1 text-lg font-black text-[#123B2D]">
+              إدارة المتجر
+            </h2>
           </div>
-          
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full text-right rounded-2xl px-5 py-3.5 font-bold text-sm transition-all flex items-center justify-between group ${
-                activeTab === tab.id
-                  ? "bg-gradient-to-r from-[#D8C99B] to-[#C5B484] text-[#0F3A2B] shadow-[0_10px_20px_-5px_rgba(216,201,155,0.3)] translate-x-[-4px]"
-                  : "text-gray-300 hover:bg-white/5 hover:text-[#D8C99B]"
-              }`}
-            >
-              <span>{tab.label}</span>
-              <div className={`h-1.5 w-1.5 rounded-full transition-all ${activeTab === tab.id ? "bg-[#0F3A2B]" : "bg-transparent group-hover:bg-[#D8C99B]/50"}`} />
-            </button>
-          ))}
+
+          <nav className="flex flex-1 flex-col gap-2">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`group flex w-full items-center gap-3 rounded-[20px] px-3 py-3.5 text-right transition-all ${
+                    isActive
+                      ? "bg-[#0F3A2B] text-white shadow-[0_12px_25px_rgba(15,58,43,0.20)]"
+                      : "text-[#234B3D] hover:bg-[#E9EEE8]"
+                  }`}
+                >
+                  <span
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition ${
+                      isActive
+                        ? "bg-white/12 text-[#F2D98C]"
+                        : "bg-[#EEF1EB] text-[#315E4C] group-hover:bg-white"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-black">
+                      {tab.label}
+                    </span>
+
+                    <span
+                      className={`mt-0.5 block truncate text-[11px] font-medium ${
+                        isActive ? "text-white/55" : "text-[#849087]"
+                      }`}
+                    >
+                      {tab.description}
+                    </span>
+                  </span>
+
+                  <ChevronLeft
+                    className={`h-4 w-4 shrink-0 ${
+                      isActive ? "text-[#F2D98C]" : "text-[#A6AEA8]"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="mt-6 rounded-[22px] border border-[#DDD5C4] bg-[#F5F0E4] p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F3A2B] text-white">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+
+              <div>
+                <p className="text-sm font-black text-[#153E30]">
+                  لوحة آمنة
+                </p>
+                <p className="text-[11px] font-medium text-[#808A83]">
+                  مرقاب لإدارة المتجر
+                </p>
+              </div>
+            </div>
+          </div>
         </aside>
 
-        {/* الشريط الجانبي للجوال (Drawer) */}
+        {/* القائمة الجانبية للجوال */}
         {isMobileSidebarOpen && (
           <div className="fixed inset-0 z-[9999] lg:hidden">
             <button
               type="button"
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="absolute inset-0 w-full h-full bg-black/70 backdrop-blur-sm transition-opacity"
+              className="absolute inset-0 h-full w-full bg-[#071710]/65 backdrop-blur-sm"
               aria-label="إغلاق القائمة"
             />
 
-            <aside className="absolute top-0 right-0 h-full w-[85%] max-w-sm bg-[#09271E] border-l border-[#D8C99B]/20 px-5 py-6 shadow-2xl overflow-y-auto z-10 flex flex-col">
-              <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
+            <aside className="absolute right-0 top-0 h-full w-[88%] max-w-[340px] overflow-y-auto bg-[#FBFAF6] p-4 shadow-2xl">
+              <div className="mb-6 flex items-center justify-between border-b border-[#E3DED3] pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-[#D8C99B] text-[#0F3A2B] flex items-center justify-center font-bold">م</div>
-                  <h2 className="text-xl font-bold font-serif text-[#F8F7F2]">لوحة التحكم</h2>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0F3A2B] text-xl font-black text-white">
+                    م
+                  </div>
+
+                  <div>
+                    <h2 className="text-lg font-black text-[#0F3A2B]">
+                      مِرقاب
+                    </h2>
+                    <p className="text-xs font-medium text-[#849087]">
+                      إدارة المتجر
+                    </p>
+                  </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setIsMobileSidebarOpen(false)}
-                  className="h-10 w-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#D8C99B] hover:bg-white/10"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EEEAE1] text-[#173F31]"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="flex flex-col gap-2 flex-1">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveTab(tab.id);
-                      setIsMobileSidebarOpen(false);
-                    }}
-                    className={`w-full text-right rounded-2xl px-5 py-4 font-bold text-sm transition-all ${
-                      activeTab === tab.id
-                        ? "bg-gradient-to-r from-[#D8C99B] to-[#C5B484] text-[#0F3A2B] shadow-lg"
-                        : "text-gray-300 hover:bg-white/5 hover:text-[#D8C99B]"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
+              <nav className="flex flex-col gap-2">
+                {TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
 
-              <div className="mt-auto pt-6 border-t border-white/10 text-center">
-                <p className="text-xs text-[#D8C99B]/60 font-mono">متجر مِرقاب النسخة الملكية 2026</p>
-              </div>
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => handleTabChange(tab.id)}
+                      className={`flex w-full items-center gap-3 rounded-[19px] px-3 py-3 text-right ${
+                        isActive
+                          ? "bg-[#0F3A2B] text-white shadow-lg"
+                          : "text-[#234B3D] hover:bg-[#E9EEE8]"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          isActive ? "bg-white/10" : "bg-[#EEF1EB]"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </span>
+
+                      <span className="flex-1 text-sm font-black">
+                        {tab.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </nav>
             </aside>
           </div>
         )}
 
-        {/* المحتوى الرئيسي للمدير (بإطار زجاجي راقي جداً) */}
-        <main className="min-w-0 flex-1 px-4 sm:px-8 py-6 lg:py-8">
-          <div className="w-full min-w-0 bg-[#09271E]/40 backdrop-blur-md rounded-[32px] border border-[#D8C99B]/15 p-4 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-x-auto">
-            {activeTab === "orders"     && <OrdersTab />}
-            {activeTab === "products"   && <ProductsManager />}
-            {activeTab === "auctions"   && <AuctionsManager />}
-            {activeTab === "categories" && <CategoriesManager />}
-            {activeTab === "discounts"  && <DiscountCodesManager />}
-            {activeTab === "shipping"   && <ShippingManager />}
-            {activeTab === "settings"   && <SettingsManager />}
-            {activeTab === "theme"      && <ThemeManager />}
-            {activeTab === "workshop"   && <WorkshopRequestsManager />}
+        {/* المحتوى */}
+        <main className="min-w-0 flex-1 px-3 py-5 sm:px-5 sm:py-7 xl:px-8">
+          <div className="mx-auto w-full max-w-[1700px]">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-black text-[#B08B3E]">
+                  لوحة التحكم
+                </p>
+
+                <h2 className="mt-1 text-2xl font-black text-[#0F3A2B] sm:text-3xl">
+                  {currentTab.label}
+                </h2>
+
+                <p className="mt-1 text-sm font-medium text-[#7C8981]">
+                  {currentTab.description}
+                </p>
+              </div>
+            </div>
+
+            <section className="min-w-0 rounded-[28px] border border-[#DED8CC] bg-white p-3 shadow-[0_16px_50px_rgba(41,61,50,0.08)] sm:p-5">
+              <div className="w-full min-w-0 overflow-x-auto">
+                {activeTab === "orders" && <OrdersTab />}
+                {activeTab === "products" && <ProductsManager />}
+                {activeTab === "auctions" && <AuctionsManager />}
+                {activeTab === "categories" && <CategoriesManager />}
+                {activeTab === "discounts" && <DiscountCodesManager />}
+                {activeTab === "shipping" && <ShippingManager />}
+                {activeTab === "settings" && <SettingsManager />}
+                {activeTab === "theme" && <ThemeManager />}
+                {activeTab === "workshop" && (
+                  <WorkshopRequestsManager />
+                )}
+              </div>
+            </section>
           </div>
         </main>
-
       </div>
     </div>
   );
