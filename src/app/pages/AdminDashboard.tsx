@@ -137,7 +137,8 @@ export default function AdminDashboard() {
     setPassword("");
   };
 
-  const currentTab = TABS.find((tab) => tab.id === activeTab) ?? TABS[0];
+  const currentTab =
+    TABS.find((tab) => tab.id === activeTab) ?? TABS[0];
 
   const handleTabChange = (tabId: AdminTab) => {
     setActiveTab(tabId);
@@ -156,6 +157,7 @@ export default function AdminDashboard() {
         className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-hidden bg-[#F4F1E9] px-4"
       >
         <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#0F3A2B]/10 blur-3xl" />
+
         <div className="pointer-events-none absolute -bottom-40 -left-40 h-[450px] w-[450px] rounded-full bg-[#C9A85C]/15 blur-3xl" />
 
         <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-[#DED8CA] bg-white shadow-[0_30px_100px_rgba(15,58,43,0.18)]">
@@ -163,10 +165,6 @@ export default function AdminDashboard() {
 
           <div className="px-7 py-9 sm:px-10">
             <div className="mb-9 text-center">
-              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[25px] bg-[#0F3A2B] text-3xl font-black text-[#F8F4E8] shadow-[0_15px_35px_rgba(15,58,43,0.28)]">
-                م
-              </div>
-
               <h1 className="text-4xl font-black tracking-tight text-[#0F3A2B]">
                 مِرقاب
               </h1>
@@ -237,43 +235,28 @@ export default function AdminDashboard() {
   return (
     <div
       dir="rtl"
-      className="min-h-screen bg-[#F4F1E9] text-[#153E30]"
+      className="min-h-screen bg-[#F5F2EB] text-[#153E30]"
     >
       {/* الهيدر */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0F3A2B] text-white shadow-[0_10px_30px_rgba(15,58,43,0.18)]">
-        <div className="flex h-[76px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsMobileSidebarOpen(true)}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 transition hover:bg-white/15 lg:hidden"
-              aria-label="فتح القائمة"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B432F] text-white shadow-[0_10px_35px_rgba(15,58,43,0.22)]">
+        <div className="flex h-[72px] items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* زر القائمة يظهر في الجوال فقط */}
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 transition hover:bg-white/20 lg:hidden"
+            aria-label="فتح القائمة"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
 
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F6F1E5] text-xl font-black text-[#0F3A2B] shadow-lg">
-              م
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black tracking-wide">مِرقاب</h1>
-
-                <span className="hidden rounded-full border border-[#E0C77B]/30 bg-[#E0C77B]/15 px-2.5 py-1 text-[10px] font-bold text-[#F3DF9F] sm:inline-flex">
-                  الإدارة
-                </span>
-              </div>
-
-              <p className="mt-0.5 hidden text-xs text-white/55 sm:block">
-                إدارة المتجر والطلبات
-              </p>
-            </div>
-          </div>
+          {/* مساحة فارغة بدل شعار مرقاب وحرف م */}
+          <div className="hidden lg:block" />
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-4 py-2 sm:flex">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]" />
+            <div className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-2.5 shadow-inner sm:flex">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.95)]" />
+
               <span className="text-xs font-bold text-white/90">
                 المسؤول: ro0ak
               </span>
@@ -282,28 +265,20 @@ export default function AdminDashboard() {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex h-11 items-center gap-2 rounded-2xl border border-red-300/20 bg-red-400/10 px-3.5 text-sm font-bold text-red-100 transition hover:bg-red-400/20 sm:px-5"
+              className="flex h-11 items-center gap-2 rounded-2xl border border-[#D79D88]/30 bg-[#A94A38]/15 px-3.5 text-sm font-bold text-[#FFD9CF] transition hover:border-[#D79D88]/50 hover:bg-[#A94A38]/25 sm:px-5"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">تسجيل الخروج</span>
+              <span className="hidden sm:inline">
+                تسجيل الخروج
+              </span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="flex min-h-[calc(100vh-76px)]">
+      <div className="flex min-h-[calc(100vh-72px)]">
         {/* القائمة الجانبية للكمبيوتر */}
-        <aside className="sticky top-[76px] hidden h-[calc(100vh-76px)] w-[285px] shrink-0 flex-col overflow-y-auto border-l border-[#DDD7CA] bg-[#FBFAF6] px-4 py-6 lg:flex">
-          <div className="mb-6 px-3">
-            <p className="text-xs font-black tracking-wider text-[#B08B3E]">
-              لوحة مرقاب
-            </p>
-
-            <h2 className="mt-1 text-lg font-black text-[#123B2D]">
-              إدارة المتجر
-            </h2>
-          </div>
-
+        <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[270px] shrink-0 flex-col overflow-y-auto border-l border-[#E3DED3] bg-[#FEFDF9] px-4 py-5 shadow-[-12px_0_40px_rgba(41,61,50,0.035)] lg:flex">
           <nav className="flex flex-1 flex-col gap-2">
             {TABS.map((tab) => {
               const Icon = tab.icon;
@@ -314,17 +289,21 @@ export default function AdminDashboard() {
                   key={tab.id}
                   type="button"
                   onClick={() => handleTabChange(tab.id)}
-                  className={`group flex w-full items-center gap-3 rounded-[20px] px-3 py-3.5 text-right transition-all ${
+                  className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-[20px] px-3 py-3.5 text-right transition-all duration-300 ${
                     isActive
-                      ? "bg-[#0F3A2B] text-white shadow-[0_12px_25px_rgba(15,58,43,0.20)]"
-                      : "text-[#234B3D] hover:bg-[#E9EEE8]"
+                      ? "bg-gradient-to-l from-[#0B432F] to-[#14543D] text-white shadow-[0_14px_30px_rgba(15,58,43,0.22)]"
+                      : "text-[#234B3D] hover:bg-[#EEF2EC]"
                   }`}
                 >
+                  {isActive && (
+                    <span className="absolute right-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-l-full bg-[#E2C56F]" />
+                  )}
+
                   <span
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition ${
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all duration-300 ${
                       isActive
-                        ? "bg-white/12 text-[#F2D98C]"
-                        : "bg-[#EEF1EB] text-[#315E4C] group-hover:bg-white"
+                        ? "bg-white/10 text-[#F3D980] shadow-inner"
+                        : "bg-[#EEF2EC] text-[#315E4C] group-hover:bg-white group-hover:shadow-sm"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -336,8 +315,10 @@ export default function AdminDashboard() {
                     </span>
 
                     <span
-                      className={`mt-0.5 block truncate text-[11px] font-medium ${
-                        isActive ? "text-white/55" : "text-[#849087]"
+                      className={`mt-1 block truncate text-[11px] font-medium ${
+                        isActive
+                          ? "text-white/60"
+                          : "text-[#879188]"
                       }`}
                     >
                       {tab.description}
@@ -345,31 +326,16 @@ export default function AdminDashboard() {
                   </span>
 
                   <ChevronLeft
-                    className={`h-4 w-4 shrink-0 ${
-                      isActive ? "text-[#F2D98C]" : "text-[#A6AEA8]"
+                    className={`h-4 w-4 shrink-0 transition-transform duration-300 ${
+                      isActive
+                        ? "translate-x-0 text-[#F3D980]"
+                        : "translate-x-1 text-[#AFB6B0] group-hover:translate-x-0"
                     }`}
                   />
                 </button>
               );
             })}
           </nav>
-
-          <div className="mt-6 rounded-[22px] border border-[#DDD5C4] bg-[#F5F0E4] p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F3A2B] text-white">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-
-              <div>
-                <p className="text-sm font-black text-[#153E30]">
-                  لوحة آمنة
-                </p>
-                <p className="text-[11px] font-medium text-[#808A83]">
-                  مرقاب لإدارة المتجر
-                </p>
-              </div>
-            </div>
-          </div>
         </aside>
 
         {/* القائمة الجانبية للجوال */}
@@ -378,31 +344,17 @@ export default function AdminDashboard() {
             <button
               type="button"
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="absolute inset-0 h-full w-full bg-[#071710]/65 backdrop-blur-sm"
+              className="absolute inset-0 h-full w-full bg-[#071710]/70 backdrop-blur-sm"
               aria-label="إغلاق القائمة"
             />
 
-            <aside className="absolute right-0 top-0 h-full w-[88%] max-w-[340px] overflow-y-auto bg-[#FBFAF6] p-4 shadow-2xl">
-              <div className="mb-6 flex items-center justify-between border-b border-[#E3DED3] pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0F3A2B] text-xl font-black text-white">
-                    م
-                  </div>
-
-                  <div>
-                    <h2 className="text-lg font-black text-[#0F3A2B]">
-                      مِرقاب
-                    </h2>
-                    <p className="text-xs font-medium text-[#849087]">
-                      إدارة المتجر
-                    </p>
-                  </div>
-                </div>
-
+            <aside className="absolute right-0 top-0 h-full w-[88%] max-w-[340px] overflow-y-auto border-l border-[#E3DED3] bg-[#FEFDF9] p-4 shadow-2xl">
+              <div className="mb-5 flex items-center justify-end border-b border-[#E6E1D7] pb-4">
                 <button
                   type="button"
                   onClick={() => setIsMobileSidebarOpen(false)}
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EEEAE1] text-[#173F31]"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EEEAE1] text-[#173F31] transition hover:bg-[#E3DED3]"
+                  aria-label="إغلاق القائمة"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -418,23 +370,45 @@ export default function AdminDashboard() {
                       key={tab.id}
                       type="button"
                       onClick={() => handleTabChange(tab.id)}
-                      className={`flex w-full items-center gap-3 rounded-[19px] px-3 py-3 text-right ${
+                      className={`flex w-full items-center gap-3 rounded-[19px] px-3 py-3.5 text-right transition-all ${
                         isActive
-                          ? "bg-[#0F3A2B] text-white shadow-lg"
-                          : "text-[#234B3D] hover:bg-[#E9EEE8]"
+                          ? "bg-gradient-to-l from-[#0B432F] to-[#14543D] text-white shadow-lg"
+                          : "text-[#234B3D] hover:bg-[#EEF2EC]"
                       }`}
                     >
                       <span
-                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                          isActive ? "bg-white/10" : "bg-[#EEF1EB]"
+                        className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                          isActive
+                            ? "bg-white/10 text-[#F3D980]"
+                            : "bg-[#EEF2EC] text-[#315E4C]"
                         }`}
                       >
                         <Icon className="h-5 w-5" />
                       </span>
 
-                      <span className="flex-1 text-sm font-black">
-                        {tab.label}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-black">
+                          {tab.label}
+                        </span>
+
+                        <span
+                          className={`mt-1 block truncate text-[11px] ${
+                            isActive
+                              ? "text-white/60"
+                              : "text-[#879188]"
+                          }`}
+                        >
+                          {tab.description}
+                        </span>
                       </span>
+
+                      <ChevronLeft
+                        className={`h-4 w-4 ${
+                          isActive
+                            ? "text-[#F3D980]"
+                            : "text-[#AFB6B0]"
+                        }`}
+                      />
                     </button>
                   );
                 })}
@@ -444,11 +418,11 @@ export default function AdminDashboard() {
         )}
 
         {/* المحتوى */}
-        <main className="min-w-0 flex-1 px-3 py-5 sm:px-5 sm:py-7 xl:px-8">
-          <div className="mx-auto w-full max-w-[1700px]">
+        <main className="min-w-0 flex-1 px-3 py-5 sm:px-5 sm:py-7 xl:px-7 xl:py-8">
+          <div className="mx-auto w-full max-w-[1800px]">
             <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-black text-[#B08B3E]">
+                <p className="text-xs font-black tracking-wide text-[#B08B3E]">
                   لوحة التحكم
                 </p>
 
@@ -462,13 +436,19 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <section className="min-w-0 rounded-[28px] border border-[#DED8CC] bg-white p-3 shadow-[0_16px_50px_rgba(41,61,50,0.08)] sm:p-5">
-              <div className="w-full min-w-0 overflow-x-auto">
+            <section className="min-w-0 overflow-hidden rounded-[30px] border border-[#DED8CC] bg-white shadow-[0_20px_65px_rgba(41,61,50,0.09)]">
+              <div className="h-1.5 w-full bg-gradient-to-l from-[#0B432F] via-[#31634F] to-[#D5B75E]" />
+
+              <div className="w-full min-w-0 p-3 sm:p-5">
                 {activeTab === "orders" && <OrdersTab />}
                 {activeTab === "products" && <ProductsManager />}
                 {activeTab === "auctions" && <AuctionsManager />}
-                {activeTab === "categories" && <CategoriesManager />}
-                {activeTab === "discounts" && <DiscountCodesManager />}
+                {activeTab === "categories" && (
+                  <CategoriesManager />
+                )}
+                {activeTab === "discounts" && (
+                  <DiscountCodesManager />
+                )}
                 {activeTab === "shipping" && <ShippingManager />}
                 {activeTab === "settings" && <SettingsManager />}
                 {activeTab === "theme" && <ThemeManager />}
