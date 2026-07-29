@@ -2,20 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
-  Clock3,
   ExternalLink,
   Eye,
   Loader2,
   MessageCircle,
   RefreshCw,
-  Save,
   Search,
   Trash2,
   Wrench,
   X,
-  Sparkles,
-  ShieldCheck,
-  PhoneCall,
 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 
@@ -32,11 +27,10 @@ interface WorkshopRequest {
   customer_name: string;
   phone: string;
   drone_model: string;
-  issue_description: string;
+  problem_description: string;
   image_url: string | null;
-  status: WorkshopStatus;
-  admin_notes: string | null;
-  created_at: string;
+  status: WorkshopStatus | null;
+  created_at: string | null;
 }
 
 const STATUS_OPTIONS: {
@@ -47,50 +41,66 @@ const STATUS_OPTIONS: {
   {
     value: "new",
     label: "جديد",
-    className: "bg-blue-500/10 text-blue-400 border-blue-500/30 shadow-lg shadow-blue-500/5",
+    className: "bg-blue-50 text-blue-700 border-blue-200",
   },
   {
     value: "contacting",
     label: "جاري التواصل",
-    className: "bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-lg shadow-amber-500/5",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
   },
   {
     value: "inspection",
     label: "تحت الفحص",
-    className: "bg-purple-500/10 text-purple-400 border-purple-500/30 shadow-lg shadow-purple-500/5",
+    className: "bg-purple-50 text-purple-700 border-purple-200",
   },
   {
     value: "repairing",
     label: "جاري الإصلاح",
-    className: "bg-orange-500/10 text-orange-400 border-orange-500/30 shadow-lg shadow-orange-500/5",
+    className: "bg-orange-50 text-orange-700 border-orange-200",
   },
   {
     value: "completed",
     label: "مكتمل",
-    className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-lg shadow-emerald-500/5",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
   {
     value: "rejected",
     label: "مرفوض",
-    className: "bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-lg shadow-rose-500/5",
+    className: "bg-red-50 text-red-700 border-red-200",
   },
 ];
 
-function getStatusDetails(status: WorkshopStatus) {
+function normalizeStatus(status: WorkshopStatus | null): WorkshopStatus {
+  return status ?? "new";
+}
+
+function getStatusDetails(status: WorkshopStatus | null) {
+  const normalizedStatus = normalizeStatus(status);
+
   return (
-    STATUS_OPTIONS.find((item) => item.value === status) ??
+    STATUS_OPTIONS.find((item) => item.value === normalizedStatus) ??
     STATUS_OPTIONS[0]
   );
 }
 
-function formatDate(value: string) {
+function formatDate(value: string | null) {
+  if (!value) {
+    return "غير محدد";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "غير محدد";
+  }
+
   return new Intl.DateTimeFormat("ar-OM", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function normalizePhone(phone: string) {
@@ -104,10 +114,6 @@ function normalizePhone(phone: string) {
     normalized = normalized.slice(2);
   }
 
-  if (normalized.startsWith("0") && normalized.length === 8) {
-    normalized = `968${normalized}`;
-  }
-
   if (normalized.length === 8) {
     normalized = `968${normalized}`;
   }
@@ -119,6 +125,7 @@ export default function WorkshopRequestsManager() {
   const [requests, setRequests] = useState<WorkshopRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "all" | WorkshopStatus
@@ -127,32 +134,30 @@ export default function WorkshopRequestsManager() {
   const [selectedRequest, setSelectedRequest] =
     useState<WorkshopRequest | null>(null);
 
-  const [notes, setNotes] = useState("");
-  const [savingNotes, setSavingNotes] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(
     null
   );
-  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const [message, setMessage] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const showSuccessMessage = (text: string) => {
-    setMessage(text);
+  const showSuccess = (text: string) => {
+    setSuccessMessage(text);
     setErrorMessage("");
 
     window.setTimeout(() => {
-      setMessage("");
+      setSuccessMessage("");
     }, 3000);
   };
 
-  const showErrorMessage = (text: string) => {
+  const showError = (text: string) => {
     setErrorMessage(text);
-    setMessage("");
+    setSuccessMessage("");
 
     window.setTimeout(() => {
       setErrorMessage("");
-    }, 4000);
+    }, 5000);
   };
 
   const loadRequests = useCallback(async (showRefresh = false) => {
@@ -163,31 +168,40 @@ export default function WorkshopRequestsManager() {
         setLoading(true);
       }
 
+      setErrorMessage("");
+
       const { data, error } = await supabase
         .from("workshop_requests")
-        .select(
-          `
-            id,
-            customer_name,
-            phone,
-            drone_model,
-            issue_description,
-            image_url,
-            status,
-            admin_notes,
-            created_at
-          `
-        )
+        .select(`
+          id,
+          customer_name,
+          phone,
+          drone_model,
+          problem_description,
+          image_url,
+          status,
+          created_at
+        `)
         .order("created_at", { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      setRequests((data ?? []) as WorkshopRequest[]);
-    } catch (error) {
+      const normalizedData = (data ?? []).map((item) => ({
+        ...item,
+        status: normalizeStatus(item.status as WorkshopStatus | null),
+      })) as WorkshopRequest[];
+
+      setRequests(normalizedData);
+    } catch (error: any) {
       console.error("Failed to load workshop requests:", error);
-      showErrorMessage("تعذر تحميل طلبات الورشة");
+
+      showError(
+        error?.message
+          ? `تعذر تحميل طلبات الورشة: ${error.message}`
+          : "تعذر تحميل طلبات الورشة"
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -198,21 +212,14 @@ export default function WorkshopRequestsManager() {
     loadRequests();
   }, [loadRequests]);
 
-  useEffect(() => {
-    if (!selectedRequest) {
-      setNotes("");
-      return;
-    }
-
-    setNotes(selectedRequest.admin_notes ?? "");
-  }, [selectedRequest]);
-
   const filteredRequests = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
     return requests.filter((request) => {
+      const requestStatus = normalizeStatus(request.status);
+
       const matchesStatus =
-        statusFilter === "all" || request.status === statusFilter;
+        statusFilter === "all" || requestStatus === statusFilter;
 
       if (!matchesStatus) {
         return false;
@@ -226,25 +233,25 @@ export default function WorkshopRequestsManager() {
         request.customer_name.toLowerCase().includes(query) ||
         request.phone.toLowerCase().includes(query) ||
         request.drone_model.toLowerCase().includes(query) ||
-        request.issue_description.toLowerCase().includes(query) ||
+        request.problem_description.toLowerCase().includes(query) ||
         String(request.id).includes(query)
       );
     });
   }, [requests, searchQuery, statusFilter]);
 
   const newRequestsCount = requests.filter(
-    (request) => request.status === "new"
+    (request) => normalizeStatus(request.status) === "new"
   ).length;
 
   const completedRequestsCount = requests.filter(
-    (request) => request.status === "completed"
+    (request) => normalizeStatus(request.status) === "completed"
   ).length;
 
   const handleStatusChange = async (
     request: WorkshopRequest,
-    status: WorkshopStatus
+    newStatus: WorkshopStatus
   ) => {
-    if (request.status === status) {
+    if (normalizeStatus(request.status) === newStatus) {
       return;
     }
 
@@ -253,7 +260,7 @@ export default function WorkshopRequestsManager() {
 
       const { error } = await supabase
         .from("workshop_requests")
-        .update({ status })
+        .update({ status: newStatus })
         .eq("id", request.id);
 
       if (error) {
@@ -262,62 +269,29 @@ export default function WorkshopRequestsManager() {
 
       setRequests((current) =>
         current.map((item) =>
-          item.id === request.id ? { ...item, status } : item
-        )
-      );
-
-      setSelectedRequest((current) =>
-        current?.id === request.id ? { ...current, status } : current
-      );
-
-      showSuccessMessage("تم تحديث حالة طلب الورشة");
-    } catch (error) {
-      console.error("Failed to update workshop status:", error);
-      showErrorMessage("تعذر تحديث حالة الطلب");
-    } finally {
-      setUpdatingStatusId(null);
-    }
-  };
-
-  const handleSaveNotes = async () => {
-    if (!selectedRequest) {
-      return;
-    }
-
-    try {
-      setSavingNotes(true);
-
-      const normalizedNotes = notes.trim() || null;
-
-      const { error } = await supabase
-        .from("workshop_requests")
-        .update({ admin_notes: normalizedNotes })
-        .eq("id", selectedRequest.id);
-
-      if (error) {
-        throw error;
-      }
-
-      setRequests((current) =>
-        current.map((item) =>
-          item.id === selectedRequest.id
-            ? { ...item, admin_notes: normalizedNotes }
+          item.id === request.id
+            ? { ...item, status: newStatus }
             : item
         )
       );
 
       setSelectedRequest((current) =>
-        current
-          ? { ...current, admin_notes: normalizedNotes }
+        current?.id === request.id
+          ? { ...current, status: newStatus }
           : current
       );
 
-      showSuccessMessage("تم حفظ ملاحظات الورشة");
-    } catch (error) {
-      console.error("Failed to save workshop notes:", error);
-      showErrorMessage("تعذر حفظ الملاحظات");
+      showSuccess("تم تحديث حالة طلب الورشة");
+    } catch (error: any) {
+      console.error("Failed to update status:", error);
+
+      showError(
+        error?.message
+          ? `تعذر تحديث الحالة: ${error.message}`
+          : "تعذر تحديث حالة الطلب"
+      );
     } finally {
-      setSavingNotes(false);
+      setUpdatingStatusId(null);
     }
   };
 
@@ -350,10 +324,15 @@ export default function WorkshopRequestsManager() {
         setSelectedRequest(null);
       }
 
-      showSuccessMessage("تم حذف طلب الورشة");
-    } catch (error) {
-      console.error("Failed to delete workshop request:", error);
-      showErrorMessage("تعذر حذف الطلب");
+      showSuccess("تم حذف طلب الورشة");
+    } catch (error: any) {
+      console.error("Failed to delete request:", error);
+
+      showError(
+        error?.message
+          ? `تعذر حذف الطلب: ${error.message}`
+          : "تعذر حذف الطلب"
+      );
     } finally {
       setDeletingId(null);
     }
@@ -366,20 +345,21 @@ export default function WorkshopRequestsManager() {
       `مرحبًا ${request.customer_name}، معك فريق ورشة مرقاب بخصوص طلب صيانة ${request.drone_model} رقم ${request.id}.`
     );
 
-    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+    window.open(
+      `https://wa.me/${phone}?text=${text}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center relative overflow-hidden rounded-[32px] bg-[#061C14] border border-[#0F3A2B]/40">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.15),rgba(255,255,255,0))]"></div>
-        <div className="text-center relative z-10">
-          <div className="relative inline-flex">
-            <div className="absolute inset-0 rounded-full blur-xl bg-emerald-500/20 animate-pulse"></div>
-            <Loader2 className="relative mx-auto h-12 w-12 animate-spin text-emerald-400" />
-          </div>
-          <p className="mt-4 font-bold text-emerald-100 tracking-wider text-sm">
-            جاري تحميل طلبات الورشة الفضائية...
+      <div className="flex min-h-[450px] items-center justify-center rounded-[30px] border border-[#D8C99B]/30 bg-[#08271D]">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-11 w-11 animate-spin text-[#D8C99B]" />
+
+          <p className="mt-4 font-bold text-white">
+            جاري تحميل طلبات الورشة...
           </p>
         </div>
       </div>
@@ -387,56 +367,38 @@ export default function WorkshopRequestsManager() {
   }
 
   return (
-    <div className="w-full space-y-6 relative min-h-screen text-slate-100 p-2 sm:p-4" dir="rtl">
-      {/* خلفية فضائية متطورة نفس هوية مرقاب (نجوم ونقاط لامعة) */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none rounded-[36px]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#04120D] via-[#08241B] to-[#020D09]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(#10B981_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.08]"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/3 right-1/4 w-[30rem] h-[30rem] bg-teal-600/10 rounded-full blur-3xl"></div>
-      </div>
-
-      {(message || errorMessage) && (
+    <div
+      className="w-full space-y-6 text-[#0F3A2B]"
+      dir="rtl"
+    >
+      {(successMessage || errorMessage) && (
         <div className="fixed inset-x-0 top-6 z-[99999] flex justify-center px-4 pointer-events-none">
           <div
-            className={`rounded-2xl px-6 py-3.5 font-bold text-white shadow-2xl backdrop-blur-md border animate-bounce ${
-              errorMessage 
-                ? "bg-rose-900/90 border-rose-500/50 text-rose-100" 
-                : "bg-emerald-950/90 border-emerald-500/50 text-emerald-100 shadow-emerald-900/20"
+            className={`rounded-2xl border px-6 py-3 font-bold text-white shadow-2xl ${
+              errorMessage
+                ? "border-red-400 bg-red-700"
+                : "border-emerald-400 bg-[#0F3A2B]"
             }`}
           >
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-emerald-400 animate-spin" />
-              <span>{errorMessage || message}</span>
-            </div>
+            {errorMessage || successMessage}
           </div>
         </div>
       )}
 
-      {/* الهيدر الرئيسي */}
-      <div className="relative rounded-[32px] border border-emerald-500/20 bg-[#0A281F]/60 backdrop-blur-xl p-6 shadow-2xl shadow-black/40 overflow-hidden sm:p-8">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50"></div>
-        
-        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+      <div className="rounded-[30px] border border-[#D8C99B]/40 bg-white p-5 shadow-xl sm:p-7">
+        <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 opacity-30 blur"></div>
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F3A2B] to-[#072118] text-emerald-400 border border-emerald-500/30 shadow-inner">
-                <Wrench className="h-7 w-7" />
-              </div>
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0F3A2B] text-[#D8C99B] shadow-md">
+              <Wrench className="h-7 w-7" />
             </div>
 
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-                  طلبات الورشة الفضائية
-                </h2>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <Sparkles className="w-3 h-3" /> نظام المرقاب
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-emerald-100/60 font-medium">
-                إدارة طلبات فحص وصيانة وإصلاح الدرونات بكفاءة عالية وأسلوب فخم
+              <h2 className="text-2xl font-black sm:text-3xl">
+                طلبات الورشة
+              </h2>
+
+              <p className="mt-1 text-sm text-[#6E7F76]">
+                متابعة طلبات فحص وصيانة وإصلاح الدرونات
               </p>
             </div>
           </div>
@@ -445,61 +407,62 @@ export default function WorkshopRequestsManager() {
             type="button"
             onClick={() => loadRequests(true)}
             disabled={refreshing}
-            className="group relative inline-flex items-center justify-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 px-6 py-3 font-bold text-emerald-300 transition-all duration-300 hover:bg-emerald-500 hover:text-white hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0F3A2B] px-6 py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
           >
             <RefreshCw
-              className={`h-4 w-4 transition-transform duration-500 group-hover:rotate-180 ${refreshing ? "animate-spin" : ""}`}
+              className={`h-4 w-4 ${
+                refreshing ? "animate-spin" : ""
+              }`}
             />
-            <span>تحديث البيانات</span>
+
+            تحديث البيانات
           </button>
         </div>
 
-        {/* إحصائيات سريعة فاخرة */}
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="relative rounded-2xl border border-emerald-500/10 bg-[#061C14]/60 p-4 backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-emerald-500/30 hover:bg-[#061C14]">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl"></div>
-            <p className="text-xs font-bold text-emerald-400/80 tracking-wider">
+        <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl bg-[#F8F7F2] p-5">
+            <p className="text-xs font-bold text-[#6E7F76]">
               إجمالي الطلبات
             </p>
-            <p className="mt-2 text-3xl font-black text-white tracking-tight">
+
+            <p className="mt-2 text-3xl font-black">
               {requests.length}
             </p>
           </div>
 
-          <div className="relative rounded-2xl border border-blue-500/10 bg-blue-950/20 p-4 backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-blue-500/30 hover:bg-blue-950/30">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl"></div>
-            <p className="text-xs font-bold text-blue-400 tracking-wider">
+          <div className="rounded-2xl bg-blue-50 p-5">
+            <p className="text-xs font-bold text-blue-700">
               الطلبات الجديدة
             </p>
-            <p className="mt-2 text-3xl font-black text-blue-300 tracking-tight">
+
+            <p className="mt-2 text-3xl font-black text-blue-800">
               {newRequestsCount}
             </p>
           </div>
 
-          <div className="relative rounded-2xl border border-emerald-500/10 bg-emerald-950/20 p-4 backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-emerald-500/30 hover:bg-emerald-950/30">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl"></div>
-            <p className="text-xs font-bold text-emerald-400 tracking-wider">
+          <div className="rounded-2xl bg-emerald-50 p-5">
+            <p className="text-xs font-bold text-emerald-700">
               الطلبات المكتملة
             </p>
-            <p className="mt-2 text-3xl font-black text-emerald-300 tracking-tight">
+
+            <p className="mt-2 text-3xl font-black text-emerald-800">
               {completedRequestsCount}
             </p>
           </div>
         </div>
       </div>
 
-      {/* شريط البحث والفلترة */}
-      <div className="rounded-[28px] border border-emerald-500/20 bg-[#0A281F]/40 backdrop-blur-xl p-4 shadow-xl">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_240px]">
+      <div className="rounded-[26px] border border-[#D8C99B]/40 bg-white p-4 shadow-md">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_230px]">
           <div className="relative">
-            <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-emerald-400/60" />
+            <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6E7F76]" />
 
             <input
               type="text"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="ابحث بالاسم، الهاتف، الموديل، أو رقم الطلب..."
-              className="w-full rounded-2xl border border-emerald-500/20 bg-[#061C14]/80 py-3.5 pr-12 pl-4 text-emerald-100 placeholder-emerald-400/40 outline-none transition-all focus:border-emerald-500 focus:bg-[#061C14] focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium"
+              placeholder="ابحث بالاسم أو الهاتف أو الموديل أو رقم الطلب..."
+              className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] py-3.5 pr-12 pl-4 outline-none transition focus:border-[#0F3A2B]"
             />
           </div>
 
@@ -510,12 +473,12 @@ export default function WorkshopRequestsManager() {
                 event.target.value as "all" | WorkshopStatus
               )
             }
-            className="w-full rounded-2xl border border-emerald-500/20 bg-[#061C14]/80 px-4 py-3.5 font-bold text-emerald-200 outline-none transition-all focus:border-emerald-500 focus:bg-[#061C14] focus:ring-2 focus:ring-emerald-500/20 text-sm cursor-pointer"
+            className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3.5 font-bold outline-none"
           >
-            <option value="all" className="bg-[#061C14] text-white">جميع الحالات</option>
+            <option value="all">جميع الحالات</option>
 
             {STATUS_OPTIONS.map((status) => (
-              <option key={status.value} value={status.value} className="bg-[#061C14] text-white">
+              <option key={status.value} value={status.value}>
                 {status.label}
               </option>
             ))}
@@ -524,90 +487,90 @@ export default function WorkshopRequestsManager() {
       </div>
 
       {filteredRequests.length === 0 ? (
-        <div className="rounded-[32px] border border-dashed border-emerald-500/20 bg-[#0A281F]/30 backdrop-blur-md px-6 py-20 text-center shadow-xl">
-          <div className="inline-flex p-4 rounded-full bg-emerald-500/10 text-emerald-400 mb-4 border border-emerald-500/20">
-            <AlertCircle className="h-10 w-10 animate-pulse" />
-          </div>
+        <div className="rounded-[30px] border border-dashed border-[#D8C99B] bg-white px-6 py-20 text-center shadow-md">
+          <AlertCircle className="mx-auto h-11 w-11 text-[#6E7F76]" />
 
-          <h3 className="text-xl font-black text-white">
+          <h3 className="mt-4 text-xl font-black">
             لا توجد طلبات مطابقة
           </h3>
 
-          <p className="mt-2 text-sm text-emerald-100/50 max-w-sm mx-auto">
-            لا توجد طلبات ورشة مطابقة لخيارات البحث أو الفلترة الحالية. جرب البحث بكلمات أخرى.
+          <p className="mt-2 text-sm text-[#6E7F76]">
+            لا توجد طلبات ورشة حاليًا أو لا توجد نتائج مطابقة للبحث.
           </p>
         </div>
       ) : (
         <>
-          {/* جدول سطح المكتب الفاخر */}
-          <div className="hidden overflow-hidden rounded-[32px] border border-emerald-500/20 bg-[#0A281F]/50 backdrop-blur-xl shadow-2xl lg:block">
+          <div className="hidden overflow-hidden rounded-[30px] border border-[#D8C99B]/40 bg-white shadow-xl lg:block">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1150px] text-right border-collapse">
-                <thead className="bg-[#061C14]/90 text-emerald-300 border-b border-emerald-500/20">
+              <table className="w-full min-w-[1100px] text-right">
+                <thead className="bg-[#0F3A2B] text-white">
                   <tr>
-                    <th className="px-5 py-4 text-xs font-black tracking-wider"># ID</th>
-                    <th className="px-5 py-4 text-xs font-black tracking-wider">اسم العميل</th>
-                    <th className="px-5 py-4 text-xs font-black tracking-wider">الهاتف</th>
-                    <th className="px-5 py-4 text-xs font-black tracking-wider">موديل الدرون</th>
-                    <th className="px-5 py-4 text-xs font-black tracking-wider">المشكلة</th>
-                    <th className="px-5 py-4 text-xs font-black tracking-wider">التاريخ</th>
-                    <th className="px-5 py-4 text-xs font-black tracking-wider">الحالة</th>
-                    <th className="px-5 py-4 text-xs font-black tracking-wider text-center">الإجراءات</th>
+                    <th className="px-5 py-4">ID</th>
+                    <th className="px-5 py-4">العميل</th>
+                    <th className="px-5 py-4">الهاتف</th>
+                    <th className="px-5 py-4">موديل الدرون</th>
+                    <th className="px-5 py-4">المشكلة</th>
+                    <th className="px-5 py-4">التاريخ</th>
+                    <th className="px-5 py-4">الحالة</th>
+                    <th className="px-5 py-4 text-center">
+                      الإجراءات
+                    </th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-emerald-500/10">
+                <tbody className="divide-y divide-[#E8E3D9]">
                   {filteredRequests.map((request) => {
                     const status = getStatusDetails(request.status);
 
                     return (
                       <tr
                         key={request.id}
-                        className="transition-all hover:bg-emerald-500/[0.03] group"
+                        className="transition hover:bg-[#F8F7F2]"
                       >
-                        <td className="px-5 py-4 font-black text-emerald-400">
+                        <td className="px-5 py-4 font-black">
                           #{request.id}
                         </td>
 
-                        <td className="px-5 py-4 font-bold text-white">
+                        <td className="px-5 py-4 font-bold">
                           {request.customer_name}
                         </td>
 
-                        <td className="px-5 py-4 font-medium text-emerald-100/80" dir="ltr">
+                        <td className="px-5 py-4" dir="ltr">
                           {request.phone}
                         </td>
 
-                        <td className="px-5 py-4 font-semibold text-emerald-200">
+                        <td className="px-5 py-4 font-semibold">
                           {request.drone_model}
                         </td>
 
-                        <td className="max-w-[280px] px-5 py-4">
-                          <p className="line-clamp-2 text-xs leading-relaxed text-emerald-100/60">
-                            {request.issue_description}
+                        <td className="max-w-[270px] px-5 py-4">
+                          <p className="line-clamp-2 text-sm text-[#6E7F76]">
+                            {request.problem_description}
                           </p>
                         </td>
 
-                        <td className="px-5 py-4 text-xs font-medium text-emerald-100/50">
+                        <td className="px-5 py-4 text-sm text-[#6E7F76]">
                           {formatDate(request.created_at)}
                         </td>
 
                         <td className="px-5 py-4">
                           <select
-                            value={request.status}
-                            disabled={updatingStatusId === request.id}
+                            value={normalizeStatus(request.status)}
+                            disabled={
+                              updatingStatusId === request.id
+                            }
                             onChange={(event) =>
                               handleStatusChange(
                                 request,
                                 event.target.value as WorkshopStatus
                               )
                             }
-                            className={`rounded-full border px-3 py-1.5 text-xs font-bold outline-none cursor-pointer transition-all ${status.className} bg-[#061C14]`}
+                            className={`rounded-full border px-3 py-2 text-xs font-bold outline-none ${status.className}`}
                           >
                             {STATUS_OPTIONS.map((item) => (
                               <option
                                 key={item.value}
                                 value={item.value}
-                                className="bg-[#061C14] text-white py-1"
                               >
                                 {item.label}
                               </option>
@@ -619,8 +582,10 @@ export default function WorkshopRequestsManager() {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
-                              onClick={() => setSelectedRequest(request)}
-                              className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2.5 text-emerald-400 transition-all hover:bg-emerald-500 hover:text-white hover:shadow-lg hover:shadow-emerald-500/20"
+                              onClick={() =>
+                                setSelectedRequest(request)
+                              }
+                              className="rounded-xl bg-[#0F3A2B]/10 p-2.5 text-[#0F3A2B] hover:bg-[#0F3A2B] hover:text-white"
                               title="عرض التفاصيل"
                             >
                               <Eye className="h-4 w-4" />
@@ -629,7 +594,7 @@ export default function WorkshopRequestsManager() {
                             <button
                               type="button"
                               onClick={() => openWhatsApp(request)}
-                              className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2.5 text-emerald-400 transition-all hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-emerald-600/20"
+                              className="rounded-xl bg-emerald-100 p-2.5 text-emerald-700 hover:bg-emerald-600 hover:text-white"
                               title="واتساب"
                             >
                               <MessageCircle className="h-4 w-4" />
@@ -639,7 +604,7 @@ export default function WorkshopRequestsManager() {
                               type="button"
                               onClick={() => handleDelete(request)}
                               disabled={deletingId === request.id}
-                              className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-2.5 text-rose-400 transition-all hover:bg-rose-600 hover:text-white hover:shadow-lg hover:shadow-rose-600/20 disabled:opacity-50"
+                              className="rounded-xl bg-red-100 p-2.5 text-red-700 hover:bg-red-600 hover:text-white disabled:opacity-50"
                               title="حذف"
                             >
                               {deletingId === request.id ? (
@@ -658,7 +623,6 @@ export default function WorkshopRequestsManager() {
             </div>
           </div>
 
-          {/* بطاقات الموبايل الفاخرة */}
           <div className="grid grid-cols-1 gap-4 lg:hidden">
             {filteredRequests.map((request) => {
               const status = getStatusDetails(request.status);
@@ -666,17 +630,19 @@ export default function WorkshopRequestsManager() {
               return (
                 <article
                   key={request.id}
-                  className="rounded-[28px] border border-emerald-500/20 bg-[#0A281F]/60 backdrop-blur-xl p-5 shadow-xl space-y-4"
+                  className="rounded-[26px] border border-[#D8C99B]/40 bg-white p-5 shadow-md"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <span className="text-[11px] font-bold text-emerald-400/70 tracking-wider">
+                      <span className="text-xs font-bold text-[#6E7F76]">
                         طلب ورشة #{request.id}
                       </span>
-                      <h3 className="mt-0.5 text-lg font-black text-white">
+
+                      <h3 className="mt-1 text-lg font-black">
                         {request.customer_name}
                       </h3>
-                      <p className="mt-0.5 text-xs text-emerald-100/40 font-medium">
+
+                      <p className="mt-1 text-xs text-[#6E7F76]">
                         {formatDate(request.created_at)}
                       </p>
                     </div>
@@ -688,31 +654,40 @@ export default function WorkshopRequestsManager() {
                     </span>
                   </div>
 
-                  <div className="space-y-2.5 rounded-2xl bg-[#061C14]/70 p-4 border border-emerald-500/10">
+                  <div className="mt-4 space-y-3 rounded-2xl bg-[#F8F7F2] p-4">
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-emerald-400/60 tracking-wider">رقم الهاتف</p>
-                      <p className="mt-0.5 font-bold text-sm text-emerald-100" dir="ltr">
+                      <p className="text-xs font-bold text-[#6E7F76]">
+                        رقم الهاتف
+                      </p>
+
+                      <p className="font-bold" dir="ltr">
                         {request.phone}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-emerald-400/60 tracking-wider">موديل الدرون</p>
-                      <p className="mt-0.5 font-bold text-sm text-white">
+                      <p className="text-xs font-bold text-[#6E7F76]">
+                        موديل الدرون
+                      </p>
+
+                      <p className="font-bold">
                         {request.drone_model}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-emerald-400/60 tracking-wider">وصف المشكلة</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-emerald-100/70">
-                        {request.issue_description}
+                      <p className="text-xs font-bold text-[#6E7F76]">
+                        وصف المشكلة
+                      </p>
+
+                      <p className="text-sm leading-relaxed">
+                        {request.problem_description}
                       </p>
                     </div>
                   </div>
 
                   <select
-                    value={request.status}
+                    value={normalizeStatus(request.status)}
                     disabled={updatingStatusId === request.id}
                     onChange={(event) =>
                       handleStatusChange(
@@ -720,31 +695,29 @@ export default function WorkshopRequestsManager() {
                         event.target.value as WorkshopStatus
                       )
                     }
-                    className={`w-full rounded-2xl border px-4 py-3 text-xs font-bold outline-none cursor-pointer ${status.className} bg-[#061C14]`}
+                    className={`mt-4 w-full rounded-2xl border px-4 py-3 font-bold ${status.className}`}
                   >
                     {STATUS_OPTIONS.map((item) => (
-                      <option key={item.value} value={item.value} className="bg-[#061C14] text-white">
+                      <option key={item.value} value={item.value}>
                         {item.label}
                       </option>
                     ))}
                   </select>
 
-                  <div className="grid grid-cols-3 gap-2 pt-1">
+                  <div className="mt-4 grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => setSelectedRequest(request)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500 hover:text-white transition-all"
+                      className="rounded-xl bg-[#0F3A2B] px-3 py-3 text-sm font-bold text-white"
                     >
-                      <Eye className="h-3.5 w-3.5" />
                       عرض
                     </button>
 
                     <button
                       type="button"
                       onClick={() => openWhatsApp(request)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 px-3 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all"
+                      className="rounded-xl bg-emerald-600 px-3 py-3 text-sm font-bold text-white"
                     >
-                      <MessageCircle className="h-3.5 w-3.5" />
                       واتساب
                     </button>
 
@@ -752,9 +725,8 @@ export default function WorkshopRequestsManager() {
                       type="button"
                       onClick={() => handleDelete(request)}
                       disabled={deletingId === request.id}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 px-3 py-2.5 text-xs font-bold text-rose-300 hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50"
+                      className="rounded-xl bg-red-600 px-3 py-3 text-sm font-bold text-white disabled:opacity-50"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
                       حذف
                     </button>
                   </div>
@@ -765,21 +737,23 @@ export default function WorkshopRequestsManager() {
         </>
       )}
 
-      {/* مودال تفاصيل الطلب الفاخر */}
       {selectedRequest && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <button
             type="button"
-            aria-label="إغلاق التفاصيل"
+            aria-label="إغلاق"
             onClick={() => setSelectedRequest(null)}
-            className="absolute inset-0 h-full w-full bg-black/80 backdrop-blur-md transition-opacity"
+            className="absolute inset-0 h-full w-full bg-black/65 backdrop-blur-sm"
           />
 
-          <div className="relative z-10 max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-emerald-500/30 bg-[#061C14] shadow-2xl shadow-emerald-950/50 text-slate-100">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-emerald-500/20 bg-[#0A281F]/90 backdrop-blur-xl px-6 py-4">
+          <div className="relative z-10 max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[30px] bg-white shadow-2xl">
+            <div className="sticky top-0 flex items-center justify-between border-b border-[#E8E3D9] bg-white px-6 py-4">
               <div>
-                <span className="text-[11px] font-bold text-emerald-400">تفاصيل طلب الورشة</span>
-                <h3 className="text-xl font-black text-white">
+                <p className="text-xs font-bold text-[#6E7F76]">
+                  تفاصيل طلب الورشة
+                </p>
+
+                <h3 className="text-xl font-black">
                   طلب رقم #{selectedRequest.id}
                 </h3>
               </div>
@@ -787,150 +761,140 @@ export default function WorkshopRequestsManager() {
               <button
                 type="button"
                 onClick={() => setSelectedRequest(null)}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F8F7F2]"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="space-y-6 p-6 sm:p-8">
+            <div className="space-y-5 p-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-emerald-500/10 bg-[#0A281F]/40 p-4">
-                  <p className="text-xs font-semibold text-emerald-400/60">اسم العميل</p>
-                  <p className="mt-1 font-black text-white text-base">
+                <div className="rounded-2xl bg-[#F8F7F2] p-4">
+                  <p className="text-xs text-[#6E7F76]">
+                    اسم العميل
+                  </p>
+
+                  <p className="mt-1 font-black">
                     {selectedRequest.customer_name}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-emerald-500/10 bg-[#0A281F]/40 p-4">
-                  <p className="text-xs font-semibold text-emerald-400/60">رقم الهاتف</p>
-                  <p className="mt-1 font-black text-emerald-200 text-base" dir="ltr">
+                <div className="rounded-2xl bg-[#F8F7F2] p-4">
+                  <p className="text-xs text-[#6E7F76]">
+                    رقم الهاتف
+                  </p>
+
+                  <p className="mt-1 font-black" dir="ltr">
                     {selectedRequest.phone}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-emerald-500/10 bg-[#0A281F]/40 p-4">
-                  <p className="text-xs font-semibold text-emerald-400/60">موديل الدرون</p>
-                  <p className="mt-1 font-black text-white text-base">
+                <div className="rounded-2xl bg-[#F8F7F2] p-4">
+                  <p className="text-xs text-[#6E7F76]">
+                    موديل الدرون
+                  </p>
+
+                  <p className="mt-1 font-black">
                     {selectedRequest.drone_model}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-emerald-500/10 bg-[#0A281F]/40 p-4">
-                  <p className="text-xs font-semibold text-emerald-400/60">تاريخ الإرسال</p>
-                  <p className="mt-1 font-bold text-emerald-200 text-sm">
+                <div className="rounded-2xl bg-[#F8F7F2] p-4">
+                  <p className="text-xs text-[#6E7F76]">
+                    تاريخ الإرسال
+                  </p>
+
+                  <p className="mt-1 font-bold">
                     {formatDate(selectedRequest.created_at)}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-emerald-500/10 bg-[#0A281F]/40 p-5">
-                <p className="text-xs font-semibold text-emerald-400/60 mb-2">وصف المشكلة</p>
-                <p className="whitespace-pre-wrap leading-relaxed text-emerald-100 text-sm">
-                  {selectedRequest.issue_description}
+              <div className="rounded-2xl bg-[#F8F7F2] p-5">
+                <p className="mb-2 text-xs font-bold text-[#6E7F76]">
+                  وصف المشكلة
+                </p>
+
+                <p className="whitespace-pre-wrap leading-relaxed">
+                  {selectedRequest.problem_description}
                 </p>
               </div>
 
               {selectedRequest.image_url && (
-                <div className="rounded-2xl border border-emerald-500/20 bg-[#0A281F]/40 p-4">
+                <div className="rounded-2xl border border-[#D8D2C5] p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <p className="font-bold text-emerald-200 text-sm">
-                      الصورة المرفقة
-                    </p>
+                    <p className="font-bold">الصورة المرفقة</p>
 
                     <a
                       href={selectedRequest.image_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:underline"
+                      className="inline-flex items-center gap-1 text-sm font-bold text-[#0F3A2B]"
                     >
-                      فتح الصورة بحجم كامل
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      فتح الصورة
+
+                      <ExternalLink className="h-4 w-4" />
                     </a>
                   </div>
 
                   <img
                     src={selectedRequest.image_url}
-                    alt={`صورة طلب الورشة ${selectedRequest.id}`}
-                    className="max-h-[380px] w-full rounded-xl object-contain bg-black/40 border border-emerald-500/10"
+                    alt={`صورة طلب ${selectedRequest.id}`}
+                    className="max-h-[400px] w-full rounded-xl object-contain"
                   />
                 </div>
               )}
 
               <div>
-                <label className="mb-2 block text-xs font-bold text-emerald-400 tracking-wider">
+                <label className="mb-2 block text-sm font-bold">
                   حالة الطلب
                 </label>
 
                 <select
-                  value={selectedRequest.status}
-                  disabled={updatingStatusId === selectedRequest.id}
+                  value={normalizeStatus(selectedRequest.status)}
+                  disabled={
+                    updatingStatusId === selectedRequest.id
+                  }
                   onChange={(event) =>
                     handleStatusChange(
                       selectedRequest,
                       event.target.value as WorkshopStatus
                     )
                   }
-                  className="w-full rounded-2xl border border-emerald-500/20 bg-[#0A281F]/60 px-4 py-3.5 font-bold text-white outline-none focus:border-emerald-500 text-sm cursor-pointer"
+                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3.5 font-bold"
                 >
                   {STATUS_OPTIONS.map((status) => (
-                    <option key={status.value} value={status.value} className="bg-[#061C14] text-white">
+                    <option key={status.value} value={status.value}>
                       {status.label}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="mb-2 block text-xs font-bold text-emerald-400 tracking-wider">
-                  ملاحظات الإدارة الداخلية
-                </label>
-
-                <textarea
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  rows={4}
-                  placeholder="اكتب نتيجة الفحص أو تكلفة الإصلاح أو أي ملاحظات داخلية..."
-                  className="w-full resize-none rounded-2xl border border-emerald-500/20 bg-[#0A281F]/60 p-4 text-emerald-100 placeholder-emerald-400/30 outline-none focus:border-emerald-500 text-sm leading-relaxed"
-                />
-
-                <button
-                  type="button"
-                  onClick={handleSaveNotes}
-                  disabled={savingNotes}
-                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3.5 font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 sm:w-auto"
-                >
-                  {savingNotes ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  <span>حفظ الملاحظات</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 border-t border-emerald-500/20 pt-6 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 border-t pt-5 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => openWhatsApp(selectedRequest)}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3.5 font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-500"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3.5 font-bold text-white"
                 >
                   <MessageCircle className="h-5 w-5" />
-                  <span>التواصل عبر واتساب</span>
+
+                  التواصل عبر واتساب
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleDelete(selectedRequest)}
                   disabled={deletingId === selectedRequest.id}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-500/10 border border-rose-500/30 px-6 py-3.5 font-bold text-rose-400 transition-all hover:bg-rose-600 hover:text-white disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 font-bold text-white disabled:opacity-50"
                 >
                   {deletingId === selectedRequest.id ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <Trash2 className="h-5 w-5" />
                   )}
-                  <span>حذف الطلب نهائياً</span>
+
+                  حذف الطلب
                 </button>
               </div>
             </div>
