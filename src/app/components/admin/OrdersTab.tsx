@@ -302,34 +302,30 @@ export default function OrdersTab() {
   }, [orders, products]);
 
   function isCancelledOrder(order: Order): boolean {
-    const status = (order.status || "").trim();
+    const status = (order.status || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
 
     return [
       "ملغي",
       "ملغى",
+      "ملغية",
       "تم الإلغاء",
-      "تم الغاء الطلب",
+      "تم الالغاء",
       "تم إلغاء الطلب",
+      "تم الغاء الطلب",
+      "cancelled",
+      "canceled",
     ].includes(status);
   }
 
   const dashboardStats = useMemo(() => {
-    const activeOrders = orders.filter((order) => {
-      const status = (order.status || "").trim();
+    const activeOrders = orders.filter((order) => !isCancelledOrder(order));
 
-      return ![
-        "ملغي",
-        "ملغى",
-        "تم الإلغاء",
-        "تم الغاء الطلب",
-        "تم إلغاء الطلب",
-      ].includes(status);
-    });
-
-    const totalSales = activeOrders.reduce(
-      (sum, order) => sum + toNumber(order.total),
-      0
-    );
+    const totalSales = activeOrders.reduce((sum, order) => {
+      return sum + toNumber(order.total);
+    }, 0);
 
     const totalProfit = activeOrders.reduce((sum, order) => {
       const calculation = calculationsByOrder.get(String(order.id));
@@ -392,9 +388,13 @@ export default function OrdersTab() {
 
       case "ملغي":
       case "ملغى":
+      case "ملغية":
       case "تم الإلغاء":
-      case "تم الغاء الطلب":
+      case "تم الالغاء":
       case "تم إلغاء الطلب":
+      case "تم الغاء الطلب":
+      case "cancelled":
+      case "canceled":
         return "bg-red-100 text-red-800 border border-red-300";
 
       default:
