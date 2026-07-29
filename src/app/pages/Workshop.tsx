@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Wrench, ArrowLeft, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient'; // تأكد من مسار استيراد ملف Supabase الخاص بك
 
 interface WorkshopProps {
   onNavigate: (page: string) => void;
@@ -17,6 +18,7 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -26,14 +28,62 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
 
-    setTimeout(() => {
+    try {
+      let imageUrl = null;
+
+      // 1. رفع الصورة إلى Supabase Storage إذا وجدت صورة مرفقة
+      if (formData.image) {
+        const fileExt = formData.image.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        // نفترض أن اسم الـ Bucket لديك هو workshop-images (أو غيّره حسب إعداداتك)
+        const { error: uploadError } = await supabase.storage
+          .from('workshop-images')
+          .upload(filePath, formData.image);
+
+        if (uploadError) {
+          throw new Error('فشل في رفع الصورة: ' + uploadError.message);
+        }
+
+        // جلب الرابط العام للصورة
+        const { data: publicUrlData } = supabase.storage
+          .from('workshop-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrlData.publicUrl;
+      }
+
+      // 2. إدخال البيانات في جدول قاعدة البيانات (مثلاً جدول workshop_requests)
+      const { error: insertError } = await supabase
+        .from('workshop_requests')
+        .insert([
+          {
+            name: formData.name,
+            phone: formData.phone,
+            drone_model: formData.droneModel,
+            issue_description: formData.issueDescription,
+            image_url: imageUrl,
+            status: 'pending',
+          },
+        ]);
+
+      if (insertError) {
+        throw new Error('فشل في حفظ بيانات الطلب: ' + insertError.message);
+      }
+
       setLoading(false);
       setSubmitted(true);
-    }, 1200);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage(err.message || 'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,7 +130,7 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
                   تم استلام طلبك بنجاح!
                 </h3>
                 <p className="text-[#6E7F76] max-w-md mx-auto mb-8 text-base leading-relaxed">
-                  شكراً لك <span className="text-[#0F3A2B] font-bold">{formData.name}</span>، تم تسجيل تفاصيل مشكلة الدرون وسيتواصل معك فني الصيانة عبر رقم الهاتف المدرج قريباً جداً.
+                  شكراً لك <span className="text-[#0F3A2B] font-bold">{formData.name}</span>، تم تسجيل تفاصيل مشكلة الدرون في النظام وسيتواصل معك فني الصيانة عبر رقم الهاتف المدرج قريباً جداً.
                 </p>
                 <button
                   type="button"
@@ -97,6 +147,15 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 
+                {errorMessage && (
+                  <div className="flex items-center gap-3 rounded-2xl bg-red-50 p-4 border border-red-200 text-red-700">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <p className="text-xs font-semibold leading-relaxed text-right">
+                      {errorMessage}
+                    </p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* الاسم الكامل */}
                   <div>
@@ -219,7 +278,7 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#0F3A2B] px-10 py-3.5 font-bold text-white transition hover:scale-105 shadow-lg disabled:opacity-50"
                   >
                     {loading ? (
-                      <span>جاري إرسال الطلب...</span>
+                      <span>جاري حفظ وإرسال الطلب...</span>
                     ) : (
                       <>
                         <Wrench className="h-5 w-5 text-[#D8C99B]" />
