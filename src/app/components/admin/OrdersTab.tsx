@@ -480,7 +480,7 @@ export default function OrdersTab() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-3xl border border-[#D8D2C5] bg-white shadow-xl">
-          <table className="w-full min-w-[1750px] border-collapse text-right text-sm">
+          <table className="w-full min-w-[1850px] table-auto border-collapse text-right text-sm">
             <thead className="bg-[#0F3A2B] text-white">
               <tr>
                 <th className="p-5 text-sm font-bold">ID</th>
@@ -525,34 +525,44 @@ export default function OrdersTab() {
                       {order.product_name || "-"}
                     </td>
 
-                    <td className="p-5 font-bold">
-                      {toNumber(order.total).toFixed(3)} ر.ع
+                    <td className="min-w-[120px] whitespace-nowrap p-4 text-center font-bold">
+                      <span dir="ltr" className="inline-flex items-center gap-1">
+                        <span>{toNumber(order.total).toFixed(3)}</span>
+                        <span>ر.ع</span>
+                      </span>
                     </td>
 
-                    <td className="p-5 font-bold text-blue-700">
-                      {calculation?.matched
-                        ? `${calculation.cost.toFixed(3)} ر.ع`
-                        : "غير محسوبة"}
+                    <td className="min-w-[120px] whitespace-nowrap p-4 text-center font-bold text-blue-700">
+                      {calculation?.matched ? (
+                        <span dir="ltr" className="inline-flex items-center gap-1">
+                          <span>{calculation.cost.toFixed(3)}</span>
+                          <span>ر.ع</span>
+                        </span>
+                      ) : (
+                        "غير محسوبة"
+                      )}
                     </td>
 
-                    <td className="p-5">
+                    <td className="min-w-[125px] whitespace-nowrap p-4 text-center">
                       {isCancelledOrder(order) ? (
-                        <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                        <span className="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
                           ملغي
                         </span>
                       ) : calculation?.matched ? (
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          dir="ltr"
+                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${
                             calculation.profit >= 0
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-700"
                           }`}
                         >
-                          {calculation.profit.toFixed(3)} ر.ع
+                          <span>{calculation.profit.toFixed(3)}</span>
+                          <span>ر.ع</span>
                         </span>
                       ) : (
                         <span
-                          className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-800"
+                          className="inline-flex rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-800"
                           title="تأكد أن اسم المنتج في الطلب مطابق لاسمه في إدارة المنتجات وأن سعر الشراء مسجل"
                         >
                           يحتاج مطابقة
