@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
@@ -99,6 +99,8 @@ const TABS: TabItem[] = [
   },
 ];
 
+const ADMIN_PIN = "2215"; // غيّر الرمز من هنا، ويجب أن يكون 4 أرقام
+
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
@@ -106,12 +108,21 @@ export default function AdminDashboard() {
   const [loginError, setLoginError] = useState("");
   const [activeTab, setActiveTab] = useState<AdminTab>("orders");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isPinUnlocked, setIsPinUnlocked] = useState(false);
+  const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
+  const [pinError, setPinError] = useState("");
+  const pinInputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
     const loggedInStatus = sessionStorage.getItem("adminLoggedIn");
+    const pinUnlockedStatus = sessionStorage.getItem("adminPinUnlocked");
 
     if (loggedInStatus === "true") {
       setIsLoggedIn(true);
+    }
+
+    if (pinUnlockedStatus === "true") {
+      setIsPinUnlocked(true);
     }
   }, []);
 
@@ -130,9 +141,102 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     sessionStorage.removeItem("adminLoggedIn");
+    sessionStorage.removeItem("adminPinUnlocked");
     setIsLoggedIn(false);
+    setIsPinUnlocked(false);
+    setPinDigits(["", "", "", ""]);
     setUsername("");
     setPassword("");
+  };
+
+  const submitPin = (digits: string[]) => {
+    const enteredPin = digits.join("");
+
+    if (enteredPin.length !== 4) {
+      return;
+    }
+
+    if (enteredPin === ADMIN_PIN) {
+      sessionStorage.setItem("adminPinUnlocked", "true");
+      setIsPinUnlocked(true);
+      setPinError("");
+      return;
+    }
+
+    setPinError("الرمز غير صحيح، حاول مرة أخرى");
+    setPinDigits(["", "", "", ""]);
+
+    window.setTimeout(() => {
+      pinInputsRef.current[0]?.focus();
+    }, 0);
+  };
+
+  const handlePinChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const nextDigits = [...pinDigits];
+    nextDigits[index] = digit;
+
+    setPinDigits(nextDigits);
+    setPinError("");
+
+    if (digit && index < 3) {
+      pinInputsRef.current[index + 1]?.focus();
+    }
+
+    if (nextDigits.every(Boolean)) {
+      submitPin(nextDigits);
+    }
+  };
+
+  const handlePinKeyDown = (
+    index: number,
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key === "Backspace" && !pinDigits[index] && index > 0) {
+      pinInputsRef.current[index - 1]?.focus();
+    }
+
+    if (event.key === "ArrowLeft" && index < 3) {
+      pinInputsRef.current[index + 1]?.focus();
+    }
+
+    if (event.key === "ArrowRight" && index > 0) {
+      pinInputsRef.current[index - 1]?.focus();
+    }
+
+    if (event.key === "Enter") {
+      submitPin(pinDigits);
+    }
+  };
+
+  const handlePinPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+
+    const pastedDigits = event.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 4)
+      .split("");
+
+    if (pastedDigits.length === 0) {
+      return;
+    }
+
+    const nextDigits = ["", "", "", ""];
+
+    pastedDigits.forEach((digit, index) => {
+      nextDigits[index] = digit;
+    });
+
+    setPinDigits(nextDigits);
+    setPinError("");
+
+    const nextFocusIndex = Math.min(pastedDigits.length, 3);
+    pinInputsRef.current[nextFocusIndex]?.focus();
+
+    if (pastedDigits.length === 4) {
+      submitPin(nextDigits);
+    }
   };
 
   const currentTab =
@@ -223,6 +327,89 @@ export default function AdminDashboard() {
               دخول مخصص لإدارة متجر مرقاب
             </p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+
+  if (!isPinUnlocked) {
+    return (
+      <div
+        dir="rtl"
+        className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-hidden bg-[#031D15] px-4 text-[#F3EAD2]"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(213,229,220,0.16)_1px,transparent_1.4px)] bg-[size:24px_24px] opacity-40" />
+        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#1B6A4E]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -left-40 h-[450px] w-[450px] rounded-full bg-[#8FA99C]/15 blur-3xl" />
+
+        <div className="relative w-full max-w-[560px] rounded-[34px] border border-white/10 bg-[#08271D]/95 px-6 py-10 text-center shadow-[0_30px_100px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:px-10 sm:py-12">
+          <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]">
+            <ShieldCheck className="h-7 w-7 text-[#E9DFC5]" />
+          </div>
+
+          <p className="text-sm font-bold text-[#8FA79B]">
+            قفل لوحة الإدارة قيد التشغيل حالياً
+          </p>
+
+          <h1 className="mt-3 text-2xl font-black leading-relaxed text-[#F3EAD2] sm:text-4xl">
+            أدخل رمز PIN للوصول إلى لوحة الإدارة
+          </h1>
+
+          <div
+            dir="ltr"
+            className="mt-9 flex items-center justify-center gap-3 sm:gap-4"
+          >
+            {pinDigits.map((digit, index) => (
+              <input
+                key={index}
+                ref={(element) => {
+                  pinInputsRef.current[index] = element;
+                }}
+                type="password"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={1}
+                value={digit}
+                onChange={(event) =>
+                  handlePinChange(index, event.target.value)
+                }
+                onKeyDown={(event) => handlePinKeyDown(index, event)}
+                onPaste={handlePinPaste}
+                autoFocus={index === 0}
+                aria-label={`الرقم ${index + 1}`}
+                className={`h-[72px] w-[62px] rounded-2xl border bg-white/[0.04] text-center text-3xl font-black text-[#F3EAD2] outline-none transition sm:h-[86px] sm:w-[76px] ${
+                  pinError
+                    ? "border-red-400/70 ring-4 ring-red-400/10"
+                    : "border-white/25 focus:border-[#E9DFC5] focus:bg-white/[0.08] focus:ring-4 focus:ring-[#E9DFC5]/10"
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="mt-5 min-h-6">
+            {pinError && (
+              <p className="text-sm font-bold text-red-300">{pinError}</p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => submitPin(pinDigits)}
+            disabled={pinDigits.some((digit) => !digit)}
+            className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#E9DFC5] text-base font-black text-[#0B3427] shadow-[0_14px_30px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:bg-[#F3EAD2] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+          >
+            <ShieldCheck className="h-5 w-5" />
+            فتح لوحة الإدارة
+          </button>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-4 text-sm font-bold text-[#8FA79B] transition hover:text-[#F3EAD2]"
+          >
+            العودة إلى تسجيل الدخول
+          </button>
         </div>
       </div>
     );
