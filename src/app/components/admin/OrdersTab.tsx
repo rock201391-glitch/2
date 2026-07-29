@@ -40,6 +40,21 @@ interface OrderCalculation {
   totalItems: number;
 }
 
+const ARABIC_MONTHS = [
+  "يناير",
+  "فبراير",
+  "مارس",
+  "أبريل",
+  "مايو",
+  "يونيو",
+  "يوليو",
+  "أغسطس",
+  "سبتمبر",
+  "أكتوبر",
+  "نوفمبر",
+  "ديسمبر",
+];
+
 export default function OrdersTab() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -291,15 +306,36 @@ export default function OrdersTab() {
     };
   }
 
+  const currentMonthOrders = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    return orders.filter((order) => {
+      if (!order.created_at) return false;
+
+      const orderDate = new Date(order.created_at);
+
+      if (Number.isNaN(orderDate.getTime())) {
+        return false;
+      }
+
+      return (
+        orderDate.getFullYear() === currentYear &&
+        orderDate.getMonth() === currentMonth
+      );
+    });
+  }, [orders]);
+
   const calculationsByOrder = useMemo(() => {
     const result = new Map<string, OrderCalculation>();
 
-    orders.forEach((order) => {
+    currentMonthOrders.forEach((order) => {
       result.set(String(order.id), calculateOrder(order));
     });
 
     return result;
-  }, [orders, products]);
+  }, [currentMonthOrders, products]);
 
   function isCancelledOrder(order: Order): boolean {
     const status = (order.status || "")
@@ -321,7 +357,9 @@ export default function OrdersTab() {
   }
 
   const dashboardStats = useMemo(() => {
-    const activeOrders = orders.filter((order) => !isCancelledOrder(order));
+    const activeOrders = currentMonthOrders.filter(
+      (order) => !isCancelledOrder(order)
+    );
 
     const totalSales = activeOrders.reduce((sum, order) => {
       return sum + toNumber(order.total);
@@ -349,7 +387,7 @@ export default function OrdersTab() {
       totalProfit,
       calculatedOrdersCount,
     };
-  }, [orders, products, calculationsByOrder]);
+  }, [currentMonthOrders, products, calculationsByOrder]);
 
   const selectedOrderCalculation = selectedOrder
     ? calculationsByOrder.get(String(selectedOrder.id))
@@ -459,7 +497,10 @@ export default function OrdersTab() {
 
       {/* شريط الأدوات */}
       <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <h2 className="text-2xl font-bold">الطلبات</h2>
+        <h2 className="text-2xl font-bold">
+          طلبات شهر {ARABIC_MONTHS[new Date().getMonth()]}{" "}
+          {new Date().getFullYear()}
+        </h2>
 
         <button
           type="button"
@@ -474,9 +515,9 @@ export default function OrdersTab() {
         <div className="rounded-3xl border border-[#D8D2C5] bg-white p-12 text-center text-lg font-medium shadow-md">
           جاري تحميل الطلبات...
         </div>
-      ) : orders.length === 0 ? (
+      ) : currentMonthOrders.length === 0 ? (
         <div className="rounded-3xl border border-[#D8D2C5] bg-white p-12 text-center text-lg font-medium shadow-md">
-          لا توجد طلبات حالياً
+          لا توجد طلبات خلال هذا الشهر حالياً
         </div>
       ) : (
         <div className="overflow-x-auto rounded-3xl border border-[#D8D2C5] bg-white shadow-xl">
@@ -501,7 +542,7 @@ export default function OrdersTab() {
             </thead>
 
             <tbody>
-              {orders.map((order) => {
+              {currentMonthOrders.map((order) => {
                 const calculation = calculationsByOrder.get(
                   String(order.id)
                 );
