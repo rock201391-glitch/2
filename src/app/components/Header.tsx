@@ -6,7 +6,8 @@ import {
   Box,
   MapPin,
   ChevronLeft,
-  Gavel
+  Gavel,
+  Wrench
 } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
@@ -29,6 +30,7 @@ export default function Header({
     { label: 'الرئيسية', id: 'home' },
     { label: 'المتجر', id: 'shop' },
     { label: 'المزادات', id: 'auctions' },
+    { label: 'الورشة', id: 'workshop' },
     { label: 'مشترياتي', id: 'my-orders' },
     { label: 'تتبع الطلب', id: 'track-order' },
   ];
@@ -139,6 +141,8 @@ export default function Header({
                         ? Box
                         : item.id === 'auctions'
                         ? Gavel
+                        : item.id === 'workshop'
+                        ? Wrench
                         : item.id === 'my-orders'
                         ? ShoppingBag
                         : MapPin;
