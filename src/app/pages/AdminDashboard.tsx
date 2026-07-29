@@ -30,12 +30,12 @@ type AdminTab =
   | "orders"
   | "products"
   | "auctions"
+  | "workshop"
   | "categories"
   | "discounts"
   | "shipping"
-  | "settings"
   | "theme"
-  | "workshop";
+  | "settings";
 
 type TabItem = {
   id: AdminTab;
@@ -54,7 +54,7 @@ const TABS: TabItem[] = [
   {
     id: "products",
     label: "المنتجات",
-    description: "الأسعار والمخزون والمنتجات",
+    description: "سعر البيع، سعر الشراء والمخزون",
     icon: Package,
   },
   {
@@ -62,6 +62,12 @@ const TABS: TabItem[] = [
     label: "المزادات",
     description: "إنشاء وإدارة المزادات",
     icon: Gavel,
+  },
+  {
+    id: "workshop",
+    label: "طلبات الورشة",
+    description: "متابعة الصيانة والخدمات",
+    icon: Wrench,
   },
   {
     id: "categories",
@@ -82,22 +88,16 @@ const TABS: TabItem[] = [
     icon: Truck,
   },
   {
+    id: "theme",
+    label: "هوية المتجر",
+    description: "مظهر وشعار المتجر",
+    icon: Palette,
+  },
+  {
     id: "settings",
     label: "إعدادات البنك",
     description: "بيانات التحويل والدفع",
     icon: Landmark,
-  },
-  {
-    id: "theme",
-    label: "هوية المتجر",
-    description: "ألوان وبنرات المتجر",
-    icon: Palette,
-  },
-  {
-    id: "workshop",
-    label: "طلبات الورشة",
-    description: "متابعة الصيانة والخدمات",
-    icon: Wrench,
   },
 ];
 
@@ -157,7 +157,6 @@ export default function AdminDashboard() {
         className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-hidden bg-[#F4F1E9] px-4"
       >
         <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#0F3A2B]/10 blur-3xl" />
-
         <div className="pointer-events-none absolute -bottom-40 -left-40 h-[450px] w-[450px] rounded-full bg-[#C9A85C]/15 blur-3xl" />
 
         <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-[#DED8CA] bg-white shadow-[0_30px_100px_rgba(15,58,43,0.18)]">
@@ -237,10 +236,9 @@ export default function AdminDashboard() {
       dir="rtl"
       className="min-h-screen bg-[#F5F2EB] text-[#153E30]"
     >
-      {/* الهيدر */}
+      {/* الهيدر العلوي */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B432F] text-white shadow-[0_10px_35px_rgba(15,58,43,0.22)]">
         <div className="flex h-[72px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* زر القائمة يظهر في الجوال فقط */}
           <button
             type="button"
             onClick={() => setIsMobileSidebarOpen(true)}
@@ -250,13 +248,13 @@ export default function AdminDashboard() {
             <Menu className="h-5 w-5" />
           </button>
 
-          {/* مساحة فارغة بدل شعار مرقاب وحرف م */}
-          <div className="hidden lg:block" />
+          <div className="hidden lg:block font-serif font-black text-xl tracking-wider text-[#F3D980]">
+            مِرقاب
+          </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-2.5 shadow-inner sm:flex">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.95)]" />
-
               <span className="text-xs font-bold text-white/90">
                 المسؤول: ro0ak
               </span>
@@ -268,9 +266,7 @@ export default function AdminDashboard() {
               className="flex h-11 items-center gap-2 rounded-2xl border border-[#D79D88]/30 bg-[#A94A38]/15 px-3.5 text-sm font-bold text-[#FFD9CF] transition hover:border-[#D79D88]/50 hover:bg-[#A94A38]/25 sm:px-5"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                تسجيل الخروج
-              </span>
+              <span className="hidden sm:inline">تسجيل الخروج</span>
             </button>
           </div>
         </div>
@@ -313,12 +309,9 @@ export default function AdminDashboard() {
                     <span className="block text-sm font-black">
                       {tab.label}
                     </span>
-
                     <span
                       className={`mt-1 block truncate text-[11px] font-medium ${
-                        isActive
-                          ? "text-white/60"
-                          : "text-[#879188]"
+                        isActive ? "text-white/60" : "text-[#879188]"
                       }`}
                     >
                       {tab.description}
@@ -349,7 +342,8 @@ export default function AdminDashboard() {
             />
 
             <aside className="absolute right-0 top-0 h-full w-[88%] max-w-[340px] overflow-y-auto border-l border-[#E3DED3] bg-[#FEFDF9] p-4 shadow-2xl">
-              <div className="mb-5 flex items-center justify-end border-b border-[#E6E1D7] pb-4">
+              <div className="mb-5 flex items-center justify-between border-b border-[#E6E1D7] pb-4">
+                <span className="font-serif font-black text-lg text-[#0F3A2B]">قائمة الإدارة</span>
                 <button
                   type="button"
                   onClick={() => setIsMobileSidebarOpen(false)}
@@ -390,12 +384,9 @@ export default function AdminDashboard() {
                         <span className="block text-sm font-black">
                           {tab.label}
                         </span>
-
                         <span
                           className={`mt-1 block truncate text-[11px] ${
-                            isActive
-                              ? "text-white/60"
-                              : "text-[#879188]"
+                            isActive ? "text-white/60" : "text-[#879188]"
                           }`}
                         >
                           {tab.description}
@@ -404,9 +395,7 @@ export default function AdminDashboard() {
 
                       <ChevronLeft
                         className={`h-4 w-4 ${
-                          isActive
-                            ? "text-[#F3D980]"
-                            : "text-[#AFB6B0]"
+                          isActive ? "text-[#F3D980]" : "text-[#AFB6B0]"
                         }`}
                       />
                     </button>
@@ -417,7 +406,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* المحتوى */}
+        {/* محتوى لوحة التحكم */}
         <main className="min-w-0 flex-1 px-3 py-5 sm:px-5 sm:py-7 xl:px-7 xl:py-8">
           <div className="mx-auto w-full max-w-[1800px]">
             <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -425,11 +414,9 @@ export default function AdminDashboard() {
                 <p className="text-xs font-black tracking-wide text-[#B08B3E]">
                   لوحة التحكم
                 </p>
-
                 <h2 className="mt-1 text-2xl font-black text-[#0F3A2B] sm:text-3xl">
                   {currentTab.label}
                 </h2>
-
                 <p className="mt-1 text-sm font-medium text-[#7C8981]">
                   {currentTab.description}
                 </p>
@@ -443,18 +430,12 @@ export default function AdminDashboard() {
                 {activeTab === "orders" && <OrdersTab />}
                 {activeTab === "products" && <ProductsManager />}
                 {activeTab === "auctions" && <AuctionsManager />}
-                {activeTab === "categories" && (
-                  <CategoriesManager />
-                )}
-                {activeTab === "discounts" && (
-                  <DiscountCodesManager />
-                )}
+                {activeTab === "workshop" && <WorkshopRequestsManager />}
+                {activeTab === "categories" && <CategoriesManager />}
+                {activeTab === "discounts" && <DiscountCodesManager />}
                 {activeTab === "shipping" && <ShippingManager />}
-                {activeTab === "settings" && <SettingsManager />}
                 {activeTab === "theme" && <ThemeManager />}
-                {activeTab === "workshop" && (
-                  <WorkshopRequestsManager />
-                )}
+                {activeTab === "settings" && <SettingsManager />}
               </div>
             </section>
           </div>
