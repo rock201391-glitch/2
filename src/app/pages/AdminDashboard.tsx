@@ -152,29 +152,30 @@ export default function AdminDashboard() {
     return (
       <div
         dir="rtl"
-        className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-hidden bg-[#EEE9DE] px-4"
+        className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-hidden bg-[#031D15] px-4 text-[#F3EAD2]"
       >
-        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#0F3A2B]/12 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-40 -left-40 h-[450px] w-[450px] rounded-full bg-[#AABCB2]/25 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(213,229,220,0.16)_1px,transparent_1.4px)] bg-[size:24px_24px] opacity-40" />
+        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#1B6A4E]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -left-40 h-[450px] w-[450px] rounded-full bg-[#8FA99C]/15 blur-3xl" />
 
-        <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-[#D9D2C5] bg-[#FAF8F2] shadow-[0_30px_100px_rgba(15,58,43,0.18)]">
-          <div className="h-2 w-full bg-gradient-to-l from-[#0A3829] via-[#1C5842] to-[#739081]" />
+        <div className="relative w-full max-w-[430px] overflow-hidden rounded-[34px] border border-white/10 bg-[#08271D]/95 shadow-[0_30px_100px_rgba(0,0,0,0.38)] backdrop-blur-xl">
+          <div className="h-1.5 w-full bg-gradient-to-l from-[#D9CFB1] via-[#7F9B8D] to-[#1C5A43]" />
 
           <div className="px-7 py-9 sm:px-10">
             <div className="mb-9 text-center">
-              <h1 className="text-4xl font-black tracking-tight text-[#0F3A2B]">
+              <h1 className="text-4xl font-black tracking-tight text-[#F3EAD2]">
                 مِرقاب
               </h1>
 
-              <div className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-[#637269]">
-                <ShieldCheck className="h-4 w-4 text-[#315E4C]" />
+              <div className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-[#A8BBB0]">
+                <ShieldCheck className="h-4 w-4 text-[#D9CFB1]" />
                 <span>لوحة إدارة المتجر</span>
               </div>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="mb-2 block text-sm font-bold text-[#173F31]">
+                <label className="mb-2 block text-sm font-bold text-[#E8E1CF]">
                   اسم المستخدم
                 </label>
 
@@ -184,13 +185,13 @@ export default function AdminDashboard() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="أدخل اسم المستخدم"
                   autoComplete="username"
-                  className="h-14 w-full rounded-2xl border border-[#D8D1C4] bg-[#F3EFE7] px-5 text-right text-[#173F31] outline-none transition placeholder:text-[#969F99] focus:border-[#0F3A2B] focus:bg-[#FAF8F2] focus:ring-4 focus:ring-[#0F3A2B]/10"
+                  className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 text-right text-[#F5F0E4] outline-none transition placeholder:text-[#789084] focus:border-[#9DB3A8] focus:bg-white/[0.09] focus:ring-4 focus:ring-[#9DB3A8]/10"
                   required
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-bold text-[#173F31]">
+                <label className="mb-2 block text-sm font-bold text-[#E8E1CF]">
                   كلمة المرور
                 </label>
 
@@ -200,7 +201,7 @@ export default function AdminDashboard() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="أدخل كلمة المرور"
                   autoComplete="current-password"
-                  className="h-14 w-full rounded-2xl border border-[#D8D1C4] bg-[#F3EFE7] px-5 text-right text-[#173F31] outline-none transition placeholder:text-[#969F99] focus:border-[#0F3A2B] focus:bg-[#FAF8F2] focus:ring-4 focus:ring-[#0F3A2B]/10"
+                  className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 text-right text-[#F5F0E4] outline-none transition placeholder:text-[#789084] focus:border-[#9DB3A8] focus:bg-white/[0.09] focus:ring-4 focus:ring-[#9DB3A8]/10"
                   required
                 />
               </div>
@@ -213,14 +214,14 @@ export default function AdminDashboard() {
 
               <button
                 type="submit"
-                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#0F3A2B] text-base font-black text-[#F7F4EC] shadow-[0_14px_30px_rgba(15,58,43,0.24)] transition hover:-translate-y-0.5 hover:bg-[#174C39] active:translate-y-0"
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#E9DFC5] text-base font-black text-[#0B3427] shadow-[0_14px_30px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:bg-[#F3EAD2] active:translate-y-0"
               >
                 <ShieldCheck className="h-5 w-5" />
                 دخول لوحة الإدارة
               </button>
             </form>
 
-            <p className="mt-7 text-center text-xs font-medium text-[#8A958E]">
+            <p className="mt-7 text-center text-xs font-medium text-[#7F978A]">
               دخول مخصص لإدارة متجر مرقاب
             </p>
           </div>
@@ -232,10 +233,10 @@ export default function AdminDashboard() {
   return (
     <div
       dir="rtl"
-      className="min-h-screen bg-[#ECE7DC] text-[#153E30]"
+      className="min-h-screen bg-[#021A13] text-[#F2EBD8]"
     >
       {/* الهيدر العلوي */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B432F] text-white shadow-[0_10px_35px_rgba(15,58,43,0.22)]">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#031F17]/95 text-white shadow-[0_10px_35px_rgba(0,0,0,0.34)] backdrop-blur-xl">
         <div className="flex h-[72px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -246,7 +247,7 @@ export default function AdminDashboard() {
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="hidden font-serif text-xl font-black tracking-wider text-[#F1EEE5] lg:block">
+          <div className="hidden text-xl font-black tracking-[0.08em] text-[#F3EAD2] lg:block">
             مِرقاب
           </div>
 
@@ -272,7 +273,16 @@ export default function AdminDashboard() {
 
       <div className="flex min-h-[calc(100vh-72px)]">
         {/* القائمة الجانبية للكمبيوتر */}
-        <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[270px] shrink-0 flex-col overflow-y-auto border-l border-[#D8D1C5] bg-[#F6F2E9] px-4 py-5 shadow-[-12px_0_40px_rgba(41,61,50,0.05)] lg:flex">
+        <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[286px] shrink-0 flex-col overflow-y-auto border-l border-white/10 bg-[#05241A] px-4 py-5 shadow-[-18px_0_45px_rgba(0,0,0,0.22)] lg:flex">
+          <div className="mb-5 rounded-[26px] border border-white/10 bg-white/[0.045] px-4 py-4">
+            <p className="text-[11px] font-bold tracking-[0.18em] text-[#789487]">
+              MERGAB ADMIN
+            </p>
+            <h3 className="mt-1 text-xl font-black tracking-tight text-[#F3EAD2]">
+              إدارة المتجر
+            </h3>
+          </div>
+
           <nav className="flex flex-1 flex-col gap-2">
             {TABS.map((tab) => {
               const Icon = tab.icon;
@@ -285,19 +295,19 @@ export default function AdminDashboard() {
                   onClick={() => handleTabChange(tab.id)}
                   className={`group relative flex min-h-[62px] w-full items-center gap-3 overflow-hidden rounded-[20px] px-3.5 py-3 text-right transition-all duration-300 ${
                     isActive
-                      ? "bg-gradient-to-l from-[#0B432F] to-[#174E3A] text-[#F8F5ED] shadow-[0_14px_30px_rgba(15,58,43,0.22)]"
-                      : "text-[#234B3D] hover:bg-[#E5EBE5]"
+                      ? "bg-[#E9DFC5] text-[#0A3426] shadow-[0_14px_34px_rgba(0,0,0,0.28)]"
+                      : "text-[#DCE6E0] hover:bg-white/[0.06]"
                   }`}
                 >
                   {isActive && (
-                    <span className="absolute right-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-l-full bg-[#B9C9C0]" />
+                    <span className="absolute right-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-l-full bg-[#6F8D7E]" />
                   )}
 
                   <span
                     className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all duration-300 ${
                       isActive
-                        ? "bg-white/10 text-[#E8F0EB] shadow-inner"
-                        : "bg-[#E3EAE4] text-[#315E4C] group-hover:bg-[#F9F6EF] group-hover:shadow-sm"
+                        ? "bg-[#0E4A37]/10 text-[#0A3A2A] shadow-inner"
+                        : "bg-white/[0.07] text-[#AFC3B8] group-hover:bg-white/[0.11] group-hover:text-[#F3EAD2]"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -310,8 +320,8 @@ export default function AdminDashboard() {
                   <ChevronLeft
                     className={`h-4 w-4 shrink-0 transition-transform duration-300 ${
                       isActive
-                        ? "translate-x-0 text-[#D9E4DE]"
-                        : "translate-x-1 text-[#9DAAA2] group-hover:translate-x-0"
+                        ? "translate-x-0 text-[#557466]"
+                        : "translate-x-1 text-[#668176] group-hover:translate-x-0 group-hover:text-[#AFC3B8]"
                     }`}
                   />
                 </button>
@@ -330,16 +340,16 @@ export default function AdminDashboard() {
               aria-label="إغلاق القائمة"
             />
 
-            <aside className="absolute right-0 top-0 h-full w-[88%] max-w-[340px] overflow-y-auto border-l border-[#D8D1C5] bg-[#F6F2E9] p-4 shadow-2xl">
-              <div className="mb-5 flex items-center justify-between border-b border-[#DCD5C9] pb-4">
-                <span className="font-serif text-lg font-black text-[#0F3A2B]">
+            <aside className="absolute right-0 top-0 h-full w-[88%] max-w-[360px] overflow-y-auto border-l border-white/10 bg-[#05241A] p-4 shadow-2xl">
+              <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-4">
+                <span className="text-lg font-black tracking-wide text-[#F3EAD2]">
                   قائمة الإدارة
                 </span>
 
                 <button
                   type="button"
                   onClick={() => setIsMobileSidebarOpen(false)}
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E6E0D5] text-[#173F31] transition hover:bg-[#DCD5C9]"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.07] text-[#F3EAD2] transition hover:bg-white/[0.12]"
                   aria-label="إغلاق القائمة"
                 >
                   <X className="h-5 w-5" />
@@ -358,15 +368,15 @@ export default function AdminDashboard() {
                       onClick={() => handleTabChange(tab.id)}
                       className={`flex min-h-[62px] w-full items-center gap-3 rounded-[19px] px-3.5 py-3 text-right transition-all ${
                         isActive
-                          ? "bg-gradient-to-l from-[#0B432F] to-[#174E3A] text-[#F8F5ED] shadow-lg"
-                          : "text-[#234B3D] hover:bg-[#E5EBE5]"
+                          ? "bg-[#E9DFC5] text-[#0A3426] shadow-lg"
+                          : "text-[#DCE6E0] hover:bg-white/[0.06]"
                       }`}
                     >
                       <span
                         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
                           isActive
-                            ? "bg-white/10 text-[#E8F0EB]"
-                            : "bg-[#E3EAE4] text-[#315E4C]"
+                            ? "bg-[#0E4A37]/10 text-[#0A3A2A]"
+                            : "bg-white/[0.07] text-[#AFC3B8]"
                         }`}
                       >
                         <Icon className="h-5 w-5" />
@@ -378,7 +388,7 @@ export default function AdminDashboard() {
 
                       <ChevronLeft
                         className={`h-4 w-4 ${
-                          isActive ? "text-[#D9E4DE]" : "text-[#9DAAA2]"
+                          isActive ? "text-[#557466]" : "text-[#668176]"
                         }`}
                       />
                     </button>
@@ -390,22 +400,26 @@ export default function AdminDashboard() {
         )}
 
         {/* محتوى لوحة التحكم */}
-        <main className="min-w-0 flex-1 bg-[radial-gradient(circle_at_top_right,rgba(15,58,43,0.055),transparent_28%),linear-gradient(180deg,#EFEADF_0%,#E9E3D8_100%)] px-3 py-5 sm:px-5 sm:py-7 xl:px-7 xl:py-8">
-          <div className="mx-auto w-full max-w-[1800px]">
+        <main className="relative min-w-0 flex-1 overflow-hidden bg-[#031F17] px-3 py-5 sm:px-5 sm:py-7 xl:px-7 xl:py-8">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(211,226,217,0.18)_1px,transparent_1.3px)] bg-[size:24px_24px] opacity-30" />
+          <div className="pointer-events-none absolute -right-40 top-8 h-[460px] w-[460px] rounded-full bg-[#176047]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 left-10 h-[420px] w-[420px] rounded-full bg-[#759083]/10 blur-3xl" />
+
+          <div className="relative mx-auto w-full max-w-[1800px]">
             <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-black tracking-wide text-[#62796D]">
+                <p className="text-xs font-black tracking-[0.16em] text-[#8FA79B]">
                   لوحة التحكم
                 </p>
 
-                <h2 className="mt-1 text-2xl font-black text-[#0F3A2B] sm:text-3xl">
+                <h2 className="mt-1 text-2xl font-black tracking-tight text-[#F3EAD2] sm:text-3xl">
                   {currentTab.label}
                 </h2>
               </div>
             </div>
 
-            <section className="min-w-0 overflow-hidden rounded-[30px] border border-[#D8D1C5] bg-[#F9F7F1] shadow-[0_20px_65px_rgba(41,61,50,0.10)]">
-              <div className="h-1.5 w-full bg-gradient-to-l from-[#0B432F] via-[#315E4C] to-[#789286]" />
+            <section className="relative min-w-0 overflow-hidden rounded-[30px] border border-white/10 bg-[#F3EDE0] shadow-[0_24px_70px_rgba(0,0,0,0.30)]">
+              <div className="h-1.5 w-full bg-gradient-to-l from-[#0A3E2D] via-[#537564] to-[#CFC5AA]" />
 
               <div className="w-full min-w-0 p-3 sm:p-5">
                 {activeTab === "orders" && <OrdersTab />}
