@@ -8,7 +8,14 @@ interface Product {
   name: string;
   slug: string | null;
   description: string | null;
+
+  // السعر القديم المستخدم في المتجر
   price: number;
+
+  // الأسعار الجديدة
+  purchase_price: number | null;
+  selling_price: number | null;
+
   image_url: string | null;
   quantity: number;
   category_id: number | null;
@@ -24,11 +31,12 @@ interface ProductFormData {
   name: string;
   slug: string;
   description: string;
-  price: string;
+  purchase_price: string;
+  selling_price: string;
   image_url: string;
   quantity: string;
   category_id: string;
-  colors: string; // comma-separated in UI
+  colors: string;
   is_active: boolean;
   is_pinned: boolean;
   pinned_order: string;
@@ -38,7 +46,8 @@ const emptyForm: ProductFormData = {
   name: "",
   slug: "",
   description: "",
-  price: "0",
+  purchase_price: "0",
+  selling_price: "0",
   image_url: "",
   quantity: "0",
   category_id: "",
@@ -51,21 +60,19 @@ const emptyForm: ProductFormData = {
 export default function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // form state
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ProductFormData>(emptyForm);
 
-  // image upload state
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -78,16 +85,40 @@ export default function ProductsManager() {
     setError(null);
 
     const [productsRes, categoriesRes] = await Promise.all([
-      supabase.from("products").select("*").order("created_at", { ascending: false }),
-      supabase.from("categories").select("*").order("sort_order", { ascending: true }),
+      supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false }),
+
+      supabase
+        .from("categories")
+        .select("*")
+        .order("sort_order", { ascending: true }),
     ]);
 
-    if (productsRes.error) setError(productsRes.error.message);
-    else setProducts(productsRes.data || []);
+    if (productsRes.error) {
+      setError(productsRes.error.message);
+    } else {
+      setProducts(productsRes.data || []);
+    }
 
-    if (!categoriesRes.error) setCategories(categoriesRes.data || []);
+    if (!categoriesRes.error) {
+      setCategories(categoriesRes.data || []);
+    }
 
     setLoading(false);
+  }
+
+  function getPurchasePrice(product: Product) {
+    return Number(product.purchase_price || 0);
+  }
+
+  function getSellingPrice(product: Product) {
+    return Number(product.selling_price ?? product.price ?? 0);
+  }
+
+  function getProductProfit(product: Product) {
+    return getSellingPrice(product) - getPurchasePrice(product);
   }
 
   function openCreateForm() {
@@ -95,26 +126,44 @@ export default function ProductsManager() {
     setForm(emptyForm);
     setUploadSuccess(false);
     setUploadError(null);
+    setError(null);
     setShowForm(true);
   }
 
   function openEditForm(product: Product) {
     setEditingId(product.id);
+
     setForm({
       name: product.name,
       slug: product.slug || "",
       description: product.description || "",
-      price: String(product.price),
+
+      purchase_price: String(product.purchase_price || 0),
+
+      // لو المنتج قديم وما عنده selling_price
+      // نستخدم price القديم تلقائياً
+      selling_price: String(product.selling_price ?? product.price ?? 0),
+
       image_url: product.image_url || "",
-      quantity: String(product.quantity),
-      category_id: product.category_id !== null ? String(product.category_id) : "",
-      colors: Array.isArray(product.colors) ? product.colors.join(", ") : "",
+      quantity: String(product.quantity || 0),
+
+      category_id:
+        product.category_id !== null
+          ? String(product.category_id)
+          : "",
+
+      colors: Array.isArray(product.colors)
+        ? product.colors.join(", ")
+        : "",
+
       is_active: product.is_active,
       is_pinned: product.is_pinned || false,
       pinned_order: String(product.pinned_order || 0),
     });
+
     setUploadSuccess(false);
     setUploadError(null);
+    setError(null);
     setShowForm(true);
   }
 
@@ -124,19 +173,33 @@ export default function ProductsManager() {
     setForm(emptyForm);
     setUploadSuccess(false);
     setUploadError(null);
+    setError(null);
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageUpload(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
     if (!allowedTypes.includes(file.type)) {
-      setUploadError("نوع الملف غير مدعوم. الأنواع المسموح بها: jpeg, png, webp");
+      setUploadError(
+        "نوع الملف غير مدعوم. المسموح: JPG وPNG وWEBP"
+      );
       return;
     }
+
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError("حجم الملف يتجاوز الحد المسموح به (5 ميجابايت)");
+      setUploadError(
+        "حجم الصورة أكبر من 5 ميجابايت"
+      );
       return;
     }
 
@@ -144,290 +207,571 @@ export default function ProductsManager() {
     setUploadSuccess(false);
     setUploadError(null);
 
-    const extMap: Record<string, string> = {
-      "image/jpeg": "jpg",
-      "image/png": "png",
-      "image/webp": "webp",
-    };
-    const ext = extMap[file.type] ?? "jpg";
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const filePath = `products/${fileName}`;
+    try {
+      const extMap: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      };
 
-    const { error: uploadErr } = await supabase.storage
-      .from("product-images")
-      .upload(filePath, file, { upsert: false });
+      const extension = extMap[file.type] || "jpg";
 
-    if (uploadErr) {
-      setUploadError(uploadErr.message);
+      const fileName =
+        `${Date.now()}-` +
+        `${Math.random().toString(36).slice(2)}.` +
+        extension;
+
+      const filePath = `products/${fileName}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, file, {
+          upsert: false,
+        });
+
+      if (uploadErr) {
+        throw uploadErr;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(filePath);
+
+      setForm((current) => ({
+        ...current,
+        image_url: publicUrlData.publicUrl,
+      }));
+
+      setUploadSuccess(true);
+    } catch (err: any) {
+      setUploadError(
+        err?.message || "فشل رفع الصورة"
+      );
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("product-images")
-      .getPublicUrl(filePath);
-
-    setForm((f) => ({ ...f, image_url: publicUrlData.publicUrl }));
-    setUploadSuccess(true);
-    setUploading(false);
   }
 
   function handleNameChange(value: string) {
-    setForm((f) => ({
-      ...f,
+    setForm((current) => ({
+      ...current,
       name: value,
-      slug: f.slug || slugify(value),
+      slug: current.slug || slugify(value),
     }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     setSaving(true);
     setError(null);
 
-    const colorsArray = form.colors
-      .split(",")
-      .map((c) => c.trim())
-      .filter(Boolean);
+    try {
+      const purchasePrice =
+        parseFloat(form.purchase_price) || 0;
 
-    const payload = {
-      name: form.name.trim(),
-      slug: form.slug.trim() || null,
-      description: form.description.trim() || null,
-      price: parseFloat(form.price) || 0,
-      image_url: form.image_url.trim() || null,
-      quantity: parseInt(form.quantity) || 0,
-      category_id: form.category_id ? parseInt(form.category_id) : null,
-      colors: colorsArray,
-      is_active: form.is_active,
-      is_pinned: form.is_pinned,
-      pinned_order: parseInt(form.pinned_order) || 0,
-    };
+      const sellingPrice =
+        parseFloat(form.selling_price) || 0;
 
-    let err;
-    if (editingId !== null) {
-      ({ error: err } = await supabase
-        .from("products")
-        .update(payload)
-        .eq("id", editingId));
-    } else {
-      ({ error: err } = await supabase.from("products").insert(payload));
-    }
+      if (purchasePrice < 0 || sellingPrice < 0) {
+        throw new Error(
+          "سعر الشراء وسعر البيع لا يمكن أن يكونا أقل من صفر"
+        );
+      }
 
-    if (err) {
-      setError(err.message);
-    } else {
+      const colorsArray = form.colors
+        .split(",")
+        .map((color) => color.trim())
+        .filter(Boolean);
+
+      const payload = {
+        name: form.name.trim(),
+        slug: form.slug.trim() || null,
+        description:
+          form.description.trim() || null,
+
+        purchase_price: purchasePrice,
+        selling_price: sellingPrice,
+
+        // مهم:
+        // نخلي price مساوي لسعر البيع
+        // حتى يستمر المتجر الحالي بالعمل
+        price: sellingPrice,
+
+        image_url:
+          form.image_url.trim() || null,
+
+        quantity:
+          parseInt(form.quantity, 10) || 0,
+
+        category_id: form.category_id
+          ? parseInt(form.category_id, 10)
+          : null,
+
+        colors: colorsArray,
+        is_active: form.is_active,
+        is_pinned: form.is_pinned,
+
+        pinned_order:
+          parseInt(form.pinned_order, 10) || 0,
+      };
+
+      let databaseError = null;
+
+      if (editingId !== null) {
+        const result = await supabase
+          .from("products")
+          .update(payload)
+          .eq("id", editingId);
+
+        databaseError = result.error;
+      } else {
+        const result = await supabase
+          .from("products")
+          .insert(payload);
+
+        databaseError = result.error;
+      }
+
+      if (databaseError) {
+        throw databaseError;
+      }
+
       await fetchAll();
       closeForm();
+    } catch (err: any) {
+      setError(
+        err?.message || "حدث خطأ أثناء حفظ المنتج"
+      );
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   }
 
   async function handleDelete(id: number) {
     setDeleting(true);
     setError(null);
-    const { error: err } = await supabase.from("products").delete().eq("id", id);
-    if (err) setError(err.message);
-    else setProducts((prev) => prev.filter((p) => p.id !== id));
+
+    const { error: deleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      setError(deleteError.message);
+    } else {
+      setProducts((current) =>
+        current.filter((product) => product.id !== id)
+      );
+    }
+
     setDeleting(false);
     setConfirmDeleteId(null);
   }
 
-  const getCategoryName = (catId: number | null) => {
-    if (!catId) return "-";
-    const cat = categories.find((c) => c.id === catId);
-    return cat ? cat.name : String(catId);
+  const getCategoryName = (
+    categoryId: number | null
+  ) => {
+    if (!categoryId) return "—";
+
+    const category = categories.find(
+      (item) => item.id === categoryId
+    );
+
+    return category
+      ? category.name
+      : String(categoryId);
   };
 
   return (
-    <div>
-      {/* Header row */}
-      <div className="mb-6 flex items-center justify-between flex-row-reverse">
-        <h2 className="text-2xl font-bold">المنتجات</h2>
+    <div dir="rtl">
+      {/* رأس الصفحة */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black">
+            المنتجات
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            إدارة الأسعار والمخزون والأرباح
+          </p>
+        </div>
+
         <button
+          type="button"
           onClick={openCreateForm}
-          className="rounded-full bg-[#0F3A2B] px-5 py-2 text-white font-semibold shadow hover:opacity-90 transition-all text-sm"
+          className="rounded-full bg-[#0F3A2B] px-5 py-2.5 text-sm font-bold text-white shadow transition-all hover:opacity-90"
         >
           + إضافة منتج
         </button>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm text-right">
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-right text-sm font-semibold text-red-700">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="rounded-3xl bg-white p-12 text-center shadow-md border border-[#D8D2C5] text-lg font-medium">
-          جاري التحميل...
+        <div className="rounded-3xl border border-[#D8D2C5] bg-white p-12 text-center text-lg font-medium shadow-md">
+          جاري تحميل المنتجات...
         </div>
       ) : products.length === 0 ? (
-        <div className="rounded-3xl bg-white p-12 text-center shadow-md border border-[#D8D2C5] text-lg font-medium">
-          لا توجد منتجات بعد. أضف منتجاً أولاً.
+        <div className="rounded-3xl border border-[#D8D2C5] bg-white p-12 text-center text-lg font-medium shadow-md">
+          لا توجد منتجات حالياً
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-3xl bg-white shadow-xl border border-[#D8D2C5]">
-          <table className="w-full text-right border-collapse">
+        <div className="overflow-x-auto rounded-3xl border border-[#D8D2C5] bg-white shadow-xl">
+          <table className="min-w-[1200px] w-full border-collapse text-right">
             <thead className="bg-[#0F3A2B] text-white">
               <tr>
-                <th className="p-4 font-bold text-sm">ID</th>
-                <th className="p-4 font-bold text-sm">الصورة</th>
-                <th className="p-4 font-bold text-sm">الاسم</th>
-                <th className="p-4 font-bold text-sm">السعر</th>
-                <th className="p-4 font-bold text-sm">مثبت</th>
-                <th className="p-4 font-bold text-sm">الحالة</th>
-                <th className="p-4 font-bold text-sm">الإجراءات</th>
+                <th className="p-4 text-sm font-bold">
+                  ID
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  الصورة
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  الاسم
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  سعر الشراء
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  سعر البيع
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  ربح القطعة
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  المخزون
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  التصنيف
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  التثبيت
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  الحالة
+                </th>
+
+                <th className="p-4 text-sm font-bold">
+                  الإجراءات
+                </th>
               </tr>
             </thead>
+
             <tbody>
-              {products.map((product) => (
-                <tr
-                  key={product.id}
-                  className="border-b border-[#E8E3D9] hover:bg-[#F8F7F2]/60 transition-colors"
-                >
-                  <td className="p-4 font-bold text-sm">{product.id}</td>
-                  <td className="p-4">
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-10 h-10 object-cover rounded-lg border border-[#D8D2C5]"
-                      />
-                    ) : (
-                      <span className="text-xs text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td className="p-4 font-medium">{product.name}</td>
-                  <td className="p-4 font-bold text-[#0F3A2B]">{product.price} ر.ع</td>
-                  <td className="p-4 text-sm font-bold text-[#0F3A2B]">
-                    {product.is_pinned ? "📌 مثبت" : "—"}
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`rounded-full px-3 py-0.5 text-xs font-bold border ${
-                        product.is_active
-                          ? "bg-[#EAF3EE] text-[#0F3A2B] border-[#cbe2d5]"
-                          : "bg-gray-100 text-gray-500 border-gray-200"
-                      }`}
-                    >
-                      {product.is_active ? "نشط" : "مخفي"}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-2 justify-end">
-                      <button
-                        onClick={() => openEditForm(product)}
-                        className="rounded-full bg-[#0F3A2B] px-4 py-1.5 text-white text-xs font-semibold hover:opacity-90 shadow transition-all"
+              {products.map((product) => {
+                const purchasePrice =
+                  getPurchasePrice(product);
+
+                const sellingPrice =
+                  getSellingPrice(product);
+
+                const profit =
+                  getProductProfit(product);
+
+                return (
+                  <tr
+                    key={product.id}
+                    className="border-b border-[#E8E3D9] transition-colors hover:bg-[#F8F7F2]/70"
+                  >
+                    <td className="p-4 text-sm font-bold">
+                      {product.id}
+                    </td>
+
+                    <td className="p-4">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="h-12 w-12 rounded-xl border border-[#D8D2C5] object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs text-gray-400">
+                          —
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="p-4 font-bold">
+                      {product.name}
+                    </td>
+
+                    <td className="p-4 font-bold text-gray-600">
+                      {purchasePrice.toFixed(3)} ر.ع
+                    </td>
+
+                    <td className="p-4 font-black text-[#0F3A2B]">
+                      {sellingPrice.toFixed(3)} ر.ع
+                    </td>
+
+                    <td className="p-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-black ${
+                          profit >= 0
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-700"
+                        }`}
                       >
-                        تعديل
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(product.id)}
-                        className="rounded-full bg-red-600 px-4 py-1.5 text-white text-xs font-semibold hover:opacity-90 shadow transition-all"
+                        {profit.toFixed(3)} ر.ع
+                      </span>
+                    </td>
+
+                    <td className="p-4 font-bold">
+                      {product.quantity}
+                    </td>
+
+                    <td className="p-4 text-sm">
+                      {getCategoryName(
+                        product.category_id
+                      )}
+                    </td>
+
+                    <td className="p-4 text-sm font-bold text-[#0F3A2B]">
+                      {product.is_pinned
+                        ? "📌 مثبت"
+                        : "—"}
+                    </td>
+
+                    <td className="p-4">
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-bold ${
+                          product.is_active
+                            ? "border-[#cbe2d5] bg-[#EAF3EE] text-[#0F3A2B]"
+                            : "border-gray-200 bg-gray-100 text-gray-500"
+                        }`}
                       >
-                        حذف
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {product.is_active
+                          ? "نشط"
+                          : "مخفي"}
+                      </span>
+                    </td>
+
+                    <td className="p-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openEditForm(product)
+                          }
+                          className="rounded-full bg-[#0F3A2B] px-4 py-1.5 text-xs font-semibold text-white shadow transition-all hover:opacity-90"
+                        >
+                          تعديل
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setConfirmDeleteId(
+                              product.id
+                            )
+                          }
+                          className="rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold text-white shadow transition-all hover:opacity-90"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* نموذج الإضافة / التعديل */}
+      {/* نموذج إضافة أو تعديل المنتج */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-[2rem] p-8 max-w-xl w-full text-[#0F3A2B] shadow-2xl relative border border-[#D8D2C5] max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-[#D8D2C5] bg-white p-6 text-[#0F3A2B] shadow-2xl sm:p-8">
             <button
+              type="button"
               onClick={closeForm}
-              className="absolute top-6 left-6 text-2xl font-light hover:opacity-60 transition-opacity"
+              className="absolute left-6 top-5 text-3xl font-light transition-opacity hover:opacity-60"
             >
               ×
             </button>
 
-            <h3 className="text-xl font-bold text-right mb-6">
-              {editingId !== null ? "تعديل المنتج" : "إضافة منتج جديد"}
+            <h3 className="mb-7 text-right text-2xl font-black">
+              {editingId !== null
+                ? "تعديل المنتج"
+                : "إضافة منتج جديد"}
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-right" dir="rtl">
-              {/* الاسم */}
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5 text-right"
+            >
               <div>
-                <label className="block text-sm font-semibold mb-1">الاسم *</label>
+                <label className="mb-1.5 block text-sm font-bold">
+                  اسم المنتج *
+                </label>
+
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(e) => handleNameChange(e.target.value)}
+                  onChange={(e) =>
+                    handleNameChange(e.target.value)
+                  }
                   required
-                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-sm"
                   placeholder="اسم المنتج"
+                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                 />
               </div>
 
-              {/* Slug */}
               <div>
-                <label className="block text-sm font-semibold mb-1">الرابط المختصر (slug)</label>
+                <label className="mb-1.5 block text-sm font-bold">
+                  الرابط المختصر
+                </label>
+
                 <input
                   type="text"
                   value={form.slug}
-                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      slug: e.target.value,
+                    }))
+                  }
                   dir="ltr"
-                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-sm font-mono text-left"
                   placeholder="product-slug"
+                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-left font-mono text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                 />
               </div>
 
-              {/* السعر والكمية */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* سعر الشراء وسعر البيع */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-semibold mb-1">السعر (ر.ع) *</label>
+                  <label className="mb-1.5 block text-sm font-bold">
+                    سعر الشراء (ر.ع) *
+                  </label>
+
                   <input
                     type="number"
-                    value={form.price}
-                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                    value={form.purchase_price}
+                    onChange={(e) =>
+                      setForm((current) => ({
+                        ...current,
+                        purchase_price:
+                          e.target.value,
+                      }))
+                    }
                     required
                     min="0"
-                    step="0.01"
-                    className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-sm"
+                    step="0.001"
+                    className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-semibold mb-1">الكمية *</label>
+                  <label className="mb-1.5 block text-sm font-bold">
+                    سعر البيع (ر.ع) *
+                  </label>
+
                   <input
                     type="number"
-                    value={form.quantity}
-                    onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+                    value={form.selling_price}
+                    onChange={(e) =>
+                      setForm((current) => ({
+                        ...current,
+                        selling_price:
+                          e.target.value,
+                      }))
+                    }
                     required
                     min="0"
-                    className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-sm"
+                    step="0.001"
+                    className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                   />
                 </div>
               </div>
 
-              {/* الوصف */}
+              {/* عرض الربح أثناء الكتابة */}
+              <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-4">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-sm font-bold text-green-800">
+                    ربح القطعة المتوقع
+                  </span>
+
+                  <span className="text-xl font-black text-green-800">
+                    {(
+                      (parseFloat(
+                        form.selling_price
+                      ) || 0) -
+                      (parseFloat(
+                        form.purchase_price
+                      ) || 0)
+                    ).toFixed(3)}{" "}
+                    ر.ع
+                  </span>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-semibold mb-1">الوصف</label>
+                <label className="mb-1.5 block text-sm font-bold">
+                  الكمية *
+                </label>
+
+                <input
+                  type="number"
+                  value={form.quantity}
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      quantity: e.target.value,
+                    }))
+                  }
+                  required
+                  min="0"
+                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-bold">
+                  الوصف
+                </label>
+
                 <textarea
                   value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      description:
+                        e.target.value,
+                    }))
+                  }
                   rows={3}
-                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-sm resize-none"
                   placeholder="وصف المنتج..."
+                  className="w-full resize-none rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                 />
               </div>
 
-              {/* رفع الصورة */}
               <div>
-                <label className="block text-sm font-semibold mb-1">رفع الصورة</label>
+                <label className="mb-1.5 block text-sm font-bold">
+                  صورة المنتج
+                </label>
+
                 {form.image_url && (
                   <img
                     src={form.image_url}
-                    alt="معاينة الصورة"
-                    className="w-24 h-24 object-cover rounded-2xl border border-[#D8D2C5] mb-2"
+                    alt="معاينة المنتج"
+                    className="mb-3 h-28 w-28 rounded-2xl border border-[#D8D2C5] object-cover"
                   />
                 )}
+
                 <label className="inline-block cursor-pointer">
                   <input
                     type="file"
@@ -436,105 +780,171 @@ export default function ProductsManager() {
                     onChange={handleImageUpload}
                     disabled={uploading}
                   />
-                  <span className="inline-block rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] text-sm font-semibold hover:bg-[#EAF3EE] transition-all cursor-pointer select-none">
-                    {uploading ? "جاري الرفع..." : form.image_url ? "تغيير الصورة" : "اختر صورة"}
+
+                  <span className="inline-block cursor-pointer select-none rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-5 py-3 text-sm font-bold text-[#0F3A2B] transition-all hover:bg-[#EAF3EE]">
+                    {uploading
+                      ? "جاري رفع الصورة..."
+                      : form.image_url
+                      ? "تغيير الصورة"
+                      : "اختر صورة"}
                   </span>
                 </label>
+
                 {uploadSuccess && (
-                  <p className="mt-1 text-xs text-green-700">تم رفع الصورة بنجاح</p>
+                  <p className="mt-2 text-xs font-semibold text-green-700">
+                    تم رفع الصورة بنجاح
+                  </p>
                 )}
+
                 {uploadError && (
-                  <p className="mt-1 text-xs text-red-600">{uploadError}</p>
+                  <p className="mt-2 text-xs font-semibold text-red-600">
+                    {uploadError}
+                  </p>
                 )}
               </div>
 
-              {/* التصنيف */}
               <div>
-                <label className="block text-sm font-semibold mb-1">التصنيف</label>
+                <label className="mb-1.5 block text-sm font-bold">
+                  التصنيف
+                </label>
+
                 <select
                   value={form.category_id}
-                  onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value }))}
-                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-sm"
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      category_id:
+                        e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                 >
-                  <option value="">— بدون تصنيف —</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={String(cat.id)}>
-                      {cat.name}
+                  <option value="">
+                    — بدون تصنيف —
+                  </option>
+
+                  {categories.map((category) => (
+                    <option
+                      key={category.id}
+                      value={String(category.id)}
+                    >
+                      {category.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* الألوان */}
               <div>
-                <label className="block text-sm font-semibold mb-1">الألوان (مفصولة بفاصلة)</label>
+                <label className="mb-1.5 block text-sm font-bold">
+                  الألوان
+                </label>
+
                 <input
                   type="text"
                   value={form.colors}
-                  onChange={(e) => setForm((f) => ({ ...f, colors: e.target.value }))}
-                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-2.5 text-[#0F3A2B] outline-none focus:border-[#0F3A2B] transition-all text-sm"
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      colors: e.target.value,
+                    }))
+                  }
                   placeholder="أحمر, أزرق, أخضر"
-                  dir="rtl"
+                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                 />
-                <p className="text-xs text-gray-400 mt-1">أدخل الألوان مفصولة بفاصلة</p>
+
+                <p className="mt-1 text-xs text-gray-400">
+                  افصل بين الألوان بفاصلة
+                </p>
               </div>
 
-              {/* الحالة */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 rounded-2xl bg-[#F8F7F2] p-4">
                 <input
                   type="checkbox"
                   id="prod-is-active"
                   checked={form.is_active}
-                  onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-                  className="w-4 h-4 accent-[#0F3A2B]"
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      is_active:
+                        e.target.checked,
+                    }))
+                  }
+                  className="h-5 w-5 accent-[#0F3A2B]"
                 />
-                <label htmlFor="prod-is-active" className="text-sm font-semibold">
-                  نشط (ظاهر في المتجر)
+
+                <label
+                  htmlFor="prod-is-active"
+                  className="text-sm font-bold"
+                >
+                  المنتج نشط وظاهر في المتجر
                 </label>
               </div>
 
-              {/* التثبيت */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 rounded-2xl bg-[#F8F7F2] p-4">
                 <input
                   type="checkbox"
                   id="prod-is-pinned"
                   checked={form.is_pinned}
-                  onChange={(e) => setForm((f) => ({ ...f, is_pinned: e.target.checked }))}
-                  className="w-4 h-4 accent-[#0F3A2B]"
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      is_pinned:
+                        e.target.checked,
+                    }))
+                  }
+                  className="h-5 w-5 accent-[#0F3A2B]"
                 />
-                <label htmlFor="prod-is-pinned" className="text-sm font-semibold">
+
+                <label
+                  htmlFor="prod-is-pinned"
+                  className="text-sm font-bold"
+                >
                   تثبيت المنتج في الأعلى
                 </label>
               </div>
+
               <div>
-                <label className="block text-sm font-semibold mb-2">ترتيب التثبيت</label>
+                <label className="mb-1.5 block text-sm font-bold">
+                  ترتيب التثبيت
+                </label>
+
                 <input
                   type="number"
                   value={form.pinned_order}
-                  onChange={(e) => setForm((f) => ({ ...f, pinned_order: e.target.value }))}
-                  className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl bg-[#F6F4EE] text-[#0F3A2B]"
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      pinned_order:
+                        e.target.value,
+                    }))
+                  }
+                  min="0"
                   placeholder="0"
+                  className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                 />
               </div>
 
               {error && (
-                <p className="text-red-600 text-sm bg-red-50 rounded-xl border border-red-100 px-3 py-2">
+                <p className="rounded-xl border border-red-100 bg-red-50 px-3 py-3 text-sm font-semibold text-red-600">
                   {error}
                 </p>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 border-t border-[#E8E3D9] pt-5">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 rounded-2xl bg-[#0F3A2B] py-2.5 text-white font-bold hover:opacity-90 shadow transition-all disabled:opacity-60"
+                  className="flex-1 rounded-2xl bg-[#0F3A2B] py-3 font-bold text-white shadow transition-all hover:opacity-90 disabled:opacity-60"
                 >
-                  {saving ? "جاري الحفظ..." : "حفظ"}
+                  {saving
+                    ? "جاري الحفظ..."
+                    : "حفظ المنتج"}
                 </button>
+
                 <button
                   type="button"
                   onClick={closeForm}
-                  className="flex-1 rounded-2xl border border-[#D8D2C5] py-2.5 font-semibold text-gray-600 hover:bg-gray-50 transition-all"
+                  className="flex-1 rounded-2xl border border-[#D8D2C5] py-3 font-semibold text-gray-600 transition-all hover:bg-gray-50"
                 >
                   إلغاء
                 </button>
@@ -544,28 +954,39 @@ export default function ProductsManager() {
         </div>
       )}
 
-      {/* تأكيد الحذف */}
+      {/* نافذة تأكيد الحذف */}
       {confirmDeleteId !== null && (
-        <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div
-            className="bg-white rounded-[2rem] p-8 max-w-sm w-full text-[#0F3A2B] shadow-2xl border border-[#D8D2C5] text-right"
-            dir="rtl"
-          >
-            <h3 className="text-xl font-bold mb-3">تأكيد الحذف</h3>
-            <p className="text-sm text-gray-600 mb-6">
-              هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذه العملية.
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-[2rem] border border-[#D8D2C5] bg-white p-8 text-right text-[#0F3A2B] shadow-2xl">
+            <h3 className="mb-3 text-xl font-bold">
+              تأكيد حذف المنتج
+            </h3>
+
+            <p className="mb-6 text-sm leading-relaxed text-gray-600">
+              هل أنت متأكد من حذف هذا المنتج؟ لا
+              يمكن التراجع عن هذه العملية.
             </p>
+
             <div className="flex gap-3">
               <button
-                onClick={() => handleDelete(confirmDeleteId)}
+                type="button"
+                onClick={() =>
+                  handleDelete(confirmDeleteId)
+                }
                 disabled={deleting}
-                className="flex-1 rounded-2xl bg-red-600 py-2.5 text-white font-bold hover:opacity-90 shadow transition-all disabled:opacity-60"
+                className="flex-1 rounded-2xl bg-red-600 py-3 font-bold text-white shadow transition-all hover:opacity-90 disabled:opacity-60"
               >
-                {deleting ? "جاري الحذف..." : "حذف"}
+                {deleting
+                  ? "جاري الحذف..."
+                  : "حذف"}
               </button>
+
               <button
-                onClick={() => setConfirmDeleteId(null)}
-                className="flex-1 rounded-2xl border border-[#D8D2C5] py-2.5 font-semibold text-gray-600 hover:bg-gray-50 transition-all"
+                type="button"
+                onClick={() =>
+                  setConfirmDeleteId(null)
+                }
+                className="flex-1 rounded-2xl border border-[#D8D2C5] py-3 font-semibold text-gray-600 transition-all hover:bg-gray-50"
               >
                 إلغاء
               </button>
