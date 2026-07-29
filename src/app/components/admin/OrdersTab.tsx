@@ -301,10 +301,30 @@ export default function OrdersTab() {
     return result;
   }, [orders, products]);
 
+  function isCancelledOrder(order: Order): boolean {
+    const status = (order.status || "").trim();
+
+    return [
+      "ملغي",
+      "ملغى",
+      "تم الإلغاء",
+      "تم الغاء الطلب",
+      "تم إلغاء الطلب",
+    ].includes(status);
+  }
+
   const dashboardStats = useMemo(() => {
-    const activeOrders = orders.filter(
-      (order) => order.status !== "ملغي"
-    );
+    const activeOrders = orders.filter((order) => {
+      const status = (order.status || "").trim();
+
+      return ![
+        "ملغي",
+        "ملغى",
+        "تم الإلغاء",
+        "تم الغاء الطلب",
+        "تم إلغاء الطلب",
+      ].includes(status);
+    });
 
     const totalSales = activeOrders.reduce(
       (sum, order) => sum + toNumber(order.total),
@@ -371,6 +391,10 @@ export default function OrdersTab() {
         return "bg-green-100 text-green-800 border border-green-300";
 
       case "ملغي":
+      case "ملغى":
+      case "تم الإلغاء":
+      case "تم الغاء الطلب":
+      case "تم إلغاء الطلب":
         return "bg-red-100 text-red-800 border border-red-300";
 
       default:
@@ -456,7 +480,7 @@ export default function OrdersTab() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-3xl border border-[#D8D2C5] bg-white shadow-xl">
-          <table className="w-full min-w-[1500px] border-collapse text-right">
+          <table className="w-full min-w-[1750px] border-collapse text-right text-sm">
             <thead className="bg-[#0F3A2B] text-white">
               <tr>
                 <th className="p-5 text-sm font-bold">ID</th>
@@ -485,7 +509,7 @@ export default function OrdersTab() {
                 return (
                   <tr
                     key={order.id}
-                    className="border-b border-[#E8E3D9] transition-colors hover:bg-[#F8F7F2]/60"
+                    className="border-b border-[#E8E3D9] transition-colors hover:bg-[#F8F7F2]/60 align-middle"
                   >
                     <td className="p-5 font-bold">{order.id}</td>
 
@@ -497,7 +521,7 @@ export default function OrdersTab() {
                       {order.phone || "-"}
                     </td>
 
-                    <td className="max-w-[280px] p-5 text-sm">
+                    <td className="min-w-[260px] max-w-[320px] p-4 text-sm leading-6">
                       {order.product_name || "-"}
                     </td>
 
@@ -512,7 +536,7 @@ export default function OrdersTab() {
                     </td>
 
                     <td className="p-5">
-                      {order.status === "ملغي" ? (
+                      {isCancelledOrder(order) ? (
                         <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
                           ملغي
                         </span>
@@ -544,11 +568,11 @@ export default function OrdersTab() {
                       {order.city || "-"}
                     </td>
 
-                    <td className="p-5 text-sm">
+                    <td className="p-4 min-w-[130px] whitespace-normal leading-6 text-sm">
                       {getShippingText(order.shipping_method)}
                     </td>
 
-                    <td className="p-5 text-sm">
+                    <td className="p-4 min-w-[145px] whitespace-nowrap text-sm">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-bold ${
                           order.payment_method === "bank_transfer"
@@ -562,7 +586,7 @@ export default function OrdersTab() {
                       </span>
                     </td>
 
-                    <td className="p-5">
+                    <td className="p-4 min-w-[145px] whitespace-nowrap">
                       <span
                         className={`rounded-full px-4 py-1 text-xs font-bold shadow-sm ${getStatusStyle(
                           order.status
@@ -646,7 +670,7 @@ export default function OrdersTab() {
 
               <p>
                 <b>ربح الطلب:</b>{" "}
-                {selectedOrder.status === "ملغي"
+                {isCancelledOrder(selectedOrder)
                   ? "الطلب ملغي"
                   : selectedOrderCalculation?.matched
                   ? `${selectedOrderCalculation.profit.toFixed(3)} ر.ع`
@@ -703,7 +727,7 @@ export default function OrdersTab() {
             </div>
 
             {!selectedOrderCalculation?.matched &&
-              selectedOrder.status !== "ملغي" && (
+              !isCancelledOrder(selectedOrder) && (
                 <div className="mb-6 rounded-2xl border border-yellow-300 bg-yellow-50 p-4 text-right text-xs font-semibold leading-6 text-yellow-800">
                   تعذر حساب ربح هذا الطلب. تأكد أن اسم المنتج داخل
                   الطلب مطابق لاسمه في إدارة المنتجات، وأن سعر الشراء
