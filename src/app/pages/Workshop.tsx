@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Wrench, ArrowLeft, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient'; // تأكد من مسار استيراد ملف Supabase الخاص بك
+import { supabase } from '../../lib/supabase'; // تصحيح مسار الاستيراد ليتوافق مع هيكل المشروع
 
 interface WorkshopProps {
   onNavigate: (page: string) => void;
@@ -42,7 +42,6 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // نفترض أن اسم الـ Bucket لديك هو workshop-images (أو غيّره حسب إعداداتك)
         const { error: uploadError } = await supabase.storage
           .from('workshop-images')
           .upload(filePath, formData.image);
@@ -59,17 +58,17 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
         imageUrl = publicUrlData.publicUrl;
       }
 
-      // 2. إدخال البيانات في جدول قاعدة البيانات (مثلاً جدول workshop_requests)
+      // 2. إدخال البيانات في جدول قاعدة البيانات workshop_requests
       const { error: insertError } = await supabase
         .from('workshop_requests')
         .insert([
           {
-            name: formData.name,
+            customer_name: formData.name,
             phone: formData.phone,
             drone_model: formData.droneModel,
             issue_description: formData.issueDescription,
             image_url: imageUrl,
-            status: 'pending',
+            status: 'new',
           },
         ]);
 
@@ -87,7 +86,7 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
   };
 
   return (
-    <section className="min-h-screen bg-[#F8F7F2] px-4 py-16 md:py-24 text-[#0F3A2B]">
+    <section className="min-h-screen bg-[#F8F7F2] px-4 py-16 md:py-24 text-[#0F3A2B]" dir="rtl">
       <div className="mx-auto max-w-4xl">
         
         {/* رأس الصفحة التعريفي */}
