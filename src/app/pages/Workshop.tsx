@@ -66,7 +66,7 @@ export default function Workshop({ onNavigate }: WorkshopProps) {
             customer_name: formData.name,
             phone: formData.phone,
             drone_model: formData.droneModel,
-            issue_description: formData.issueDescription,
+            problem_description: formData.issueDescription,
             image_url: imageUrl,
             status: 'new',
           },
