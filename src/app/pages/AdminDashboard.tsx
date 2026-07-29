@@ -8,6 +8,7 @@ import DiscountCodesManager from "../components/admin/DiscountCodesManager";
 import ShippingManager from "../components/admin/ShippingManager";
 import SettingsManager from "../components/admin/SettingsManager";
 import ThemeManager from "../components/admin/ThemeManager";
+import WorkshopRequestsManager from "../components/admin/WorkshopRequestsManager";
 
 type AdminTab =
   | "orders"
@@ -17,17 +18,19 @@ type AdminTab =
   | "discounts"
   | "shipping"
   | "settings"
-  | "theme";
+  | "theme"
+  | "workshop";
 
 const TABS: { id: AdminTab; label: string }[] = [
-  { id: "orders",    label: "الطلبات" },
-  { id: "products",  label: "المنتجات" },
-  { id: "auctions",  label: "المزادات" },
+  { id: "orders",     label: "الطلبات" },
+  { id: "products",   label: "المنتجات" },
+  { id: "auctions",   label: "المزادات" },
   { id: "categories", label: "الأقسام" },
-  { id: "discounts", label: "كوبونات الخصم" },
-  { id: "shipping",  label: "الشحن" },
-  { id: "settings",  label: "إعدادات البنك" },
-  { id: "theme",     label: "الثيم" },
+  { id: "discounts",  label: "كوبونات الخصم" },
+  { id: "shipping",   label: "الشحن" },
+  { id: "settings",   label: "إعدادات البنك" },
+  { id: "theme",      label: "الثيم" },
+  { id: "workshop",   label: "طلبات الورشة" },
 ];
 
 export default function AdminDashboard() {
@@ -222,6 +225,7 @@ export default function AdminDashboard() {
             {activeTab === "shipping"   && <ShippingManager />}
             {activeTab === "settings"   && <SettingsManager />}
             {activeTab === "theme"      && <ThemeManager />}
+            {activeTab === "workshop"   && <WorkshopRequestsManager />}
           </div>
         </main>
       </div>
