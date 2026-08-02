@@ -20,6 +20,11 @@ interface Order {
   status?: string;
   created_at?: string;
   payment_method?: string;
+  governorate?: string;
+  wilayat?: string;
+  delivery_method?: string;
+  notes?: string;
+  receipt_url?: string;
 }
 
 interface Product {
@@ -72,6 +77,7 @@ export default function StoreAccountsManager() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [openMonth, setOpenMonth] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -464,6 +470,7 @@ export default function StoreAccountsManager() {
                             <th className="p-4">الربح</th>
                             <th className="p-4">الحالة</th>
                             <th className="p-4">التاريخ</th>
+                            <th className="px-4 py-3">التفاصيل</th>
                           </tr>
                         </thead>
 
@@ -542,6 +549,20 @@ export default function StoreAccountsManager() {
                                       ).toLocaleDateString("ar-OM")
                                     : "-"}
                                 </td>
+
+                                <td className="px-4 py-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedOrder({
+                                      ...order,
+                                      cost: calculation?.matched ? calculation.cost.toFixed(3) : "غير محسوبة",
+                                      profit: calculation?.matched ? calculation.profit.toFixed(3) : "غير محسوبة"
+                                    })}
+                                    className="rounded-full bg-[#0F3A2B] px-5 py-2 text-sm font-bold text-white"
+                                  >
+                                    عرض
+                                  </button>
+                                </td>
                               </tr>
                             );
                           })}
@@ -553,6 +574,62 @@ export default function StoreAccountsManager() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <button
+            type="button"
+            onClick={() => setSelectedOrder(null)}
+            className="absolute inset-0 bg-black/60"
+          />
+
+          <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[30px] bg-white p-8 text-[#0F3A2B] shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setSelectedOrder(null)}
+              className="absolute left-6 top-5 text-2xl"
+            >
+              ×
+            </button>
+
+            <h2 className="mb-6 text-2xl font-black">
+              تفاصيل الطلب #{selectedOrder.id}
+            </h2>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <p><strong>الاسم:</strong> {selectedOrder.customer_name || "-"}</p>
+              <p><strong>الهاتف:</strong> {selectedOrder.phone || "-"}</p>
+              <p><strong>المنتج:</strong> {selectedOrder.product_name || "-"}</p>
+              <p><strong>إجمالي البيع:</strong> {toNumber(selectedOrder.total).toFixed(3)} ر.ع</p>
+              <p><strong>التكلفة:</strong> {selectedOrder.cost} ر.ع</p>
+              <p><strong>الربح:</strong> {selectedOrder.profit} ر.ع</p>
+              <p><strong>المحافظة:</strong> {selectedOrder.governorate || "-"}</p>
+              <p><strong>الولاية:</strong> {selectedOrder.wilayat || "-"}</p>
+              <p><strong>طريقة التوصيل:</strong> {selectedOrder.delivery_method || "-"}</p>
+              <p><strong>طريقة الدفع:</strong> {selectedOrder.payment_method === 'cash_on_delivery' ? 'الدفع عند الاستلام' : selectedOrder.payment_method === 'bank_transfer' ? 'تحويل بنكي' : selectedOrder.payment_method || '-'}</p>
+              <p><strong>الحالة:</strong> {selectedOrder.status || "-"}</p>
+              <p><strong>التاريخ:</strong> {selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleDateString("ar-OM") : "-"}</p>
+            </div>
+
+            {selectedOrder.notes && (
+              <div className="mt-5 rounded-2xl bg-[#F8F7F2] p-4">
+                <strong>الملاحظات:</strong> {selectedOrder.notes}
+              </div>
+            )}
+
+            {selectedOrder.receipt_url && (
+              <div className="mt-6">
+                <p className="mb-3 font-bold">صورة الإيصال</p>
+                <img
+                  src={selectedOrder.receipt_url}
+                  alt="الإيصال"
+                  className="max-h-[420px] w-full rounded-2xl object-contain"
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
