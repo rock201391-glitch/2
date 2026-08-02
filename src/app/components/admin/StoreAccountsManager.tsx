@@ -19,6 +19,7 @@ interface Order {
   total?: number | string;
   status?: string;
   created_at?: string;
+  payment_method?: string;
 }
 
 interface Product {
@@ -450,13 +451,14 @@ export default function StoreAccountsManager() {
                     </div>
 
                     <div className="overflow-x-auto rounded-2xl border border-[#D8D2C5]">
-                      <table className="w-full min-w-[1100px] border-collapse text-right text-sm">
+                      <table className="w-full min-w-[1200px] border-collapse text-right text-sm">
                         <thead className="bg-[#0F3A2B] text-white">
                           <tr>
                             <th className="p-4">ID</th>
                             <th className="p-4">الاسم</th>
                             <th className="p-4">الهاتف</th>
                             <th className="p-4">المنتج</th>
+                            <th className="p-4 py-3">طريقة الدفع</th>
                             <th className="p-4">المبيعات</th>
                             <th className="p-4">التكلفة</th>
                             <th className="p-4">الربح</th>
@@ -491,6 +493,14 @@ export default function StoreAccountsManager() {
 
                                 <td className="min-w-[260px] p-4">
                                   {order.product_name || "-"}
+                                </td>
+
+                                <td className="px-4 py-3">
+                                  {order.payment_method === 'cash_on_delivery'
+                                    ? 'الدفع عند الاستلام'
+                                    : order.payment_method === 'bank_transfer'
+                                    ? 'تحويل بنكي'
+                                    : order.payment_method || 'غير محدد'}
                                 </td>
 
                                 <td className="whitespace-nowrap p-4 font-bold">
