@@ -9,6 +9,7 @@ import {
   Phone,
   UploadCloud,
   User,
+  ChevronDown,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import type { RentalCheckoutData } from "./Rentals";
@@ -317,37 +318,42 @@ export default function RentalCheckout({
   if (successId !== null) {
     return (
       <div
-        className="min-h-screen bg-[#F8F7F2] px-4 py-12 text-[#0F3A2B]"
+        className="min-h-screen bg-[#FDFBF7] px-4 py-12 text-[#0f3a2b]"
         dir="rtl"
       >
-        <div className="mx-auto max-w-xl rounded-[34px] border bg-white p-8 text-center shadow-xl sm:p-12">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-700">
-            <CheckCircle2 className="h-11 w-11" />
+        <div className="mx-auto max-w-xl rounded-[36px] border border-[#E7E2D3] bg-white p-8 text-center shadow-2xl sm:p-12">
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 shadow-inner">
+            <CheckCircle2 className="h-12 w-12" />
           </div>
 
-          <h1 className="mt-6 text-3xl font-black">
+          <h1 className="mt-6 text-3xl font-black text-[#0f3a2b]">
             تم إرسال طلب الإيجار
           </h1>
 
-          <p className="mt-3 leading-7 text-gray-600">
-            رقم الحجز #{successId}. ظهر الطلب الآن داخل لوحة الإدارة
-            وسنتواصل معك بعد مراجعته.
+          <p className="mt-3 leading-7 text-gray-600 text-lg">
+            رقم الحجز <span className="font-bold text-[#0f3a2b]">#{successId}</span>. ظهر الطلب الآن داخل لوحة الإدارة وسنتواصل معك بعد مراجعته.
           </p>
 
-          <div className="mt-6 rounded-3xl bg-[#F8F7F2] p-5 leading-8">
-            <b>{booking.drone.name}</b>
-            <br />
-            من {formatDate(booking.startDate)}
-            <br />
-            إلى {formatDate(booking.endDate)}
-            <br />
-            الإجمالي: {booking.totalAmount.toFixed(3)} ر.ع
+          <div className="mt-8 rounded-3xl bg-[#FAF8F5] p-6 leading-9 border border-[#EFECE6] text-right">
+            <div className="font-black text-[#0f3a2b] text-lg mb-2">{booking.drone.name}</div>
+            <div className="flex justify-between border-b border-gray-200/60 pb-2 text-sm text-gray-600">
+              <span>من تاريخ:</span>
+              <span className="font-bold text-[#0f3a2b]">{formatDate(booking.startDate)}</span>
+            </div>
+            <div className="flex justify-between py-2 text-sm text-gray-600">
+              <span>إلى تاريخ:</span>
+              <span className="font-bold text-[#0f3a2b]">{formatDate(booking.endDate)}</span>
+            </div>
+            <div className="flex justify-between pt-2 border-t border-gray-200/60 text-lg">
+              <span className="font-bold text-gray-700">الإجمالي:</span>
+              <span className="font-black text-[#0f3a2b]">{booking.totalAmount.toFixed(3)} ر.ع</span>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onSuccess}
-            className="mt-7 h-14 w-full rounded-full bg-[#0F3A2B] font-black text-white"
+            className="mt-8 h-14 w-full rounded-2xl bg-[#0f3a2b] font-black text-white shadow-xl shadow-[#0f3a2b]/25 transition hover:bg-[#09251c]"
           >
             العودة إلى صفحة التأجير
           </button>
@@ -359,34 +365,36 @@ export default function RentalCheckout({
   return (
     <form
       onSubmit={submitBooking}
-      className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#0F3A2B]"
+      className="min-h-screen bg-[#FDFBF7] px-4 py-10 text-[#0f3a2b]"
       dir="rtl"
     >
       <div className="mx-auto max-w-6xl">
         <button
           type="button"
           onClick={onBack}
-          className="mb-7 flex items-center gap-2 font-bold"
+          className="mb-8 flex items-center gap-2 font-bold text-[#0f3a2b] hover:opacity-80 transition bg-white px-5 py-2.5 rounded-2xl border border-[#E7E2D3] shadow-sm w-fit"
         >
-          <ChevronRight />
+          <ChevronRight className="h-5 w-5" />
           العودة لاختيار التاريخ
         </button>
 
-        <h1 className="mb-9 text-center text-4xl font-black">
+        <h1 className="mb-10 text-center text-4xl font-black tracking-tight text-[#0f3a2b]">
           إتمام حجز الدرون
         </h1>
 
-        <div className="grid items-start gap-7 lg:grid-cols-[1fr_360px]">
+        <div className="grid items-start gap-8 lg:grid-cols-[1fr_380px]">
           <section className="space-y-6">
-            <div className="rounded-[30px] border bg-white p-6 shadow-sm sm:p-8">
-              <div className="mb-6 flex items-center gap-3">
-                <User className="h-6 w-6" />
-                <h2 className="text-2xl font-black">بيانات المستأجر</h2>
+            <div className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm">
+              <div className="mb-6 flex items-center gap-3 border-b border-[#F0EBE1] pb-4">
+                <div className="p-2.5 rounded-2xl bg-[#FAF8F5] text-[#0f3a2b] border border-[#EFECE6]">
+                  <User className="h-6 w-6" />
+                </div>
+                <h2 className="text-2xl font-black text-[#0f3a2b]">بيانات المستأجر</h2>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-bold">
+                  <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
                     الاسم الثلاثي
                   </label>
 
@@ -397,24 +405,24 @@ export default function RentalCheckout({
                       setError("");
                     }}
                     placeholder="مثال: حمد محمد البلوشي"
-                    className="h-14 w-full rounded-2xl border bg-[#FFFEFC] px-4 outline-none focus:border-[#0F3A2B]"
+                    className="h-14 w-full rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 outline-none focus:border-[#0f3a2b] focus:bg-white transition font-bold text-[#0f3a2b] placeholder:font-normal placeholder:text-gray-400"
                   />
 
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs font-medium text-gray-400">
                     يجب كتابة ثلاثة أسماء على الأقل
                   </p>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-bold">
+                  <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
                     رقم الهاتف
                   </label>
 
                   <div
-                    className="flex h-14 items-center gap-2 rounded-2xl border bg-[#FFFEFC] px-4"
+                    className="flex h-14 items-center gap-3 rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 focus-within:border-[#0f3a2b] focus-within:bg-white transition"
                     dir="ltr"
                   >
-                    <Phone className="h-5 w-5" />
+                    <Phone className="h-5 w-5 text-gray-400" />
 
                     <input
                       value={phone}
@@ -426,79 +434,93 @@ export default function RentalCheckout({
                       }}
                       placeholder="968XXXXXXXX"
                       inputMode="numeric"
-                      className="h-full w-full bg-transparent outline-none"
+                      className="h-full w-full bg-transparent outline-none font-bold text-[#0f3a2b] placeholder:font-normal placeholder:text-gray-400 text-left"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[30px] border bg-white p-6 shadow-sm sm:p-8">
-              <div className="mb-6 flex items-center gap-3">
-                <MapPin className="h-6 w-6" />
-                <h2 className="text-2xl font-black">موقع الاستلام</h2>
+            <div className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm">
+              <div className="mb-6 flex items-center gap-3 border-b border-[#F0EBE1] pb-4">
+                <div className="p-2.5 rounded-2xl bg-[#FAF8F5] text-[#0f3a2b] border border-[#EFECE6]">
+                  <MapPin className="h-6 w-6" />
+                </div>
+                <h2 className="text-2xl font-black text-[#0f3a2b]">موقع الاستلام</h2>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-bold">
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="relative">
+                  <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
                     المحافظة
                   </label>
 
-                  <select
-                    value={governorate}
-                    onChange={(event) => {
-                      setGovernorate(event.target.value);
-                      setWilayat("");
-                      setError("");
-                    }}
-                    className="h-14 w-full rounded-2xl border bg-[#FFFEFC] px-4 outline-none focus:border-[#0F3A2B]"
-                  >
-                    <option value="">اختر المحافظة</option>
+                  <div className="relative">
+                    <select
+                      value={governorate}
+                      onChange={(event) => {
+                        setGovernorate(event.target.value);
+                        setWilayat("");
+                        setError("");
+                      }}
+                      className="h-14 w-full appearance-none rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 pl-12 outline-none focus:border-[#0f3a2b] focus:bg-white transition font-bold text-[#0f3a2b] cursor-pointer"
+                    >
+                      <option value="">اختر المحافظة</option>
 
-                    {Object.keys(GOVERNORATE_TO_WILAYAT).map(
-                      (item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ),
-                    )}
-                  </select>
+                      {Object.keys(GOVERNORATE_TO_WILAYAT).map(
+                        (item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                      <ChevronDown className="h-5 w-5" />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-bold">
+                <div className="relative">
+                  <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
                     الولاية
                   </label>
 
-                  <select
-                    value={wilayat}
-                    disabled={!governorate}
-                    onChange={(event) => {
-                      setWilayat(event.target.value);
-                      setError("");
-                    }}
-                    className="h-14 w-full rounded-2xl border bg-[#FFFEFC] px-4 outline-none disabled:opacity-50 focus:border-[#0F3A2B]"
-                  >
-                    <option value="">اختر الولاية</option>
+                  <div className="relative">
+                    <select
+                      value={wilayat}
+                      disabled={!governorate}
+                      onChange={(event) => {
+                        setWilayat(event.target.value);
+                        setError("");
+                      }}
+                      className="h-14 w-full appearance-none rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 pl-12 outline-none disabled:opacity-40 disabled:cursor-not-allowed focus:border-[#0f3a2b] focus:bg-white transition font-bold text-[#0f3a2b] cursor-pointer"
+                    >
+                      <option value="">اختر الولاية</option>
 
-                    {wilayatOptions.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
+                      {wilayatOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                      <ChevronDown className="h-5 w-5" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[30px] border bg-white p-6 shadow-sm sm:p-8">
-              <div className="mb-6 flex items-center gap-3">
-                <CreditCard className="h-6 w-6" />
-                <h2 className="text-2xl font-black">المرفقات</h2>
+            <div className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm">
+              <div className="mb-6 flex items-center gap-3 border-b border-[#F0EBE1] pb-4">
+                <div className="p-2.5 rounded-2xl bg-[#FAF8F5] text-[#0f3a2b] border border-[#EFECE6]">
+                  <CreditCard className="h-6 w-6" />
+                </div>
+                <h2 className="text-2xl font-black text-[#0f3a2b]">المرفقات</h2>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-5 md:grid-cols-2">
                 <FileUpload
                   label="أرفق إيصال التحويل"
                   file={receiptFile}
@@ -518,35 +540,34 @@ export default function RentalCheckout({
                 />
               </div>
 
-              <p className="mt-4 text-xs text-gray-500">
-                الصيغ المسموحة JPG وPNG وWEBP، والحد الأقصى 5MB
-                لكل صورة.
+              <p className="mt-4 text-xs font-medium text-gray-400">
+                الصيغ المسموحة JPG وPNG وWEBP، والحد الأقصى 5MB لكل صورة.
               </p>
             </div>
 
             {error && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center font-bold text-red-700">
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center font-bold text-red-700 shadow-sm">
                 {error}
               </div>
             )}
           </section>
 
-          <aside className="rounded-[30px] border bg-white p-6 shadow-sm lg:sticky lg:top-28">
+          <aside className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm lg:sticky lg:top-28 space-y-6">
             {booking.drone.image_url && (
-              <div className="mb-5 aspect-[4/3] overflow-hidden rounded-2xl bg-[#F8F7F2] p-3">
+              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] flex items-center justify-center">
                 <img
                   src={booking.drone.image_url}
                   alt={booking.drone.name}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-cover"
                 />
               </div>
             )}
 
-            <h2 className="text-2xl font-black">
+            <h2 className="text-2xl font-black text-[#0f3a2b]">
               {booking.drone.name}
             </h2>
 
-            <div className="mt-5 space-y-3 rounded-2xl bg-[#F8F7F2] p-4 text-sm">
+            <div className="space-y-3 rounded-2xl bg-[#FAF8F5] p-5 border border-[#EFECE6] text-sm">
               <SummaryRow
                 label="من"
                 value={formatDate(booking.startDate)}
@@ -569,16 +590,16 @@ export default function RentalCheckout({
                 ).toFixed(3)} ر.ع`}
               />
 
-              <div className="flex justify-between gap-3 border-t pt-3 text-lg">
-                <span className="font-bold">الإجمالي</span>
-                <b>{booking.totalAmount.toFixed(3)} ر.ع</b>
+              <div className="flex justify-between gap-3 border-t border-gray-200/80 pt-4 text-lg">
+                <span className="font-bold text-gray-700">الإجمالي</span>
+                <b className="text-xl font-black text-[#0f3a2b]">{booking.totalAmount.toFixed(3)} ر.ع</b>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#0F3A2B] font-black text-white disabled:opacity-50"
+              className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#0f3a2b] font-black text-white shadow-xl shadow-[#0f3a2b]/25 transition hover:bg-[#09251c] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <>
@@ -607,9 +628,9 @@ function SummaryRow({
   value: string;
 }) {
   return (
-    <div className="flex justify-between gap-3">
-      <span className="text-gray-500">{label}</span>
-      <b className="text-left">{value}</b>
+    <div className="flex justify-between gap-3 text-gray-600">
+      <span>{label}</span>
+      <b className="text-[#0f3a2b] text-left">{value}</b>
     </div>
   );
 }
@@ -624,7 +645,7 @@ function FileUpload({
   onChange: (file: File | null) => void;
 }) {
   return (
-    <label className="cursor-pointer rounded-2xl border-2 border-dashed border-[#D7D0C2] bg-[#F8F7F2] p-5 transition hover:border-[#0F3A2B]">
+    <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-[#DED7C5] bg-[#FAF8F5] p-5 transition hover:border-[#0f3a2b] hover:bg-white group">
       <input
         type="file"
         accept="image/jpeg,image/png,image/webp"
@@ -634,19 +655,19 @@ function FileUpload({
         }
       />
 
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-[#EFECE6] group-hover:scale-105 transition">
           {file ? (
-            <FileCheck2 className="h-6 w-6 text-green-700" />
+            <FileCheck2 className="h-6 w-6 text-emerald-600" />
           ) : (
-            <UploadCloud className="h-6 w-6" />
+            <UploadCloud className="h-6 w-6 text-[#0f3a2b]" />
           )}
         </div>
 
-        <div className="min-w-0">
-          <p className="font-black">{label}</p>
+        <div className="min-w-0 overflow-hidden">
+          <p className="font-black text-[#0f3a2b]">{label}</p>
 
-          <p className="mt-1 truncate text-xs text-gray-500">
+          <p className="mt-0.5 truncate text-xs text-gray-500 font-medium">
             {file ? file.name : "اضغط لاختيار الصورة"}
           </p>
         </div>
