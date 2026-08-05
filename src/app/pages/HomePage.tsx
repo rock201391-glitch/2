@@ -1,4 +1,4 @@
-import { ChevronLeft, Wrench } from 'lucide-react';
+import { CalendarDays, ChevronLeft, Wrench } from 'lucide-react';
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
@@ -77,6 +77,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 <span>الدخول إلى المزاد</span>
 
                 <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+              </button>
+
+              {/* التأجير */}
+              <button type="button" onClick={() => onNavigate('rentals')} className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full px-8 py-4 font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] hover:shadow-[0_14px_30px_rgba(15,58,43,0.28)] active:scale-95" style={{ background:'linear-gradient(135deg, #173F31 0%, #0F3A2B 55%, #08271D 100%)', border:'1px solid rgba(216,201,155,0.65)' }}>
+                <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#D8C99B]/15 ring-1 ring-[#D8C99B]/35"><CalendarDays className="h-4 w-4 text-[#E5D8AA]" /></span>
+                <span className="relative z-10">تأجير الدرونات</span>
+                <ChevronLeft className="relative z-10 h-5 w-5 text-[#E5D8AA]" />
               </button>
 
               {/* الورشة */}
