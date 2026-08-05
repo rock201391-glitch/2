@@ -16,24 +16,34 @@ interface Order {
   created_at: string;
 }
 
+function normalizePhoneNumber(value: string) {
+  const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
+  const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+
+  return value
+    .replace(/[٠-٩]/g, (digit) => String(arabicDigits.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String(persianDigits.indexOf(digit)))
+    .replace(/\D/g, "");
+}
+
 export default function MyOrders({ onNavigate }: MyOrdersProps) {
   const [phone, setPhone] = useState("");
   const [searchedPhone, setSearchedPhone] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [searched, setSearched] = useState(true);
   const [message, setMessage] = useState("");
 
   async function fetchOrdersByPhone(phoneNumber: string) {
-    const cleanPhone = phoneNumber.replace(/\D/g, "");
+    const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
-    if (!cleanPhone) {
+    if (!normalizedPhone) {
       setMessage("اكتب رقم الهاتف");
       setOrders([]);
       return;
     }
 
-    if (cleanPhone.length < 8) {
+    if (normalizedPhone.length < 8) {
       setMessage("رقم الهاتف يجب أن يكون 8 أرقام على الأقل");
       setOrders([]);
       return;
@@ -43,11 +53,19 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
     setMessage("");
     setSearched(true);
 
-    const lastEightDigits = cleanPhone.replace(/^968/, "").slice(-8);
+    const phoneWithout968 = normalizedPhone.startsWith("968")
+      ? normalizedPhone.slice(3)
+      : normalizedPhone;
+    const phoneWith968 = normalizedPhone.startsWith("968")
+      ? normalizedPhone
+      : `968${normalizedPhone}`;
 
     const { data, error } = await supabase
       .from("orders")
       .select("*")
+      .or(
+        `phone.eq.${phoneWithout968},phone.eq.${phoneWith968},phone.eq.+${phoneWith968}`,
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -55,15 +73,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
       setMessage("حدث خطأ أثناء البحث عن الطلبات");
       setOrders([]);
     } else {
-      const matchingOrders = ((data as Order[]) || []).filter((order) => {
-        const savedPhone = String(order.phone || "")
-          .replace(/\D/g, "")
-          .replace(/^968/, "");
-
-        return savedPhone.slice(-8) === lastEightDigits;
-      });
-
-      setOrders(matchingOrders);
+      setOrders((data as Order[]) || []);
       setSearchedPhone(phoneNumber);
     }
 
@@ -127,7 +137,7 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
                 type="tel"
                 value={phone}
                 onChange={(event) => {
-                  setPhone(event.target.value);
+                  setPhone(normalizePhoneNumber(event.target.value));
                   setMessage("");
                 }}
                 placeholder="968XXXXXXXX"
