@@ -1,97 +1,163 @@
-import { useState } from 'react';
-import { Loader2, Search } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { useEffect, useState } from "react";
+import { Loader2, Phone, Search, ShoppingBag } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
-export default function TrackOrder() {
-  const [phone, setPhone] = useState('');
-  const [orders, setOrders] = useState<any[]>([]);
-  const [searched, setSearched] = useState(false);
+interface MyOrdersProps {
+  onNavigate: (page: string) => void;
+}
+
+interface Order {
+  id: number | string;
+  customer_name?: string | null;
+  phone?: string | null;
+  product_name?: string | null;
+  total?: number | null;
+  status?: string | null;
+  created_at: string;
+}
+
+function normalizePhoneNumber(value: string) {
+  const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
+  const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+
+  return value
+    .replace(/[٠-٩]/g, (digit) => String(arabicDigits.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String(persianDigits.indexOf(digit)))
+    .replace(/\D/g, "");
+}
+
+export default function MyOrders({ onNavigate }: MyOrdersProps) {
+  const [phone, setPhone] = useState("");
+  const [searchedPhone, setSearchedPhone] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [searched, setSearched] = useState(true);
+  const [message, setMessage] = useState("");
 
-  const handleSearch = async () => {
-    const cleanPhone = phone.replace(/\D/g, '');
+  async function fetchOrdersByPhone(phoneNumber: string) {
+    const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
-    if (!cleanPhone) {
-      setMessage('اكتب رقم الهاتف');
+    if (!normalizedPhone) {
+      setMessage("اكتب رقم الهاتف");
       setOrders([]);
       return;
     }
 
-    if (cleanPhone.length < 8) {
-      setMessage('رقم الهاتف يجب أن يكون 8 أرقام على الأقل');
+    if (normalizedPhone.length < 8) {
+      setMessage("رقم الهاتف يجب أن يكون 8 أرقام على الأقل");
       setOrders([]);
       return;
     }
 
     setLoading(true);
+    setMessage("");
     setSearched(true);
-    setMessage('');
 
-    const lastEightDigits = cleanPhone.replace(/^968/, "").slice(-8);
+    const phoneWithout968 = normalizedPhone.startsWith("968")
+      ? normalizedPhone.slice(3)
+      : normalizedPhone;
+    const phoneWith968 = normalizedPhone.startsWith("968")
+      ? normalizedPhone
+      : `968${normalizedPhone}`;
 
     const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("orders")
+      .select("*")
+      .or(
+        `phone.eq.${phoneWithout968},phone.eq.${phoneWith968},phone.eq.+${phoneWith968}`,
+      )
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
-      setMessage('حدث خطأ أثناء البحث');
+      console.error("Fetch orders error:", error);
+      setMessage("حدث خطأ أثناء البحث عن الطلبات");
       setOrders([]);
     } else {
-      const matchingOrders = (data || []).filter((order: any) => {
-        const savedPhone = String(order.phone || '')
-          .replace(/\D/g, '')
-          .replace(/^968/, '');
-        return savedPhone.slice(-8) === lastEightDigits;
-      });
-
-      setOrders(matchingOrders);
+      setOrders((data as Order[]) || []);
+      setSearchedPhone(phoneNumber);
     }
 
     setLoading(false);
-  };
+  }
+
+  function handleSearch(event: React.FormEvent) {
+    event.preventDefault();
+    void fetchOrdersByPhone(phone);
+  }
+
+  useEffect(() => {
+    if (!searchedPhone) return;
+
+    const channel = supabase
+      .channel("customer-orders-status")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+        },
+        () => {
+          void fetchOrdersByPhone(searchedPhone);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [searchedPhone]);
 
   return (
-    <div className="min-h-screen bg-[#F8F7F2] py-8 px-4" dir="rtl">
-      <div className="max-w-4xl mx-auto">
-        {/* Header Banner */}
-        <div className="rounded-3xl p-12 mb-12 text-center text-white" style={{ backgroundColor: '#0F3A2B' }}>
-          <h1 className="text-4xl font-bold mb-4">تتبع طلبك</h1>
-          <p className="text-lg opacity-90">
-            أدخل رقم الهاتف المستخدم عند الطلب
-          </p>
-        </div>
+    <div
+      className="min-h-screen bg-[#F8F7F2] px-4 py-8 text-[#0F3A2B]"
+      dir="rtl"
+    >
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-4 text-center text-4xl font-bold">مشترياتي</h1>
 
-        {/* Search Section */}
-        <div className="bg-white rounded-3xl p-8 mb-8 shadow-sm">
-          <div className="flex gap-3 mb-6">
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => {
-                setPhone(e.target.value);
-                setMessage('');
-              }}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 px-6 py-4 border border-gray-200 rounded-full text-[#0F3A2B] placeholder:text-[#0F3A2B] placeholder:opacity-100 focus:outline-none focus:border-[#0F3A2B]"
-              placeholder="أدخل رقم الهاتف"
-            />
+        <p className="mb-10 text-center text-sm text-gray-600">
+          أدخل رقم الهاتف المستخدم عند الطلب لعرض جميع طلباتك
+        </p>
+
+        <form
+          onSubmit={handleSearch}
+          className="mx-auto mb-10 max-w-2xl rounded-3xl bg-white p-5 shadow-sm"
+        >
+          <label className="mb-2 block text-sm font-bold">رقم الهاتف</label>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div
+              className="flex flex-1 items-center gap-3 rounded-full border border-[#D8D2C5] bg-[#F8F7F2] px-5"
+              dir="ltr"
+            >
+              <Phone className="h-5 w-5 text-[#0F3A2B]" />
+
+              <input
+                type="tel"
+                value={phone}
+                onChange={(event) => {
+                  setPhone(normalizePhoneNumber(event.target.value));
+                  setMessage("");
+                }}
+                placeholder="968XXXXXXXX"
+                className="w-full bg-transparent py-4 text-left outline-none"
+              />
+            </div>
+
             <button
-              onClick={handleSearch}
+              type="submit"
               disabled={loading}
-              className="px-8 py-4 rounded-full text-white font-bold transition-all hover:shadow-lg flex items-center gap-2 disabled:opacity-60"
-              style={{ backgroundColor: '#0F3A2B' }}
+              className="flex items-center justify-center gap-2 rounded-full bg-[#0F3A2B] px-8 py-4 font-bold text-white disabled:opacity-60"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   جاري البحث...
                 </>
               ) : (
                 <>
-                  <Search className="w-5 h-5" />
+                  <Search className="h-5 w-5" />
                   بحث
                 </>
               )}
@@ -99,151 +165,82 @@ export default function TrackOrder() {
           </div>
 
           {message && (
-            <p className="text-center text-red-600 font-bold">{message}</p>
+            <div className="mt-4 rounded-2xl bg-red-50 p-3 text-center text-sm font-bold text-red-700">
+              {message}
+            </div>
           )}
+        </form>
 
-          {searched && !loading && orders.length === 0 && !message && (
-            <p className="text-center text-gray-600">
-              لا توجد طلبات مرتبطة بهذا الرقم
-            </p>
-          )}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center gap-3 py-16 font-bold">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            جاري تحميل الطلبات...
+          </div>
+        ) : searched && orders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-full max-w-md rounded-3xl bg-white p-10 text-center">
+              <ShoppingBag className="mx-auto mb-5 h-12 w-12" />
 
-        {/* Order Status */}
-        {orders.length > 0 && (
-          <div className="space-y-8">
-            {orders.map((order: any) => {
-              const statusOrder = [
-                'قيد المراجعة',
-                'تم تأكيد الطلب',
-                'جاري التحضير',
-                'قيد التوصيل',
-                'تم الاستلام',
-              ];
+              <h2 className="mb-3 text-2xl font-bold">
+                لا توجد طلبات بهذا الرقم
+              </h2>
 
-              const currentStatus = order.status || 'قيد المراجعة';
-              const currentIndex = statusOrder.indexOf(currentStatus);
+              <p className="mb-6 text-sm text-gray-500">
+                تأكد أنك كتبت نفس رقم الهاتف المستخدم عند تقديم الطلب.
+              </p>
 
-              const steps = [
-                'تم تأكيد الطلب',
-                'جاري التحضير',
-                'قيد التوصيل',
-                'تم الاستلام',
-              ];
-
-              return (
-                <div
-                  key={order.id}
-                  className="bg-white rounded-3xl p-8 space-y-8 shadow-sm"
-                >
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-2">رقم الطلب</p>
-                      <p className="font-bold text-[#0F3A2B]">
-                        #{order.id}
-                      </p>
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-2">الحالة</p>
-                      <p className="font-bold text-[#0F3A2B]">
-                        {currentStatus}
-                      </p>
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-2">التاريخ</p>
-                      <p className="font-bold text-[#0F3A2B]">
-                        {new Date(order.created_at).toLocaleDateString('ar-OM')}
-                      </p>
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-2">الإجمالي</p>
-                      <p className="font-bold text-[#0F3A2B]">
-                        {Number(order.total || 0).toFixed(3)} ر.ع
-                      </p>
-                    </div>
+              <button
+                type="button"
+                onClick={() => onNavigate("shop")}
+                className="w-full rounded-full bg-[#0F3A2B] py-4 font-bold text-white"
+              >
+                تصفح المتجر
+              </button>
+            </div>
+          </div>
+        ) : orders.length > 0 ? (
+          <div className="space-y-6">
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="rounded-3xl bg-white p-6 shadow-sm md:p-8"
+              >
+                <div className="mb-6 grid grid-cols-1 gap-5 border-b pb-6 sm:grid-cols-2 md:grid-cols-4">
+                  <div>
+                    <p className="text-sm text-gray-600">رقم الطلب</p>
+                    <p className="font-bold">#{order.id}</p>
                   </div>
 
-                  <div className="border-t border-gray-200 pt-6">
-                    <p className="font-bold mb-2 text-[#0F3A2B]">
-                      تفاصيل الطلب والعميل
-                    </p>
-                    <p className="text-gray-700">
-                      اسم العميل: <span className="font-semibold">{order.customer_name || 'غير متوفر'}</span>
-                    </p>
-                    <p className="text-gray-700 mt-1">
-                      المنتج: {order.product_name || 'لا توجد تفاصيل للمنتجات'}
+                  <div>
+                    <p className="text-sm text-gray-600">التاريخ</p>
+                    <p className="font-bold">
+                      {new Date(order.created_at).toLocaleDateString("ar-OM")}
                     </p>
                   </div>
 
-                  <div className="py-8 border-t border-gray-200">
-                    <h3 className="font-bold mb-6 text-[#0F3A2B]">
-                      مراحل الطلب
-                    </h3>
+                  <div>
+                    <p className="text-sm text-gray-600">الحالة</p>
+                    <span className="mt-1 inline-block rounded-full bg-[#FFF3E0] px-4 py-2 text-sm font-semibold text-[#E65100]">
+                      {order.status || "قيد المراجعة"}
+                    </span>
+                  </div>
 
-                    <div className="space-y-6">
-                      {steps.map((label, index) => {
-                        const stepStatusIndex = statusOrder.indexOf(label);
-                        const completed =
-                          currentIndex >= stepStatusIndex &&
-                          currentIndex !== -1;
-
-                        return (
-                          <div key={label} className="flex items-start gap-4">
-                            <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white ${
-                                completed ? '' : 'opacity-50'
-                              }`}
-                              style={{
-                                backgroundColor: completed
-                                  ? '#0F3A2B'
-                                  : '#E8E3D9',
-                              }}
-                            >
-                              {completed ? '✓' : index + 1}
-                            </div>
-
-                            <div className="pt-2">
-                              <p className="font-semibold text-[#0F3A2B]">
-                                {label}
-                              </p>
-
-                              {completed && (
-                                <p className="text-sm text-gray-600 mt-1">
-                                  تم استكمال هذه المرحلة
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {currentStatus === "ملغي" && (
-                        <div className="flex items-start gap-4 mt-6">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white bg-red-600">
-                            ✕
-                          </div>
-
-                          <div className="pt-2">
-                            <p className="font-semibold text-red-600">
-                              تم إلغاء الطلب
-                            </p>
-
-                            <p className="text-sm text-gray-600 mt-1">
-                              تم إلغاء هذا الطلب ولن يتم إكمال المراحل التالية.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  <div>
+                    <p className="text-sm text-gray-600">الإجمالي</p>
+                    <p className="text-xl font-bold">
+                      {Number(order.total || 0).toFixed(3)} ر.ع
+                    </p>
                   </div>
                 </div>
-              );
-            })}
+
+                <div className="text-sm">
+                  <p className="mb-2 font-bold">المنتجات:</p>
+                  <p>{order.product_name || "لا توجد تفاصيل للمنتجات"}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
