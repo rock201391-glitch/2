@@ -4,7 +4,6 @@ import {
   X,
   Home,
   Box,
-  MapPin,
   ChevronLeft,
   Gavel,
   Wrench
@@ -32,7 +31,6 @@ export default function Header({
     { label: 'المزادات', id: 'auctions' },
     { label: 'الورشة', id: 'workshop' },
     { label: 'مشترياتي', id: 'my-orders' },
-    { label: 'تتبع الطلب', id: 'track-order' },
   ];
 
   const cartCount = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -143,9 +141,7 @@ export default function Header({
                         ? Gavel
                         : item.id === 'workshop'
                         ? Wrench
-                        : item.id === 'my-orders'
-                        ? ShoppingBag
-                        : MapPin;
+                        : ShoppingBag;
 
                     const active = item.id === currentPage;
 
