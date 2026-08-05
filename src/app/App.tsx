@@ -12,12 +12,14 @@ import Checkout from './pages/Checkout';
 import MyOrders from './pages/MyOrders';
 import Auctions from './pages/Auctions';
 import Workshop from './pages/Workshop';
+import Rentals from './pages/Rentals';
 import Footer from './components/Footer';
 import AdminDashboard from './pages/AdminDashboard';
 
 type Page =
   | 'home'
   | 'shop'
+  | 'rentals'
   | 'product-detail'
   | 'cart'
   | 'checkout'
@@ -168,6 +170,14 @@ export default function App() {
         return (
           <>
             <MyOrders onNavigate={handleNavigate} />
+            <Footer onNavigate={handleNavigate} />
+          </>
+        );
+
+      case 'rentals':
+        return (
+          <>
+            <Rentals />
             <Footer onNavigate={handleNavigate} />
           </>
         );
