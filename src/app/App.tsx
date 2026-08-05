@@ -9,7 +9,6 @@ import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
-import TrackOrder from './pages/TrackOrder';
 import MyOrders from './pages/MyOrders';
 import Auctions from './pages/Auctions';
 import Workshop from './pages/Workshop';
@@ -22,7 +21,6 @@ type Page =
   | 'product-detail'
   | 'cart'
   | 'checkout'
-  | 'track-order'
   | 'my-orders'
   | 'auctions'
   | 'workshop'
@@ -162,14 +160,6 @@ export default function App() {
               onBack={() => setCurrentPage('cart')}
               onSuccess={() => setCurrentPage('my-orders')}
             />
-            <Footer onNavigate={handleNavigate} />
-          </>
-        );
-
-      case 'track-order':
-        return (
-          <>
-            <TrackOrder />
             <Footer onNavigate={handleNavigate} />
           </>
         );
