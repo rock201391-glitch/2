@@ -12,6 +12,48 @@ function normalizePhoneNumber(value: string) {
     .replace(/\D/g, '');
 }
 
+function toArabicDigits(value: string) {
+  const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
+
+  return value.replace(/\d/g, (digit) => arabicDigits[Number(digit)]);
+}
+
+function toPersianDigits(value: string) {
+  const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+
+  return value.replace(/\d/g, (digit) => persianDigits[Number(digit)]);
+}
+
+function buildPhoneSearchFilter(value: string) {
+  const normalizedPhone = normalizePhoneNumber(value);
+
+  const phoneWithout968 = normalizedPhone.startsWith("968")
+    ? normalizedPhone.slice(3)
+    : normalizedPhone;
+
+  const phoneWith968 = normalizedPhone.startsWith("968")
+    ? normalizedPhone
+    : `968${normalizedPhone}`;
+
+  const variants = [
+    phoneWithout968,
+    phoneWith968,
+    `+${phoneWith968}`,
+
+    toArabicDigits(phoneWithout968),
+    toArabicDigits(phoneWith968),
+    `+${toArabicDigits(phoneWith968)}`,
+
+    toPersianDigits(phoneWithout968),
+    toPersianDigits(phoneWith968),
+    `+${toPersianDigits(phoneWith968)}`,
+  ];
+
+  return [...new Set(variants)]
+    .map((number) => `phone.eq.${number}`)
+    .join(",");
+}
+
 export default function TrackOrder() {
   const [phone, setPhone] = useState('');
   const [orders, setOrders] = useState<any[]>([]);
@@ -38,20 +80,11 @@ export default function TrackOrder() {
     setSearched(true);
     setMessage('');
 
-    const phoneWithout968 = normalizedPhone.startsWith('968')
-      ? normalizedPhone.slice(3)
-      : normalizedPhone;
-    const phoneWith968 = normalizedPhone.startsWith('968')
-      ? normalizedPhone
-      : `968${normalizedPhone}`;
-
     const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .or(
-        `phone.eq.${phoneWithout968},phone.eq.${phoneWith968},phone.eq.+${phoneWith968}`
-      )
-      .order('created_at', { ascending: false });
+      .from("orders")
+      .select("*")
+      .or(buildPhoneSearchFilter(normalizedPhone))
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error(error);
