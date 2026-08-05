@@ -399,12 +399,12 @@ export default function Rentals({
       </div>
 
       {selectedDrone && (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 p-3 sm:p-6 backdrop-blur-md flex items-center justify-center">
-          <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-[36px] border border-[#E7E2D3] bg-[#FDFBF7] shadow-2xl text-[#0F3A2B]">
-            <div className="flex items-center justify-between border-b border-[#EFECE6] bg-white px-8 py-5">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 p-2 sm:p-6 backdrop-blur-md flex items-center justify-center">
+          <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-[28px] sm:rounded-[36px] border border-[#E7E2D3] bg-[#FDFBF7] shadow-2xl text-[#0F3A2B] my-auto max-h-[96vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-[#EFECE6] bg-white px-5 sm:px-8 py-3.5 sm:py-5 flex-shrink-0">
               <div>
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">حجز درون</span>
-                <h2 className="text-2xl font-black text-[#0F3A2B] mt-0.5">
+                <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">حجز درون</span>
+                <h2 className="text-xl sm:text-2xl font-black text-[#0F3A2B]">
                   {selectedDrone.name}
                 </h2>
               </div>
@@ -412,26 +412,26 @@ export default function Rentals({
               <button
                 type="button"
                 onClick={() => setSelectedDrone(null)}
-                className="rounded-full border border-[#EFECE6] bg-white p-3 text-gray-500 hover:text-[#0F3A2B] hover:bg-gray-50 transition shadow-sm"
+                className="rounded-full border border-[#EFECE6] bg-white p-2.5 sm:p-3 text-gray-500 hover:text-[#0F3A2B] hover:bg-gray-50 transition shadow-sm"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
 
-            <div className="grid gap-8 p-6 lg:grid-cols-[1fr_360px] items-start">
-              <section className="rounded-[30px] border border-[#EFECE6] bg-white p-7 shadow-sm">
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="overflow-y-auto p-3 sm:p-6 grid gap-5 lg:grid-cols-[1fr_360px] items-start">
+              <section className="rounded-2xl sm:rounded-[30px] border border-[#EFECE6] bg-white p-4 sm:p-7 shadow-sm">
+                <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="text-xl font-black text-[#0F3A2B]">
+                    <h3 className="text-lg sm:text-xl font-black text-[#0F3A2B]">
                       اختر مدة الإيجار
                     </h3>
 
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-0.5 text-xs sm:text-sm text-gray-500">
                       اضغط يومًا واحدًا لحجز يوم واحد، أو اختر يومًا ثانيًا لتحديد نهاية الحجز.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] p-1.5 shadow-sm">
+                  <div className="flex items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] p-1 shadow-sm self-center sm:self-auto">
                     <button
                       type="button"
                       onClick={() => moveMonth(-1)}
@@ -440,12 +440,12 @@ export default function Rentals({
                           today.getFullYear() &&
                         visibleMonth.getMonth() === today.getMonth()
                       }
-                      className="rounded-xl bg-white p-2.5 text-[#0F3A2B] disabled:opacity-30 shadow-sm hover:bg-gray-50 transition"
+                      className="rounded-lg sm:rounded-xl bg-white p-2 text-[#0F3A2B] disabled:opacity-30 shadow-sm hover:bg-gray-50 transition"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
 
-                    <strong className="min-w-[140px] text-center text-sm font-black text-[#0F3A2B]">
+                    <strong className="min-w-[120px] sm:min-w-[140px] text-center text-xs sm:text-sm font-black text-[#0F3A2B]">
                       {MONTHS[visibleMonth.getMonth()]}{" "}
                       {visibleMonth.getFullYear()}
                     </strong>
@@ -453,7 +453,7 @@ export default function Rentals({
                     <button
                       type="button"
                       onClick={() => moveMonth(1)}
-                      className="rounded-xl bg-white p-2.5 text-[#0F3A2B] shadow-sm hover:bg-gray-50 transition"
+                      className="rounded-lg sm:rounded-xl bg-white p-2 text-[#0F3A2B] shadow-sm hover:bg-gray-50 transition"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -461,20 +461,20 @@ export default function Rentals({
                 </div>
 
                 {loadingDates ? (
-                  <div className="flex justify-center py-24 text-[#0F3A2B]">
-                    <Loader2 className="animate-spin h-8 w-8" />
+                  <div className="flex justify-center py-20 text-[#0F3A2B]">
+                    <Loader2 className="animate-spin h-7 w-7" />
                   </div>
                 ) : (
                   <>
-                    <div className="mb-3 grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-400">
+                    <div className="mb-2 sm:mb-3 grid grid-cols-7 gap-1 sm:gap-2 text-center text-[10px] sm:text-xs font-bold text-gray-400">
                       {WEEK_DAYS.map((day) => (
-                        <div key={day} className="py-2">
+                        <div key={day} className="py-1.5 sm:py-2">
                           {day}
                         </div>
                       ))}
                     </div>
 
-                    <div className="grid grid-cols-7 gap-2.5">
+                    <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
                       {calendarCells.map((date, index) => {
                         if (!date) {
                           return <div key={`empty-${index}`} />;
@@ -497,16 +497,16 @@ export default function Rentals({
                             type="button"
                             disabled={past || booked}
                             onClick={() => chooseDate(date)}
-                            className={`aspect-square rounded-2xl border text-sm font-black transition-all flex items-center justify-center ${
+                            className={`aspect-square rounded-xl sm:rounded-2xl border text-xs sm:text-sm font-black transition-all flex items-center justify-center ${
                               booked
                                 ? "bg-red-50 text-red-300 border-red-100 line-through cursor-not-allowed"
                                 : past
                                   ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
                                   : selected
-                                    ? "bg-[#0F3A2B] text-white border-[#0F3A2B] shadow-lg shadow-[#0F3A2B]/20 scale-105 z-10"
+                                    ? "bg-[#0F3A2B] text-white border-[#0F3A2B] shadow-md shadow-[#0F3A2B]/20 scale-105 z-10"
                                     : insideRange
                                       ? "bg-[#F2ECE0] text-[#0F3A2B] border-[#E8DFCC]"
-                                      : "bg-white text-[#0F3A2B] border-[#EFECE6] hover:border-[#0F3A2B] hover:shadow-md"
+                                      : "bg-white text-[#0F3A2B] border-[#EFECE6] hover:border-[#0F3A2B]"
                             }`}
                           >
                             {date.getDate()}
@@ -515,17 +515,17 @@ export default function Rentals({
                       })}
                     </div>
 
-                    <div className="mt-6 flex flex-wrap gap-6 text-xs font-bold text-gray-500 pt-4 border-t border-[#F0EBE1]">
-                      <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-[#0F3A2B]"></span>
+                    <div className="mt-4 sm:mt-6 flex flex-wrap gap-4 sm:gap-6 text-[11px] sm:text-xs font-bold text-gray-500 pt-3 sm:pt-4 border-t border-[#F0EBE1]">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#0F3A2B]"></span>
                         <span>اختيارك</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-red-100 border border-red-200"></span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-100 border border-red-200"></span>
                         <span>محجوز</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-gray-100"></span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gray-100"></span>
                         <span>غير متاح</span>
                       </div>
                     </div>
@@ -533,18 +533,18 @@ export default function Rentals({
                 )}
               </section>
 
-              <aside className="space-y-6">
-                <div className="rounded-[30px] border border-[#EFECE6] bg-white p-7 shadow-sm">
-                  <h3 className="text-2xl font-black text-[#0F3A2B]">
+              <aside className="space-y-4 sm:space-y-6">
+                <div className="rounded-2xl sm:rounded-[30px] border border-[#EFECE6] bg-white p-5 sm:p-7 shadow-sm">
+                  <h3 className="text-xl sm:text-2xl font-black text-[#0F3A2B]">
                     {selectedDrone.name}
                   </h3>
 
-                  <div className="mt-5 grid grid-cols-2 gap-4">
-                    <div className="rounded-2xl bg-[#FAF8F5] p-4 border border-[#EFECE6]">
-                      <span className="text-xs text-gray-400 font-bold block mb-1">
+                  <div className="mt-4 sm:mt-5 grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="rounded-xl sm:rounded-2xl bg-[#FAF8F5] p-3.5 sm:p-4 border border-[#EFECE6]">
+                      <span className="text-[11px] sm:text-xs text-gray-400 font-bold block mb-1">
                         الإيجار اليومي
                       </span>
-                      <p className="text-lg font-black text-[#0F3A2B]">
+                      <p className="text-base sm:text-lg font-black text-[#0F3A2B]">
                         {Number(
                           selectedDrone.daily_price,
                         ).toFixed(3)}{" "}
@@ -552,11 +552,11 @@ export default function Rentals({
                       </p>
                     </div>
 
-                    <div className="rounded-2xl bg-[#FAF8F5] p-4 border border-[#EFECE6]">
-                      <span className="text-xs text-gray-400 font-bold block mb-1">
+                    <div className="rounded-xl sm:rounded-2xl bg-[#FAF8F5] p-3.5 sm:p-4 border border-[#EFECE6]">
+                      <span className="text-[11px] sm:text-xs text-gray-400 font-bold block mb-1">
                         مبلغ التأمين
                       </span>
-                      <p className="text-lg font-black text-[#0F3A2B]">
+                      <p className="text-base sm:text-lg font-black text-[#0F3A2B]">
                         {Number(
                           selectedDrone.deposit_amount || 0,
                         ).toFixed(3)}{" "}
@@ -566,12 +566,12 @@ export default function Rentals({
                   </div>
                 </div>
 
-                <div className="rounded-[30px] border border-[#EFECE6] bg-white p-7 shadow-sm">
-                  <h3 className="mb-5 text-xl font-black text-[#0F3A2B]">
+                <div className="rounded-2xl sm:rounded-[30px] border border-[#EFECE6] bg-white p-5 sm:p-7 shadow-sm">
+                  <h3 className="mb-4 sm:mb-5 text-lg sm:text-xl font-black text-[#0F3A2B]">
                     ملخص الحجز
                   </h3>
 
-                  <div className="space-y-3 rounded-2xl bg-[#FAF8F5] p-5 border border-[#EFECE6] text-sm">
+                  <div className="space-y-2.5 sm:space-y-3 rounded-xl sm:rounded-2xl bg-[#FAF8F5] p-4 sm:p-5 border border-[#EFECE6] text-xs sm:text-sm">
                     <div className="flex justify-between gap-3 text-gray-600">
                       <span>من</span>
                       <b className="text-[#0F3A2B]">{formatDate(startDate)}</b>
@@ -587,14 +587,14 @@ export default function Rentals({
                       <b className="text-[#0F3A2B]">{totalDays} يوم</b>
                     </div>
 
-                    <div className="flex justify-between gap-3 border-t border-gray-200/80 pt-4 text-lg">
+                    <div className="flex justify-between gap-3 border-t border-gray-200/80 pt-3 text-base sm:text-lg">
                       <span className="font-bold text-gray-700">الإجمالي</span>
-                      <b className="text-xl font-black text-[#0F3A2B]">{totalAmount.toFixed(3)} ر.ع</b>
+                      <b className="text-lg sm:text-xl font-black text-[#0F3A2B]">{totalAmount.toFixed(3)} ر.ع</b>
                     </div>
                   </div>
 
                   {error && (
-                    <div className="mt-4 rounded-2xl bg-red-50 border border-red-200 p-4 text-sm font-bold text-red-700">
+                    <div className="mt-3 sm:mt-4 rounded-xl sm:rounded-2xl bg-red-50 border border-red-200 p-3.5 text-xs sm:text-sm font-bold text-red-700">
                       {error}
                     </div>
                   )}
@@ -603,7 +603,7 @@ export default function Rentals({
                     type="button"
                     disabled={!startDate || !endDate}
                     onClick={proceedToCheckout}
-                    className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#0F3A2B] font-black text-white shadow-xl shadow-[#0F3A2B]/20 transition hover:bg-[#0c2e22] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="mt-4 sm:mt-6 flex h-12 sm:h-14 w-full items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-[#0F3A2B] font-black text-white shadow-lg shadow-[#0F3A2B]/20 transition hover:bg-[#0c2e22] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-sm sm:text-base"
                   >
                     الانتقال إلى الدفع
                   </button>
