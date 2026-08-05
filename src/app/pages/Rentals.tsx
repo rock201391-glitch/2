@@ -862,7 +862,7 @@ export default function Rentals() {
                       )}
 
                       {uploadingReceipt
-                        , "جاري رفع الإيصال..."
+                        ? "جاري رفع الإيصال..."
                         : saving
                           ? "جاري إرسال الحجز..."
                           : "إرسال طلب الحجز"}
