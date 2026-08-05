@@ -12,7 +12,8 @@ import Checkout from './pages/Checkout';
 import MyOrders from './pages/MyOrders';
 import Auctions from './pages/Auctions';
 import Workshop from './pages/Workshop';
-import Rentals from './pages/Rentals';
+import Rentals, { type RentalCheckoutData } from './pages/Rentals';
+import RentalCheckout from './pages/RentalCheckout';
 import Footer from './components/Footer';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -20,6 +21,7 @@ type Page =
   | 'home'
   | 'shop'
   | 'rentals'
+  | 'rental-checkout'
   | 'product-detail'
   | 'cart'
   | 'checkout'
@@ -41,6 +43,7 @@ export default function App() {
 
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [rentalCheckoutData, setRentalCheckoutData] = useState<RentalCheckoutData | null>(null);
 
   const [showSplash, setShowSplash] = useState<boolean>(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#admin') {
@@ -177,7 +180,38 @@ export default function App() {
       case 'rentals':
         return (
           <>
-            <Rentals />
+            <Rentals
+              onProceedToCheckout={(data) => {
+                setRentalCheckoutData(data);
+                setCurrentPage('rental-checkout');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+            <Footer onNavigate={handleNavigate} />
+          </>
+        );
+
+      case 'rental-checkout':
+        return rentalCheckoutData ? (
+          <>
+            <RentalCheckout
+              booking={rentalCheckoutData}
+              onBack={() => setCurrentPage('rentals')}
+              onSuccess={() => {
+                setRentalCheckoutData(null);
+                setCurrentPage('rentals');
+              }}
+            />
+            <Footer onNavigate={handleNavigate} />
+          </>
+        ) : (
+          <>
+            <Rentals
+              onProceedToCheckout={(data) => {
+                setRentalCheckoutData(data);
+                setCurrentPage('rental-checkout');
+              }}
+            />
             <Footer onNavigate={handleNavigate} />
           </>
         );
