@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ChevronLeft,
   WalletCards,
+  CalendarDays,
 } from "lucide-react";
 
 import OrdersTab from "../components/admin/OrdersTab";
@@ -27,10 +28,12 @@ import ShippingManager from "../components/admin/ShippingManager";
 import SettingsManager from "../components/admin/SettingsManager";
 import ThemeManager from "../components/admin/ThemeManager";
 import WorkshopRequestsManager from "../components/admin/WorkshopRequestsManager";
+import RentalManager from "../components/admin/RentalManager";
 
 type AdminTab =
   | "orders"
   | "accounts"
+  | "rentals"
   | "products"
   | "auctions"
   | "workshop"
@@ -56,6 +59,11 @@ const TABS: TabItem[] = [
     id: "accounts",
     label: "حسابات المتجر",
     icon: WalletCards,
+  },
+  {
+    id: "rentals",
+    label: "إيجارات الدرون",
+    icon: CalendarDays,
   },
   {
     id: "products",
@@ -250,7 +258,7 @@ export default function AdminDashboard() {
     TABS.find((tab) => tab.id === activeTab) ?? TABS[0];
 
   const handleTabChange = (tabId: AdminTab) => {
-    if (tabId === "orders" || tabId === "accounts") {
+    if (tabId === "orders" || tabId === "accounts" || tabId === "rentals") {
       setPendingProtectedTab(tabId);
       setPinDigits(["", "", "", ""]);
       setPinError("");
@@ -698,6 +706,7 @@ export default function AdminDashboard() {
               <div className="admin-content w-full min-w-0 p-3 sm:p-5">
                 {activeTab === "orders" && <OrdersTab />}
                 {activeTab === "accounts" && <StoreAccountsManager />}
+                {activeTab === "rentals" && <RentalManager />}
                 {activeTab === "products" && <ProductsManager />}
                 {activeTab === "auctions" && <AuctionsManager />}
                 {activeTab === "workshop" && <WorkshopRequestsManager />}
