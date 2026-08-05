@@ -6,7 +6,8 @@ import {
   Box,
   ChevronLeft,
   Gavel,
-  Wrench
+  Wrench,
+  CalendarDays
 } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
@@ -28,6 +29,7 @@ export default function Header({
   const navItems = [
     { label: 'الرئيسية', id: 'home' },
     { label: 'المتجر', id: 'shop' },
+    { label: 'التأجير', id: 'rentals' },
     { label: 'المزادات', id: 'auctions' },
     { label: 'الورشة', id: 'workshop' },
     { label: 'مشترياتي', id: 'my-orders' },
@@ -137,6 +139,8 @@ export default function Header({
                         ? Home
                         : item.id === 'shop'
                         ? Box
+                        : item.id === 'rentals'
+                        ? CalendarDays
                         : item.id === 'auctions'
                         ? Gavel
                         : item.id === 'workshop'
