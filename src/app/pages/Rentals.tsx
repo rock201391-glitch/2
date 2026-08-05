@@ -254,14 +254,6 @@ export default function Rentals() {
 
     setError("");
 
-    /*
-      أول ضغطة:
-      البداية والنهاية تكون نفس اليوم، لذلك يظهر يوم واحد والسعر مباشرة.
-
-      الضغطة الثانية:
-      إذا كانت بعد البداية، تصبح تاريخ النهاية.
-      إذا كانت قبل البداية، يبدأ اختيار جديد من ذلك اليوم.
-    */
     if (!startDate || (startDate && endDate && startDate !== endDate)) {
       setStartDate(value);
       setEndDate(value);
@@ -479,77 +471,80 @@ export default function Rentals() {
 
   return (
     <div
-      className="min-h-screen bg-[#F8F7F2] px-4 py-10 text-[#0F3A2B]"
+      className="min-h-screen bg-[#FDFBF7] px-4 py-12 text-[#1b3b2b]"
       dir="rtl"
     >
       <div className="mx-auto max-w-7xl">
-        <section className="mb-10 rounded-[36px] bg-[#0F3A2B] px-6 py-12 text-center text-white shadow-xl">
-          <CalendarDays className="mx-auto mb-4 h-12 w-12 text-[#E5D8AA]" />
+        <section className="mb-12 rounded-[36px] bg-gradient-to-br from-[#1b3b2b] to-[#12281d] px-6 py-14 text-center text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#E5D8AA_1px,transparent_1px)] [background-size:16px_16px]"></div>
+          <CalendarDays className="mx-auto mb-4 h-14 w-14 text-[#E5D8AA] relative z-10" />
 
-          <h1 className="text-4xl font-black md:text-5xl">تأجير الدرونات</h1>
+          <h1 className="text-4xl font-black md:text-5xl tracking-tight relative z-10">تأجير الدرونات</h1>
 
-          <p className="mx-auto mt-4 max-w-2xl text-white/80">
-            اختر الدرون وحدد مدة الإيجار. الأيام المحجوزة تظهر تلقائيًا ولا
-            يمكن اختيارها.
+          <p className="mx-auto mt-4 max-w-2xl text-white/80 text-lg leading-relaxed relative z-10">
+            اختر الدرون المناسب وحدد مدة الإيجار بكل سهولة. الأيام المحجوزة تحدد تلقائياً لضمان تجربتك.
           </p>
         </section>
 
         {error && !selectedDrone && (
-          <div className="mb-5 rounded-2xl bg-red-50 p-4 text-center font-bold text-red-700">
+          <div className="mb-6 rounded-2xl bg-red-50 p-4 text-center font-bold text-red-700 border border-red-200 shadow-sm">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="flex justify-center gap-2 py-20">
-            <Loader2 className="animate-spin" />
-            جاري التحميل...
+          <div className="flex flex-col items-center justify-center gap-3 py-24 text-[#1b3b2b]">
+            <Loader2 className="h-8 w-8 animate-spin text-[#1b3b2b]" />
+            <span className="font-bold text-lg">جاري تحميل الدرونات...</span>
           </div>
         ) : drones.length === 0 ? (
-          <div className="rounded-3xl bg-white p-12 text-center">
+          <div className="rounded-3xl bg-white p-12 text-center text-gray-500 shadow-sm border border-[#EFECE6] text-lg font-bold">
             لا توجد درونات متاحة حاليًا
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
             {drones.map((drone) => (
               <article
                 key={drone.id}
-                className="overflow-hidden rounded-[30px] border border-[#DED7C9] bg-white shadow-sm"
+                className="group overflow-hidden rounded-[32px] border border-[#E7E2D3] bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:border-[#1b3b2b]/30 flex flex-col justify-between"
               >
-                <div className="aspect-[4/3] bg-[#F8F7F2] p-3">
-                  {drone.image_url ? (
-                    <img
-                      src={drone.image_url}
-                      alt={drone.name}
-                      className="h-full w-full object-contain"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <ImageOff />
-                    </div>
-                  )}
+                <div>
+                  <div className="aspect-[4/3] bg-[#F9F8F4] p-8 flex items-center justify-center relative overflow-hidden border-b border-[#F0EBE1]">
+                    {drone.image_url ? (
+                      <img
+                        src={drone.image_url}
+                        alt={drone.name}
+                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-md"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-gray-400">
+                        <ImageOff className="h-10 w-10" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-7">
+                    <h2 className="text-2xl font-black text-[#1b3b2b]">{drone.name}</h2>
+
+                    <p className="mt-3 min-h-[52px] text-sm leading-relaxed text-gray-600">
+                      {drone.description || "درون متاح للإيجار اليومي بكفاءة عالية."}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="p-6">
-                  <h2 className="text-2xl font-black">{drone.name}</h2>
-
-                  <p className="mt-3 min-h-[52px] text-sm leading-7 text-gray-600">
-                    {drone.description || "درون متاح للإيجار اليومي."}
-                  </p>
-
-                  <div className="mt-5 flex items-end justify-between border-t pt-5">
+                <div className="px-7 pb-7 pt-2">
+                  <div className="flex items-end justify-between border-t border-[#F0EBE1] pt-5">
                     <div>
-                      <p className="text-xs text-gray-500">سعر اليوم</p>
-
-                      <p className="text-2xl font-black">
-                        {Number(drone.daily_price).toFixed(3)} ر.ع
+                      <p className="text-xs font-bold text-gray-400 mb-1">سعر اليوم</p>
+                      <p className="text-2xl font-black text-[#1b3b2b]">
+                        {Number(drone.daily_price).toFixed(3)} <span className="text-sm font-bold text-gray-500">ر.ع</span>
                       </p>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => void openBooking(drone)}
-                      className="rounded-full bg-[#0F3A2B] px-6 py-3 font-bold text-white"
+                      className="rounded-2xl bg-[#1b3b2b] px-6 py-3.5 font-bold text-white shadow-lg shadow-[#1b3b2b]/20 transition-all hover:bg-[#12281d] active:scale-95"
                     >
                       اختر واحجز
                     </button>
@@ -562,70 +557,77 @@ export default function Rentals() {
       </div>
 
       {selectedDrone && (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/55 p-3 backdrop-blur-sm">
-          <div className="mx-auto my-3 max-w-6xl rounded-[32px] bg-[#F8F7F2] shadow-2xl">
-            <div className="sticky top-0 z-20 flex items-center justify-between border-b bg-[#F8F7F2] px-6 py-4">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 p-3 sm:p-6 backdrop-blur-md flex items-center justify-center animate-fadeIn">
+          <div className="mx-auto w-full max-w-6xl rounded-[36px] bg-[#FDFBF7] shadow-2xl border border-[#EFECE6] overflow-hidden my-auto">
+            <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#EFECE6] bg-[#FDFBF7]/90 px-8 py-5 backdrop-blur-md">
               <div>
-                <p className="text-xs text-gray-500">حجز درون</p>
-
-                <h2 className="text-2xl font-black">{selectedDrone.name}</h2>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">حجز درون</span>
+                <h2 className="text-2xl font-black text-[#1b3b2b]">{selectedDrone.name}</h2>
               </div>
 
               <button
                 type="button"
                 onClick={() => !saving && setSelectedDrone(null)}
-                className="rounded-full bg-white p-3"
+                className="rounded-full bg-white p-3 shadow-sm border border-[#EFECE6] text-gray-500 hover:text-[#1b3b2b] transition hover:bg-gray-50"
                 aria-label="إغلاق"
               >
-                <X />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {success ? (
-              <div className="mx-auto max-w-xl px-6 py-16 text-center">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-700">
-                  <Check className="h-10 w-10" />
+              <div className="mx-auto max-w-xl px-6 py-20 text-center">
+                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 shadow-inner">
+                  <Check className="h-12 w-12" />
                 </div>
 
-                <h3 className="mt-6 text-3xl font-black">
-                  تم استلام طلب الإيجار
+                <h3 className="mt-6 text-3xl font-black text-[#1b3b2b]">
+                  تم استلام طلب الإيجار بنجاح
                 </h3>
 
-                <p className="mt-3 text-gray-600">
-                  رقم الحجز #{success.id}. سنتواصل معك لتأكيد الحجز.
+                <p className="mt-3 text-gray-600 text-lg">
+                  رقم الحجز <span className="font-bold text-[#1b3b2b]">#{success.id}</span>. سنتواصل معك قريبًا لتأكيد الحجز.
                 </p>
 
-                <div className="mt-6 rounded-3xl bg-white p-5 leading-8">
-                  من {formatDisplayDate(success.start_date)}
-                  <br />
-                  إلى {formatDisplayDate(success.end_date)}
-                  <br />
-                  {success.total_days} يوم —{" "}
-                  {Number(success.total_amount).toFixed(3)} ر.ع
+                <div className="mt-8 rounded-3xl bg-white p-6 leading-9 border border-[#EFECE6] shadow-sm text-right">
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">من تاريخ:</span>
+                    <span className="font-bold">{formatDisplayDate(success.start_date)}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-100 py-2">
+                    <span className="text-gray-500">إلى تاريخ:</span>
+                    <span className="font-bold">{formatDisplayDate(success.end_date)}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-100 py-2">
+                    <span className="text-gray-500">مدة الإيجار:</span>
+                    <span className="font-bold">{success.total_days} أيام</span>
+                  </div>
+                  <div className="flex justify-between pt-2 text-lg">
+                    <span className="text-gray-500">الإجمالي:</span>
+                    <span className="font-black text-[#1b3b2b]">{Number(success.total_amount).toFixed(3)} ر.ع</span>
+                  </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setSelectedDrone(null)}
-                  className="mt-6 rounded-full bg-[#0F3A2B] px-10 py-4 font-bold text-white"
+                  className="mt-8 rounded-2xl bg-[#1b3b2b] px-10 py-4 font-bold text-white shadow-lg transition hover:bg-[#12281d]"
                 >
-                  إغلاق
+                  إغلاق النافذة
                 </button>
               </div>
             ) : (
-              <div className="grid gap-6 p-5 lg:grid-cols-[1.25fr_.75fr]">
-                <section className="rounded-[28px] border bg-white p-5">
-                  <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="grid gap-8 p-6 lg:grid-cols-[1.25fr_.75fr] items-start">
+                <section className="rounded-[30px] border border-[#EFECE6] bg-white p-7 shadow-sm">
+                  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="text-xl font-black">اختر مدة الإيجار</h3>
-
-                      <p className="text-sm text-gray-500">
-                        اضغط يومًا واحدًا لحجز يوم واحد، أو اختر يومًا ثانيًا
-                        لتحديد نهاية الحجز
+                      <h3 className="text-xl font-black text-[#1b3b2b]">اختر مدة الإيجار</h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        اضغط يومًا واحدًا لحجز يوم واحد، أو اختر يومًا ثانيًا لتحديد نهاية الحجز
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-full bg-[#F8F7F2] p-1">
+                    <div className="flex items-center gap-3 rounded-2xl bg-[#F9F8F4] p-1.5 border border-[#EFECE6]">
                       <button
                         type="button"
                         onClick={() => moveMonth(-1)}
@@ -633,12 +635,12 @@ export default function Rentals() {
                           visibleMonth.getFullYear() === now.getFullYear() &&
                           visibleMonth.getMonth() === now.getMonth()
                         }
-                        className="rounded-full bg-white p-2 disabled:opacity-30"
+                        className="rounded-xl bg-white p-2.5 shadow-sm disabled:opacity-30 text-[#1b3b2b] hover:bg-gray-50 transition"
                       >
-                        <ChevronRight />
+                        <ChevronRight className="h-4 w-4" />
                       </button>
 
-                      <strong className="min-w-[145px] text-center">
+                      <strong className="min-w-[145px] text-center text-sm font-black text-[#1b3b2b]">
                         {MONTHS[visibleMonth.getMonth()]}{" "}
                         {visibleMonth.getFullYear()}
                       </strong>
@@ -646,28 +648,28 @@ export default function Rentals() {
                       <button
                         type="button"
                         onClick={() => moveMonth(1)}
-                        className="rounded-full bg-white p-2"
+                        className="rounded-xl bg-white p-2.5 shadow-sm text-[#1b3b2b] hover:bg-gray-50 transition"
                       >
-                        <ChevronLeft />
+                        <ChevronLeft className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
 
                   {loadingDates ? (
                     <div className="flex justify-center py-24">
-                      <Loader2 className="animate-spin" />
+                      <Loader2 className="animate-spin h-8 w-8 text-[#1b3b2b]" />
                     </div>
                   ) : (
                     <>
-                      <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-500 sm:text-xs">
+                      <div className="mb-3 grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-400">
                         {WEEK_DAYS.map((day) => (
-                          <div key={day} className="px-0.5 py-2">
+                          <div key={day} className="py-2">
                             {day}
                           </div>
                         ))}
                       </div>
 
-                      <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                      <div className="grid grid-cols-7 gap-2.5">
                         {calendarCells.map((date, index) => {
                           if (!date) {
                             return <div key={`empty-${index}`} />;
@@ -690,16 +692,16 @@ export default function Rentals() {
                               type="button"
                               disabled={past || booked}
                               onClick={() => chooseDate(date)}
-                              className={`aspect-square rounded-xl border font-bold transition ${
+                              className={`aspect-square rounded-2xl border text-sm font-black transition-all flex items-center justify-center ${
                                 booked
-                                  ? "bg-red-50 text-red-300 line-through"
+                                  ? "bg-red-50/80 text-red-300 border-red-100 line-through cursor-not-allowed"
                                   : past
-                                    ? "bg-gray-50 text-gray-300"
+                                    ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
                                     : selected
-                                      ? "bg-[#0F3A2B] text-white"
+                                      ? "bg-[#1b3b2b] text-white border-[#1b3b2b] shadow-lg shadow-[#1b3b2b]/20 scale-105 z-10"
                                       : insideRange
-                                        ? "bg-[#F0E8CF]"
-                                        : "bg-white hover:border-[#0F3A2B]"
+                                        ? "bg-[#F2ECE0] text-[#1b3b2b] border-[#E8DFCC]"
+                                        : "bg-white text-[#1b3b2b] border-[#EFECE6] hover:border-[#1b3b2b] hover:shadow-md"
                               }`}
                             >
                               {date.getDate()}
@@ -708,36 +710,45 @@ export default function Rentals() {
                         })}
                       </div>
 
-                      <div className="mt-4 text-xs text-gray-500">
-                        الأحمر محجوز — الرمادي غير متاح
+                      <div className="mt-6 flex items-center gap-6 text-xs font-bold text-gray-500 pt-4 border-t border-[#F0EBE1]">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-[#1b3b2b]"></span>
+                          <span>المحدد</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-red-100 border border-red-200"></span>
+                          <span>الأحمر محجوز</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-gray-100"></span>
+                          <span>الرمادي غير متاح</span>
+                        </div>
                       </div>
                     </>
                   )}
                 </section>
 
-                <aside>
-                  <div className="mb-5 rounded-[28px] border bg-white p-5">
-                    <h3 className="text-2xl font-black">
+                <aside className="space-y-6">
+                  <div className="rounded-[30px] border border-[#EFECE6] bg-white p-7 shadow-sm">
+                    <h3 className="text-2xl font-black text-[#1b3b2b]">
                       {selectedDrone.name}
                     </h3>
 
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
                       {selectedDrone.description}
                     </p>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <div className="rounded-2xl bg-[#F8F7F2] p-3">
-                        اليومي
-                        <br />
-                        <b>
+                    <div className="mt-5 grid grid-cols-2 gap-4">
+                      <div className="rounded-2xl bg-[#F9F8F4] p-4 border border-[#EFECE6]">
+                        <span className="text-xs text-gray-400 font-bold block mb-1">الإيجار اليومي</span>
+                        <b className="text-lg font-black text-[#1b3b2b]">
                           {Number(selectedDrone.daily_price).toFixed(3)} ر.ع
                         </b>
                       </div>
 
-                      <div className="rounded-2xl bg-[#F8F7F2] p-3">
-                        التأمين
-                        <br />
-                        <b>
+                      <div className="rounded-2xl bg-[#F9F8F4] p-4 border border-[#EFECE6]">
+                        <span className="text-xs text-gray-400 font-bold block mb-1">مبلغ التأمين</span>
+                        <b className="text-lg font-black text-[#1b3b2b]">
                           {Number(
                             selectedDrone.deposit_amount || 0,
                           ).toFixed(3)}{" "}
@@ -749,9 +760,9 @@ export default function Rentals() {
 
                   <form
                     onSubmit={submitBooking}
-                    className="rounded-[28px] border bg-white p-5"
+                    className="rounded-[30px] border border-[#EFECE6] bg-white p-7 shadow-sm"
                   >
-                    <h3 className="mb-4 text-xl font-black">بيانات الحجز</h3>
+                    <h3 className="mb-5 text-xl font-black text-[#1b3b2b]">بيانات الحجز</h3>
 
                     <input
                       value={customerName}
@@ -759,14 +770,14 @@ export default function Rentals() {
                         setCustomerName(event.target.value)
                       }
                       placeholder="الاسم الكامل"
-                      className="mb-3 h-12 w-full rounded-2xl border bg-[#F8F7F2] px-4 outline-none focus:border-[#0F3A2B]"
+                      className="mb-4 h-14 w-full rounded-2xl border border-[#EFECE6] bg-[#F9F8F4] px-5 outline-none focus:border-[#1b3b2b] focus:bg-white transition font-bold text-[#1b3b2b] placeholder:font-normal placeholder:text-gray-400"
                     />
 
                     <div
-                      className="mb-3 flex items-center gap-2 rounded-2xl border bg-[#F8F7F2] px-4"
+                      className="mb-4 flex items-center gap-3 rounded-2xl border border-[#EFECE6] bg-[#F9F8F4] px-5 focus-within:border-[#1b3b2b] focus-within:bg-white transition"
                       dir="ltr"
                     >
-                      <Phone className="h-4 w-4" />
+                      <Phone className="h-5 w-5 text-gray-400" />
 
                       <input
                         value={phone}
@@ -775,11 +786,11 @@ export default function Rentals() {
                         }
                         placeholder="968XXXXXXXX"
                         inputMode="numeric"
-                        className="h-12 w-full bg-transparent outline-none"
+                        className="h-14 w-full bg-transparent outline-none font-bold text-[#1b3b2b] placeholder:font-normal placeholder:text-gray-400 text-left"
                       />
                     </div>
 
-                    <label className="block cursor-pointer rounded-2xl border border-dashed border-[#BDB5A5] bg-[#F8F7F2] p-4 transition hover:border-[#0F3A2B]">
+                    <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-[#DED7C5] bg-[#F9F8F4] p-5 transition hover:border-[#1b3b2b] hover:bg-white group">
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
@@ -787,51 +798,55 @@ export default function Rentals() {
                         className="hidden"
                       />
 
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm border border-[#EFECE6] group-hover:scale-105 transition">
                           {receiptFile ? (
-                            <FileCheck2 className="h-5 w-5 text-green-700" />
+                            <FileCheck2 className="h-6 w-6 text-emerald-600" />
                           ) : (
-                            <UploadCloud className="h-5 w-5" />
+                            <UploadCloud className="h-6 w-6 text-[#1b3b2b]" />
                           )}
                         </div>
 
-                        <div>
-                          <p className="font-bold">
+                        <div className="overflow-hidden">
+                          <p className="font-black text-[#1b3b2b]">
                             {receiptFile
                               ? "تم إرفاق إيصال التحويل"
                               : "أرفق إيصال التحويل"}
                           </p>
 
-                          <p className="mt-1 max-w-[240px] truncate text-xs text-gray-500">
+                          <p className="mt-0.5 max-w-[220px] truncate text-xs text-gray-500 font-medium">
                             {receiptFile
                               ? receiptFile.name
-                              : "JPG أو PNG أو WEBP — بحد أقصى 5MB"}
+                              : "اضغط لاختيار صورة الإيصال"}
                           </p>
                         </div>
                       </div>
                     </label>
 
-                    <div className="mt-4 rounded-2xl bg-[#F8F7F2] p-4 text-sm">
-                      <div>
-                        من: <b>{formatDisplayDate(startDate)}</b>
+                    <div className="mt-5 rounded-2xl bg-[#F9F8F4] p-5 border border-[#EFECE6] space-y-2 text-sm">
+                      <div className="flex justify-between text-gray-600">
+                        <span>من:</span>
+                        <b className="text-[#1b3b2b]">{formatDisplayDate(startDate)}</b>
                       </div>
 
-                      <div className="mt-1">
-                        إلى: <b>{formatDisplayDate(endDate)}</b>
+                      <div className="flex justify-between text-gray-600">
+                        <span>إلى:</span>
+                        <b className="text-[#1b3b2b]">{formatDisplayDate(endDate)}</b>
                       </div>
 
-                      <div className="mt-1">
-                        الأيام: <b>{totalDays}</b>
+                      <div className="flex justify-between text-gray-600">
+                        <span>عدد الأيام:</span>
+                        <b className="text-[#1b3b2b]">{totalDays} يوم</b>
                       </div>
 
-                      <div className="mt-3 border-t pt-3 text-lg">
-                        الإجمالي: <b>{totalAmount.toFixed(3)} ر.ع</b>
+                      <div className="mt-3 border-t border-[#EFECE6] pt-3 flex justify-between items-center text-lg">
+                        <span className="font-bold text-gray-700">الإجمالي:</span>
+                        <b className="text-xl font-black text-[#1b3b2b]">{totalAmount.toFixed(3)} ر.ع</b>
                       </div>
                     </div>
 
                     {error && (
-                      <div className="mt-3 rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-700">
+                      <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 border border-red-200">
                         {error}
                       </div>
                     )}
@@ -844,12 +859,12 @@ export default function Rentals() {
                         !startDate ||
                         !endDate
                       }
-                      className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#0F3A2B] font-black text-white disabled:opacity-50"
+                      className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#1b3b2b] font-black text-white shadow-xl shadow-[#1b3b2b]/25 transition hover:bg-[#12281d] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {saving || uploadingReceipt ? (
-                        <Loader2 className="animate-spin" />
+                        <Loader2 className="animate-spin h-5 w-5" />
                       ) : (
-                        <ShieldCheck />
+                        <ShieldCheck className="h-5 w-5" />
                       )}
 
                       {uploadingReceipt
