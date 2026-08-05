@@ -509,12 +509,12 @@ export default function Rentals() {
                 className="group overflow-hidden rounded-[32px] border border-[#E7E2D3] bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:border-[#1b3b2b]/30 flex flex-col justify-between"
               >
                 <div>
-                  <div className="aspect-[4/3] bg-[#F9F8F4] p-8 flex items-center justify-center relative overflow-hidden border-b border-[#F0EBE1]">
+                  <div className="aspect-[4/3] bg-[#FAF8F5] flex items-center justify-center relative overflow-hidden border-b border-[#F0EBE1]">
                     {drone.image_url ? (
                       <img
                         src={drone.image_url}
                         alt={drone.name}
-                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-md"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-gray-400">
@@ -813,12 +813,6 @@ export default function Rentals() {
                               ? "تم إرفاق إيصال التحويل"
                               : "أرفق إيصال التحويل"}
                           </p>
-
-                          <p className="mt-0.5 max-w-[220px] truncate text-xs text-gray-500 font-medium">
-                            {receiptFile
-                              ? receiptFile.name
-                              : "اضغط لاختيار صورة الإيصال"}
-                          </p>
                         </div>
                       </div>
                     </label>
@@ -846,7 +840,7 @@ export default function Rentals() {
                     </div>
 
                     {error && (
-                      <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 border border-red-200">
+                      <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 border border-red-250">
                         {error}
                       </div>
                     )}
