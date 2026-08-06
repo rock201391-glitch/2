@@ -17,6 +17,14 @@ export type AIAction =
       style?: "primary" | "secondary";
     }
   | {
+      type: "auto_open_product";
+      label: string;
+      path: string;
+      productName: string;
+      productPrice?: string;
+      style?: "primary" | "secondary";
+    }
+  | {
       type: "prompt";
       label: string;
       prompt: string;
@@ -47,6 +55,13 @@ interface AIReply {
   actions?: AIAction[];
 }
 
+interface PendingRecommendation {
+  productName: string;
+  productPrice?: string;
+  path: string;
+  createdAt: number;
+}
+
 interface AIChatContextValue {
   isOpen: boolean;
   isLoading: boolean;
@@ -57,9 +72,11 @@ interface AIChatContextValue {
   toggleChat: () => void;
   sendMessage: (text: string, visibleText?: string) => Promise<void>;
   clearConversation: () => void;
+  savePendingRecommendation: (recommendation: PendingRecommendation) => void;
 }
 
-const STORAGE_KEY = "mergab_zulekha_openai_v2";
+const STORAGE_KEY = "mergab_zulekha_openai_v3";
+const PENDING_RECOMMENDATION_KEY = "mergab_zulekha_pending_recommendation";
 
 const WELCOME_MESSAGE: AIMessage = {
   id: "welcome",
@@ -71,20 +88,20 @@ const WELCOME_MESSAGE: AIMessage = {
       type: "prompt",
       label: "أريد درون مناسب",
       prompt:
-        "أريد مساعدتك في اختيار درون مناسب. ابدئي بسؤالي عن خبرتي واستخدامي وميزانيتي، سؤالًا واحدًا في كل مرة.",
+        "أريد مساعدتك في اختيار درون مناسب. اسأليني أولًا عن خبرتي، وبعدها خليني أكتب استخدامي وميزانيتي بنفسي.",
       style: "primary",
     },
     {
       type: "prompt",
       label: "أبحث عن كاميرا",
       prompt:
-        "أريد كاميرا مناسبة. اسأليني عن نوع التصوير والاستخدام والميزانية، سؤالًا واحدًا في كل مرة.",
+        "أريد كاميرا مناسبة. خليني أكتب استخدامي وميزانيتي بنفسي، سؤالًا واحدًا في كل مرة.",
     },
     {
       type: "prompt",
       label: "منتج حسب ميزانيتي",
       prompt:
-        "أريد منتجًا مناسبًا حسب ميزانيتي. اسأليني أولًا عن نوع المنتج ثم الميزانية والاستخدام.",
+        "أريد منتجًا مناسبًا حسب ميزانيتي. اسأليني أولًا عن نوع المنتج وبعدها خليني أكتب الميزانية والاستخدام بنفسي.",
     },
   ],
 };
@@ -125,6 +142,69 @@ function loadMessages(): AIMessage[] {
   }
 }
 
+function readPendingRecommendation(): PendingRecommendation | null {
+  try {
+    const raw = localStorage.getItem(PENDING_RECOMMENDATION_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as PendingRecommendation;
+
+    if (
+      !parsed ||
+      typeof parsed.productName !== "string" ||
+      typeof parsed.path !== "string"
+    ) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function createRecommendationFollowup(
+  recommendation: PendingRecommendation,
+): AIMessage {
+  const priceText = recommendation.productPrice
+    ? ` بسعر ${recommendation.productPrice}`
+    : "";
+
+  return createMessage(
+    "assistant",
+    `شو رأيك في ${recommendation.productName}${priceText}؟ هل مناسب لك؟`,
+    [
+      {
+        type: "prompt",
+        label: "نعم، مناسب",
+        prompt: `نعم، المنتج ${recommendation.productName} مناسب لي.`,
+        style: "primary",
+      },
+      {
+        type: "prompt",
+        label: "أريد شيء أفضل",
+        prompt:
+          `المنتج الحالي هو ${recommendation.productName}. ` +
+          "أريد خيارًا أفضل وأقوى حتى لو كان أغلى. رشحي لي المنتج التالي مباشرة.",
+      },
+      {
+        type: "prompt",
+        label: "أريد أرخص",
+        prompt:
+          `المنتج الحالي هو ${recommendation.productName}. ` +
+          "أريد خيارًا أرخص ويكون قريب من احتياجي. رشحي لي المنتج التالي مباشرة.",
+      },
+      {
+        type: "prompt",
+        label: "أريد بديل",
+        prompt:
+          `المنتج الحالي هو ${recommendation.productName}. ` +
+          "أريد بديلًا مختلفًا بنفس المستوى تقريبًا. رشحي لي المنتج التالي مباشرة.",
+      },
+    ],
+  );
+}
+
 export function AIChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,25 +215,66 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-40)));
   }, [messages]);
 
+  const injectPendingFollowup = useCallback(() => {
+    const pending = readPendingRecommendation();
+    if (!pending) return;
+
+    localStorage.removeItem(PENDING_RECOMMENDATION_KEY);
+
+    setMessages((current) => {
+      const last = current[current.length - 1];
+
+      if (
+        last?.role === "assistant" &&
+        last.text.includes(pending.productName) &&
+        last.text.includes("هل مناسب لك")
+      ) {
+        return current;
+      }
+
+      return [
+        ...current,
+        createRecommendationFollowup(pending),
+      ].slice(-40);
+    });
+  }, []);
+
   const openChat = useCallback(() => {
     setIsOpen(true);
     setUnreadCount(0);
-  }, []);
+    injectPendingFollowup();
+  }, [injectPendingFollowup]);
 
   const closeChat = useCallback(() => setIsOpen(false), []);
 
   const toggleChat = useCallback(() => {
     setIsOpen((current) => {
       const next = !current;
-      if (next) setUnreadCount(0);
+
+      if (next) {
+        setUnreadCount(0);
+        setTimeout(injectPendingFollowup, 0);
+      }
+
       return next;
     });
-  }, []);
+  }, [injectPendingFollowup]);
 
   const clearConversation = useCallback(() => {
     setMessages([freshWelcome()]);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PENDING_RECOMMENDATION_KEY);
   }, []);
+
+  const savePendingRecommendation = useCallback(
+    (recommendation: PendingRecommendation) => {
+      localStorage.setItem(
+        PENDING_RECOMMENDATION_KEY,
+        JSON.stringify(recommendation),
+      );
+    },
+    [],
+  );
 
   const sendMessage = useCallback(
     async (rawText: string, visibleText?: string) => {
@@ -166,6 +287,7 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
       );
 
       const nextMessages = [...messages, userMessage].slice(-20);
+
       setMessages(nextMessages);
       setIsLoading(true);
 
@@ -190,7 +312,7 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
         const assistantMessage = createMessage(
           "assistant",
           data?.message?.trim() ||
-            "ما قدرت أجهز الإجابة الآن. جرّب مرة ثانية.",
+            "ما قدرت أجهز الإجابة الحين. جرّب مرة ثانية.",
           Array.isArray(data?.actions)
             ? data.actions.slice(0, 8)
             : undefined,
@@ -208,18 +330,13 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
           ...current,
           createMessage(
             "assistant",
-            "صار خطأ مؤقت في زليخة. جرّب مرة ثانية أو افتح المتجر.",
+            "صار خطأ بسيط في زليخة. جرّب مرة ثانية.",
             [
               {
                 type: "navigate",
                 label: "فتح المتجر",
                 path: "/shop",
                 style: "primary",
-              },
-              {
-                type: "request_phone",
-                label: "متابعة الطلب",
-                purpose: "track_order",
               },
             ],
           ),
@@ -242,6 +359,7 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
       toggleChat,
       sendMessage,
       clearConversation,
+      savePendingRecommendation,
     }),
     [
       isOpen,
@@ -253,6 +371,7 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
       toggleChat,
       sendMessage,
       clearConversation,
+      savePendingRecommendation,
     ],
   );
 
