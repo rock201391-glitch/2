@@ -3,6 +3,8 @@ import {
   CheckCircle2,
   ChevronRight,
   CreditCard,
+  Banknote,
+  IdCard,
   FileCheck2,
   Loader2,
   MapPin,
@@ -450,65 +452,29 @@ export default function RentalCheckout({
               </div>
 
               <div className="grid gap-5 md:grid-cols-2">
-                <div className="relative">
-                  <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
-                    المحافظة
-                  </label>
+                <FancySelect
+                  label="المحافظة"
+                  placeholder="اختر المحافظة"
+                  value={governorate}
+                  options={Object.keys(GOVERNORATE_TO_WILAYAT)}
+                  onChange={(value) => {
+                    setGovernorate(value);
+                    setWilayat("");
+                    setError("");
+                  }}
+                />
 
-                  <div className="relative">
-                    <select
-                      value={governorate}
-                      onChange={(event) => {
-                        setGovernorate(event.target.value);
-                        setWilayat("");
-                        setError("");
-                      }}
-                      className="h-14 w-full appearance-none rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 pl-12 outline-none focus:border-[#0f3a2b] focus:bg-white transition font-bold text-[#0f3a2b] cursor-pointer"
-                    >
-                      <option value="">اختر المحافظة</option>
-
-                      {Object.keys(GOVERNORATE_TO_WILAYAT).map(
-                        (item) => (
-                          <option key={item} value={item}>
-                            {item}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                      <ChevronDown className="h-5 w-5" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
-                    الولاية
-                  </label>
-
-                  <div className="relative">
-                    <select
-                      value={wilayat}
-                      disabled={!governorate}
-                      onChange={(event) => {
-                        setWilayat(event.target.value);
-                        setError("");
-                      }}
-                      className="h-14 w-full appearance-none rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 pl-12 outline-none disabled:opacity-40 disabled:cursor-not-allowed focus:border-[#0f3a2b] focus:bg-white transition font-bold text-[#0f3a2b] cursor-pointer"
-                    >
-                      <option value="">اختر الولاية</option>
-
-                      {wilayatOptions.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                      <ChevronDown className="h-5 w-5" />
-                    </div>
-                  </div>
-                </div>
+                <FancySelect
+                  label="الولاية"
+                  placeholder="اختر الولاية"
+                  value={wilayat}
+                  options={wilayatOptions}
+                  disabled={!governorate}
+                  onChange={(value) => {
+                    setWilayat(value);
+                    setError("");
+                  }}
+                />
               </div>
             </div>
 
@@ -523,6 +489,7 @@ export default function RentalCheckout({
               <div className="grid gap-5 md:grid-cols-2">
                 <FileUpload
                   label="أرفق إيصال التحويل"
+                  icon="receipt"
                   file={receiptFile}
                   onChange={(file) => {
                     setReceiptFile(file);
@@ -532,6 +499,7 @@ export default function RentalCheckout({
 
                 <FileUpload
                   label="أرفق صورة البطاقة الشخصية"
+                  icon="id-card"
                   file={idCardFile}
                   onChange={(file) => {
                     setIdCardFile(file);
@@ -635,17 +603,114 @@ function SummaryRow({
   );
 }
 
+function FancySelect({
+  label,
+  placeholder,
+  value,
+  options,
+  onChange,
+  disabled = false,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
+        {label}
+      </label>
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((current) => !current)}
+        className={`flex h-14 w-full items-center justify-between rounded-2xl border px-5 text-right font-bold transition ${
+          open
+            ? "border-[#0f3a2b] bg-white shadow-[0_10px_30px_rgba(15,58,43,0.10)]"
+            : "border-[#EFECE6] bg-[#FAF8F5]"
+        } ${disabled ? "cursor-not-allowed opacity-40" : "hover:border-[#0f3a2b]/50"}`}
+      >
+        <span className={value ? "text-[#0f3a2b]" : "text-gray-400"}>
+          {value || placeholder}
+        </span>
+
+        <ChevronDown
+          className={`h-5 w-5 text-gray-400 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {open && !disabled && (
+        <>
+          <button
+            type="button"
+            aria-label="إغلاق القائمة"
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+
+          <div className="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-[22px] border border-[#E7E2D3] bg-white p-2 shadow-[0_24px_70px_rgba(15,58,43,0.18)]">
+            <button
+              type="button"
+              onClick={() => {
+                onChange("");
+                setOpen(false);
+              }}
+              className={`mb-1 flex w-full items-center rounded-xl px-4 py-3 text-right text-sm font-bold transition ${
+                !value
+                  ? "bg-[#0f3a2b] text-white"
+                  : "text-[#0f3a2b] hover:bg-[#F8F7F2]"
+              }`}
+            >
+              {placeholder}
+            </button>
+
+            {options.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                }}
+                className={`mb-1 flex w-full items-center rounded-xl px-4 py-3 text-right text-sm font-bold transition last:mb-0 ${
+                  value === option
+                    ? "bg-[#0f3a2b] text-white"
+                    : "text-[#0f3a2b] hover:bg-[#F8F7F2]"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function FileUpload({
   label,
+  icon,
   file,
   onChange,
 }: {
   label: string;
+  icon: "receipt" | "id-card";
   file: File | null;
   onChange: (file: File | null) => void;
 }) {
+  const EmptyIcon = icon === "receipt" ? Banknote : IdCard;
+
   return (
-    <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-[#DED7C5] bg-[#FAF8F5] p-5 transition hover:border-[#0f3a2b] hover:bg-white group">
+    <label className="group block cursor-pointer rounded-2xl border-2 border-dashed border-[#DED7C5] bg-[#FAF8F5] p-5 transition hover:border-[#0f3a2b] hover:bg-white">
       <input
         type="file"
         accept="image/jpeg,image/png,image/webp"
@@ -656,20 +721,22 @@ function FileUpload({
       />
 
       <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-[#EFECE6] group-hover:scale-105 transition">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-[#EFECE6] bg-white shadow-sm transition group-hover:scale-105">
           {file ? (
-            <FileCheck2 className="h-6 w-6 text-emerald-600" />
+            <FileCheck2 className="h-7 w-7 text-emerald-600" />
           ) : (
-            <UploadCloud className="h-6 w-6 text-[#0f3a2b]" />
+            <EmptyIcon className="h-7 w-7 text-[#0f3a2b]" />
           )}
         </div>
 
         <div className="min-w-0 overflow-hidden">
           <p className="font-black text-[#0f3a2b]">{label}</p>
 
-          <p className="mt-0.5 truncate text-xs text-gray-500 font-medium">
-            {file ? file.name : "اضغط لاختيار الصورة"}
-          </p>
+          {file && (
+            <p className="mt-1 truncate text-xs font-medium text-gray-500">
+              {file.name}
+            </p>
+          )}
         </div>
       </div>
     </label>
