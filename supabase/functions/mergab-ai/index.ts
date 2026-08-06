@@ -418,6 +418,29 @@ function phoneFilter(phone: string) {
   return `phone.eq.${local},phone.eq.${full},phone.eq.+${full}`;
 }
 
+function normalizePhoneForCompare(value: unknown) {
+  if (typeof value !== "string" && typeof value !== "number") {
+    return "";
+  }
+
+  let digits = normalizeDigits(String(value)).replace(/\D/g, "");
+
+  if (digits.startsWith("00968")) {
+    digits = digits.slice(5);
+  } else if (digits.startsWith("968")) {
+    digits = digits.slice(3);
+  }
+
+  return digits.slice(-8);
+}
+
+function samePhone(storedPhone: unknown, submittedPhone: string) {
+  const stored = normalizePhoneForCompare(storedPhone);
+  const submitted = normalizePhoneForCompare(submittedPhone);
+
+  return stored.length === 8 && stored === submitted;
+}
+
 type BudgetRange = {
   min: number | null;
   max: number | null;
@@ -1348,39 +1371,55 @@ Deno.serve(async (req) => {
         });
       }
 
-      const filter = phoneFilter(phone);
-
-      const [orders, bookings, workshop] =
+      /**
+       * لا نعتمد على المطابقة النصية المباشرة فقط؛ لأن الرقم قد يكون محفوظًا:
+       * 99166959
+       * 96899166959
+       * +968 9916 6959
+       * أو بالأرقام العربية.
+       *
+       * نجلب آخر السجلات ثم نوحد الأرقام ونقارن آخر 8 أرقام.
+       */
+      const [ordersResult, bookingsResult, workshopResult] =
         await Promise.all([
           supabase
             .from("orders")
             .select(
-              "id,product_name,total,status,payment_method,delivery_method,created_at",
+              "id,phone,product_name,total,status,payment_method,delivery_method,created_at",
             )
-            .or(filter)
             .order("created_at", { ascending: false })
-            .limit(10),
+            .limit(500),
 
           supabase
             .from("rental_bookings")
             .select(
-              "id,start_date,end_date,total_days,total_amount,status,created_at,rental_drones(name)",
+              "id,phone,start_date,end_date,total_days,total_amount,status,created_at,rental_drones(name)",
             )
-            .or(filter)
             .order("created_at", { ascending: false })
-            .limit(10),
+            .limit(500),
 
           supabase
             .from("workshop_requests")
-            .select("id,drone_model,status,created_at")
-            .or(filter)
+            .select("id,phone,drone_model,status,created_at")
             .order("created_at", { ascending: false })
-            .limit(10),
+            .limit(500),
         ]);
+
+      const orders = (ordersResult.data || [])
+        .filter((row) => samePhone(row.phone, phone))
+        .slice(0, 10);
+
+      const bookings = (bookingsResult.data || [])
+        .filter((row) => samePhone(row.phone, phone))
+        .slice(0, 10);
+
+      const workshop = (workshopResult.data || [])
+        .filter((row) => samePhone(row.phone, phone))
+        .slice(0, 10);
 
       const lines: string[] = [];
 
-      for (const order of orders.data || []) {
+      for (const order of orders) {
         lines.push(
           `طلب متجر #${order.id}: ${
             order.product_name || "منتج"
@@ -1390,7 +1429,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      for (const booking of bookings.data || []) {
+      for (const booking of bookings) {
         const droneName = Array.isArray(
           booking.rental_drones,
         )
@@ -1408,7 +1447,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      for (const request of workshop.data || []) {
+      for (const request of workshop) {
         lines.push(
           `طلب ورشة #${request.id}: ${
             request.drone_model || "درون"
