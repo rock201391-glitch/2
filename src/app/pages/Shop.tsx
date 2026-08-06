@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductsContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 
 interface ShopProps {
@@ -64,6 +65,7 @@ function getFilterChipStyle(isActive: boolean) {
 
 export default function Shop({ onProductClick }: ShopProps) {
   const { addItem } = useCart();
+  const { isArabic, direction, t } = useLanguage();
   const { products, loading, error } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilterKey>('all');
   const [sortOption, setSortOption] = useState<SortOption>('newest');
@@ -107,19 +109,28 @@ export default function Shop({ onProductClick }: ShopProps) {
         })
         .map((category) => category.id);
 
-      return { ...filter, ids };
+      const translatedLabel =
+        filter.key === 'drones'
+          ? t('الدرون', 'Drones')
+          : filter.key === 'cameras'
+            ? t('الكاميرات', 'Cameras')
+            : filter.key === 'microphones'
+              ? t('المايكات', 'Microphones')
+              : t('إكسسوارات', 'Accessories');
+
+      return { ...filter, label: translatedLabel, ids };
     });
-  }, [categories]);
+  }, [categories, t]);
 
   const selectedCategoryIds = useMemo(() => {
     if (selectedCategory === 'all') return null;
     return resolvedCategoryFilters.find((filter) => filter.key === selectedCategory)?.ids ?? [];
-  }, [resolvedCategoryFilters, selectedCategory]);
+  }, [resolvedCategoryFilters, selectedCategory, t]);
 
   const selectedCategoryLabel = useMemo(() => {
-    if (selectedCategory === 'all') return 'الكل';
-    return resolvedCategoryFilters.find((filter) => filter.key === selectedCategory)?.label ?? 'هذا التصنيف';
-  }, [resolvedCategoryFilters, selectedCategory]);
+    if (selectedCategory === 'all') return t('الكل', 'All');
+    return resolvedCategoryFilters.find((filter) => filter.key === selectedCategory)?.label ?? t('هذا التصنيف', 'this category');
+  }, [resolvedCategoryFilters, selectedCategory, t]);
 
   const sortedFilteredProducts = useMemo(() => {
     let list = selectedCategoryIds
@@ -282,13 +293,13 @@ export default function Shop({ onProductClick }: ShopProps) {
   };
 
   const sortButtons: { key: SortOption; label: string }[] = [
-    { key: 'newest', label: 'الأحدث' },
-    { key: 'price-desc', label: 'الأعلى سعراً' },
-    { key: 'price-asc', label: 'الأقل سعراً' },
+    { key: 'newest', label: t('الأحدث', 'Newest') },
+    { key: 'price-desc', label: t('الأعلى سعراً', 'Highest Price') },
+    { key: 'price-asc', label: t('الأقل سعراً', 'Lowest Price') },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8F7F2]" dir="rtl">
+    <div className="min-h-screen bg-[#F8F7F2]" dir={direction}>
       <div
         className="relative w-full py-10 px-4 flex flex-col items-center justify-center text-center overflow-hidden border-b border-[#0D3125]/20"
         style={{ 
@@ -309,10 +320,10 @@ export default function Shop({ onProductClick }: ShopProps) {
             textShadow: '0 2px 4px rgba(0,0,0,0.15)'
           }}
         >
-          تسوّق الآن
+          {t('تسوّق الآن', 'Shop Now')}
         </h1>
         <p className="text-[#FBF7EF]/70 text-xs md:text-sm font-light max-w-xs md:max-w-md tracking-normal">
-          منتجات مختارة بعناية لعشاق التقنية
+          {t('منتجات مختارة بعناية لعشاق التقنية', 'Carefully selected products for technology enthusiasts')}
         </p>
       </div>
 
@@ -366,7 +377,7 @@ export default function Shop({ onProductClick }: ShopProps) {
                 style={{ borderColor: '#0A261C', borderTopColor: 'transparent' }}
               />
               <p className="text-base font-medium" style={{ color: '#0A261C' }}>
-                جاري تحميل المنتجات...
+                {t('جاري تحميل المنتجات...', 'Loading products...')}
               </p>
             </div>
           </div>
@@ -375,7 +386,7 @@ export default function Shop({ onProductClick }: ShopProps) {
         {!loading && error && (
           <div className="flex items-center justify-center py-24">
             <p className="text-base font-medium text-red-500">
-              حدث خطأ أثناء تحميل المنتجات
+              {t('حدث خطأ أثناء تحميل المنتجات', 'An error occurred while loading products')}
             </p>
           </div>
         )}
@@ -390,8 +401,8 @@ export default function Shop({ onProductClick }: ShopProps) {
             </div>
             <p className="text-base font-medium text-gray-500">
               {selectedCategory === 'all'
-                ? 'لا توجد منتجات حالياً'
-                : `لا توجد منتجات ضمن ${selectedCategoryLabel} حالياً`}
+                ? t('لا توجد منتجات حالياً', 'No products are currently available')
+                : t(`لا توجد منتجات ضمن ${selectedCategoryLabel} حالياً`, `No products are currently available in ${selectedCategoryLabel}`)}
             </p>
           </div>
         )}
@@ -425,7 +436,7 @@ export default function Shop({ onProductClick }: ShopProps) {
                     {product.quantity === 0 && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <span className="bg-white text-gray-800 text-xs font-bold px-3 py-1 rounded-full">
-                          نفذت الكمية
+                          {t('نفذت الكمية', 'Out of stock')}
                         </span>
                       </div>
                     )}
@@ -446,7 +457,7 @@ export default function Shop({ onProductClick }: ShopProps) {
                         className="text-lg font-bold"
                         style={{ color: '#F8F7F2' }}
                       >
-                        {product.price} <span className="text-xs font-medium">ر.ع</span>
+                        {product.price} <span className="text-xs font-medium">{t('ر.ع', 'OMR')}</span>
                       </span>
                       <button
                         onClick={(e) => handleAddToCart(e, product)}
