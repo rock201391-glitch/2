@@ -278,6 +278,22 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
   }
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const phoneFromUrl = normalizePhoneNumber(
+      searchParams.get("phone") || "",
+    ).slice(-8);
+    const shouldSearch = searchParams.get("search") === "1";
+
+    if (!phoneFromUrl || phoneFromUrl.length !== 8) return;
+
+    setPhone(phoneFromUrl);
+
+    if (shouldSearch) {
+      void fetchCustomerItems(phoneFromUrl);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!searchedPhone) return;
 
     const ordersChannel = supabase
