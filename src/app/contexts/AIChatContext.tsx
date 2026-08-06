@@ -59,19 +59,17 @@ interface AIChatContextValue {
   clearConversation: () => void;
 }
 
-const STORAGE_KEY = "mergab_zulekha_openai_v1";
+const STORAGE_KEY = "mergab_zulekha_openai_v2";
 
 const WELCOME_MESSAGE: AIMessage = {
   id: "welcome",
   role: "assistant",
   createdAt: Date.now(),
-  text:
-    "أهلًا، أنا زليخة، مساعدتك الذكية في متجر مرقاب.\n" +
-    "اكتب لي ما تبحث عنه، أو اختر أحد الخيارات وسأسألك أسئلة بسيطة حتى أصل لأفضل منتج مناسب لك.",
+  text: "أهلًا، أنا زليخة. كيف ممكن أساعدك؟",
   actions: [
     {
       type: "prompt",
-      label: "ساعديني أختار درون",
+      label: "أريد درون مناسب",
       prompt:
         "أريد مساعدتك في اختيار درون مناسب. ابدئي بسؤالي عن خبرتي واستخدامي وميزانيتي، سؤالًا واحدًا في كل مرة.",
       style: "primary",
@@ -117,7 +115,9 @@ function loadMessages(): AIMessage[] {
     if (!saved) return [freshWelcome()];
 
     const parsed = JSON.parse(saved);
-    if (!Array.isArray(parsed) || parsed.length === 0) return [freshWelcome()];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return [freshWelcome()];
+    }
 
     return parsed.slice(-40);
   } catch {
@@ -198,7 +198,9 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
 
         setMessages((current) => [...current, assistantMessage].slice(-40));
 
-        if (!isOpen) setUnreadCount((count) => count + 1);
+        if (!isOpen) {
+          setUnreadCount((count) => count + 1);
+        }
       } catch (error) {
         console.error("Zulekha error:", error);
 
