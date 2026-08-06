@@ -27,6 +27,8 @@ import Rentals, {
 import RentalCheckout from "./pages/RentalCheckout";
 import Footer from "./components/Footer";
 import AdminDashboard from "./pages/AdminDashboard";
+import MergabAI from "./components/ai/MergabAI";
+import { AIChatProvider } from "./contexts/AIChatContext";
 
 const RENTAL_CHECKOUT_KEY = "mergab_rental_checkout";
 
@@ -275,6 +277,8 @@ function AppContent() {
           </div>
         </div>
       )}
+
+      {!isAdmin && <MergabAI />}
     </div>
   );
 }
@@ -285,7 +289,9 @@ export default function App() {
       <CartProvider>
         <ThemeSettingsProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-            <AppContent />
+            <AIChatProvider>
+              <AppContent />
+            </AIChatProvider>
           </ThemeProvider>
         </ThemeSettingsProvider>
       </CartProvider>
