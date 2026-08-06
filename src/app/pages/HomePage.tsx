@@ -1,4 +1,10 @@
-import { CalendarDays, ChevronLeft, Wrench } from 'lucide-react';
+import {
+  CalendarDays,
+  ChevronLeft,
+  Gavel,
+  ShoppingBag,
+  Wrench,
+} from 'lucide-react';
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
@@ -36,7 +42,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             </div>
           </div>
 
-          {/* النص والأزرار */}
+          {/* النص والقوائم */}
           <div className="order-2 text-center lg:text-right">
             <h1
               className="mb-6 text-4xl font-bold leading-tight md:text-6xl"
@@ -50,64 +56,105 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               بجودة عالية وأسعار منافسة
             </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+            <div className="mx-auto grid max-w-xl grid-cols-1 gap-3 lg:mr-0">
               {/* المتجر */}
               <button
                 type="button"
                 onClick={() => onNavigate('shop')}
-                className="group inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95"
-                style={{ backgroundColor: '#0F3A2B' }}
+                className="group flex w-full items-center justify-between rounded-[24px] border border-[#D8CFB8] bg-white px-5 py-4 text-right shadow-[0_10px_30px_rgba(15,58,43,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#0F3A2B]/40 hover:shadow-[0_18px_40px_rgba(15,58,43,0.14)] active:scale-[0.99]"
               >
-                <span>تصفح المتجر</span>
+                <span className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white">
+                    <ShoppingBag className="h-5 w-5" />
+                  </span>
 
-                <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                  <span>
+                    <span className="block text-base font-black text-[#0F3A2B]">
+                      تصفح المتجر
+                    </span>
+
+                    <span className="mt-1 block text-sm text-gray-500">
+                      شاهد الدرونات والكاميرات والإكسسوارات
+                    </span>
+                  </span>
+                </span>
+
+                <ChevronLeft className="h-5 w-5 text-[#0F3A2B] transition-transform group-hover:-translate-x-1" />
               </button>
 
-              {/* المزاد */}
+              {/* المزادات */}
               <button
                 type="button"
                 onClick={() => onNavigate('auctions')}
-                className="group inline-flex items-center gap-2 rounded-full border-2 px-7 py-3.5 font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
-                style={{
-                  borderColor: '#0F3A2B',
-                  color: '#0F3A2B',
-                  backgroundColor: '#FFFFFF',
-                }}
+                className="group flex w-full items-center justify-between rounded-[24px] border border-[#D8CFB8] bg-white px-5 py-4 text-right shadow-[0_10px_30px_rgba(15,58,43,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#0F3A2B]/40 hover:shadow-[0_18px_40px_rgba(15,58,43,0.14)] active:scale-[0.99]"
               >
-                <span>الدخول إلى المزاد</span>
+                <span className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F0E8CC] text-[#0F3A2B]">
+                    <Gavel className="h-5 w-5" />
+                  </span>
 
-                <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                  <span>
+                    <span className="block text-base font-black text-[#0F3A2B]">
+                      الدخول إلى المزادات
+                    </span>
+
+                    <span className="mt-1 block text-sm text-gray-500">
+                      شارك في المزادات والمنتجات المميزة
+                    </span>
+                  </span>
+                </span>
+
+                <ChevronLeft className="h-5 w-5 text-[#0F3A2B] transition-transform group-hover:-translate-x-1" />
               </button>
 
               {/* التأجير */}
-              <button type="button" onClick={() => onNavigate('rentals')} className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full px-8 py-4 font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] hover:shadow-[0_14px_30px_rgba(15,58,43,0.28)] active:scale-95" style={{ background:'linear-gradient(135deg, #173F31 0%, #0F3A2B 55%, #08271D 100%)', border:'1px solid rgba(216,201,155,0.65)' }}>
-                <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#D8C99B]/15 ring-1 ring-[#D8C99B]/35"><CalendarDays className="h-4 w-4 text-[#E5D8AA]" /></span>
-                <span className="relative z-10">تأجير الدرونات</span>
-                <ChevronLeft className="relative z-10 h-5 w-5 text-[#E5D8AA]" />
+              <button
+                type="button"
+                onClick={() => onNavigate('rentals')}
+                className="group flex w-full items-center justify-between rounded-[24px] border border-[#D8CFB8] bg-white px-5 py-4 text-right shadow-[0_10px_30px_rgba(15,58,43,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#0F3A2B]/40 hover:shadow-[0_18px_40px_rgba(15,58,43,0.14)] active:scale-[0.99]"
+              >
+                <span className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E6EFEA] text-[#0F3A2B]">
+                    <CalendarDays className="h-5 w-5" />
+                  </span>
+
+                  <span>
+                    <span className="block text-base font-black text-[#0F3A2B]">
+                      تأجير الدرونات
+                    </span>
+
+                    <span className="mt-1 block text-sm text-gray-500">
+                      اختر الدرون وحدد مدة الإيجار
+                    </span>
+                  </span>
+                </span>
+
+                <ChevronLeft className="h-5 w-5 text-[#0F3A2B] transition-transform group-hover:-translate-x-1" />
               </button>
 
               {/* الورشة */}
               <button
                 type="button"
                 onClick={() => onNavigate('workshop')}
-                className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full px-8 py-4 font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] hover:shadow-[0_14px_30px_rgba(15,58,43,0.28)] active:translate-y-0 active:scale-95"
-                style={{
-                  background:
-                    'linear-gradient(135deg, #173F31 0%, #0F3A2B 55%, #08271D 100%)',
-                  border: '1px solid rgba(216,201,155,0.65)',
-                }}
+                className="group flex w-full items-center justify-between rounded-[24px] border border-[#D8CFB8] bg-white px-5 py-4 text-right shadow-[0_10px_30px_rgba(15,58,43,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#0F3A2B]/40 hover:shadow-[0_18px_40px_rgba(15,58,43,0.14)] active:scale-[0.99]"
               >
-                <span className="absolute inset-0 translate-x-full bg-gradient-to-l from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:-translate-x-full" />
+                <span className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white">
+                    <Wrench className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" />
+                  </span>
 
-                <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#D8C99B]/15 ring-1 ring-[#D8C99B]/35">
-                  <Wrench className="h-4 w-4 text-[#E5D8AA] transition-transform duration-300 group-hover:rotate-12" />
+                  <span>
+                    <span className="block text-base font-black text-[#0F3A2B]">
+                      الدخول إلى الورشة
+                    </span>
+
+                    <span className="mt-1 block text-sm text-gray-500">
+                      صيانة وإصلاح الدرونات والملحقات
+                    </span>
+                  </span>
                 </span>
 
-                <span className="relative z-10">
-                  الدخول إلى الورشة
-                </span>
-
-                <ChevronLeft className="relative z-10 h-5 w-5 text-[#E5D8AA] transition-transform duration-300 group-hover:-translate-x-1" />
+                <ChevronLeft className="h-5 w-5 text-[#0F3A2B] transition-transform group-hover:-translate-x-1" />
               </button>
             </div>
           </div>
