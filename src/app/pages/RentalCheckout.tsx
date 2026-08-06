@@ -286,8 +286,24 @@ export default function RentalCheckout({
 
     setError("");
     setStep("undertaking");
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  useEffect(() => {
+    if (step !== "undertaking") return;
+
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [step]);
 
   async function finishBooking() {
     if (submitting) return;
@@ -763,67 +779,41 @@ function SignaturePad({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const hasSignatureRef = useRef(false);
+  const activePointerIdRef = useRef<number | null>(null);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
-
-  function prepareCanvas(preserve = false) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-
-    if (rect.width === 0 || rect.height === 0) return;
-
-    const previousImage =
-      preserve && hasSignatureRef.current
-        ? canvas.toDataURL("image/png")
-        : null;
-
-    const ratio = Math.max(window.devicePixelRatio || 1, 1);
-
-    canvas.width = Math.round(rect.width * ratio);
-    canvas.height = Math.round(rect.height * ratio);
-
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.fillStyle = "#FFFFFF";
-    context.fillRect(0, 0, rect.width, rect.height);
-
-    context.strokeStyle = "#0F3A2B";
-    context.lineWidth = window.innerWidth < 640 ? 3.5 : 3;
-    context.lineCap = "round";
-    context.lineJoin = "round";
-
-    if (previousImage) {
-      const image = new Image();
-
-      image.onload = () => {
-        context.drawImage(image, 0, 0, rect.width, rect.height);
-      };
-
-      image.src = previousImage;
-    }
-  }
+  const [hasVisibleSignature, setHasVisibleSignature] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    prepareCanvas(false);
+    const frame = window.requestAnimationFrame(() => {
+      const rect = canvas.getBoundingClientRect();
 
-    const resizeObserver = new ResizeObserver(() => {
-      prepareCanvas(true);
+      if (rect.width === 0 || rect.height === 0) return;
+
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.fillStyle = "#FFFFFF";
+      context.fillRect(0, 0, rect.width, rect.height);
+
+      context.strokeStyle = "#0F3A2B";
+      context.lineWidth = window.innerWidth < 640 ? 3.8 : 3.2;
+      context.lineCap = "round";
+      context.lineJoin = "round";
     });
 
-    resizeObserver.observe(canvas);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  function getPointFromClient(clientX: number, clientY: number) {
+  function getPoint(clientX: number, clientY: number) {
     const canvas = canvasRef.current;
 
     if (!canvas) {
@@ -838,25 +828,29 @@ function SignaturePad({
     };
   }
 
-  function beginStroke(clientX: number, clientY: number) {
+  function beginStroke(
+    clientX: number,
+    clientY: number,
+    pointerId?: number,
+  ) {
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
 
     if (!canvas || !context) return;
 
     drawingRef.current = true;
+    activePointerIdRef.current = pointerId ?? null;
 
-    const point = getPointFromClient(clientX, clientY);
+    const point = getPoint(clientX, clientY);
     lastPointRef.current = point;
 
     context.beginPath();
     context.moveTo(point.x, point.y);
-
-    // ترسم نقطة حتى لو ضغط الزبون ضغطة خفيفة فقط.
     context.lineTo(point.x + 0.01, point.y + 0.01);
     context.stroke();
 
     hasSignatureRef.current = true;
+    setHasVisibleSignature(true);
   }
 
   function continueStroke(clientX: number, clientY: number) {
@@ -867,20 +861,20 @@ function SignaturePad({
 
     if (!canvas || !context) return;
 
-    const point = getPointFromClient(clientX, clientY);
-    const lastPoint = lastPointRef.current;
+    const point = getPoint(clientX, clientY);
+    const previous = lastPointRef.current;
 
-    if (!lastPoint) {
+    if (!previous) {
       lastPointRef.current = point;
       return;
     }
 
-    const middleX = (lastPoint.x + point.x) / 2;
-    const middleY = (lastPoint.y + point.y) / 2;
+    const middleX = (previous.x + point.x) / 2;
+    const middleY = (previous.y + point.y) / 2;
 
     context.quadraticCurveTo(
-      lastPoint.x,
-      lastPoint.y,
+      previous.x,
+      previous.y,
       middleX,
       middleY,
     );
@@ -890,20 +884,27 @@ function SignaturePad({
     hasSignatureRef.current = true;
   }
 
-  function saveSignature() {
-    const canvas = canvasRef.current;
+  function finishStroke() {
+    if (!drawingRef.current) return;
 
     drawingRef.current = false;
+    activePointerIdRef.current = null;
     lastPointRef.current = null;
+
+    const canvas = canvasRef.current;
 
     if (!canvas || !hasSignatureRef.current) {
       onChange(null);
       return;
     }
 
+    /*
+      نحفظ نسخة التوقيع بعد كل شخطة، لكننا لا نمسح الـ canvas.
+      لذلك يستطيع العميل رفع إصبعه ثم إكمال شخطة ثانية وثالثة.
+    */
     canvas.toBlob(
       (blob) => {
-        onChange(blob);
+        if (blob) onChange(blob);
       },
       "image/png",
       1,
@@ -914,31 +915,52 @@ function SignaturePad({
     event: React.PointerEvent<HTMLCanvasElement>,
   ) {
     event.preventDefault();
+    event.stopPropagation();
 
     const canvas = canvasRef.current;
 
     try {
       canvas?.setPointerCapture(event.pointerId);
     } catch {
-      // بعض متصفحات الجوال لا تدعم Pointer Capture بشكل كامل.
+      // بعض المتصفحات لا تدعم Pointer Capture بالكامل.
     }
 
-    beginStroke(event.clientX, event.clientY);
+    beginStroke(
+      event.clientX,
+      event.clientY,
+      event.pointerId,
+    );
   }
 
   function handlePointerMove(
     event: React.PointerEvent<HTMLCanvasElement>,
   ) {
-    if (!drawingRef.current) return;
+    if (
+      !drawingRef.current ||
+      (activePointerIdRef.current !== null &&
+        activePointerIdRef.current !== event.pointerId)
+    ) {
+      return;
+    }
 
     event.preventDefault();
+    event.stopPropagation();
+
     continueStroke(event.clientX, event.clientY);
   }
 
   function handlePointerEnd(
     event: React.PointerEvent<HTMLCanvasElement>,
   ) {
+    if (
+      activePointerIdRef.current !== null &&
+      activePointerIdRef.current !== event.pointerId
+    ) {
+      return;
+    }
+
     event.preventDefault();
+    event.stopPropagation();
 
     const canvas = canvasRef.current;
 
@@ -950,66 +972,7 @@ function SignaturePad({
       // تجاهل الخطأ في المتصفحات القديمة.
     }
 
-    saveSignature();
-  }
-
-  function handleTouchStart(
-    event: React.TouchEvent<HTMLCanvasElement>,
-  ) {
-    event.preventDefault();
-
-    const touch = event.touches[0];
-
-    if (!touch) return;
-
-    beginStroke(touch.clientX, touch.clientY);
-  }
-
-  function handleTouchMove(
-    event: React.TouchEvent<HTMLCanvasElement>,
-  ) {
-    event.preventDefault();
-
-    const touch = event.touches[0];
-
-    if (!touch) return;
-
-    continueStroke(touch.clientX, touch.clientY);
-  }
-
-  function handleTouchEnd(
-    event: React.TouchEvent<HTMLCanvasElement>,
-  ) {
-    event.preventDefault();
-    saveSignature();
-  }
-
-  function handleMouseDown(
-    event: React.MouseEvent<HTMLCanvasElement>,
-  ) {
-    // Pointer Events تتولى الماوس في المتصفحات الحديثة.
-    if ("PointerEvent" in window) return;
-
-    event.preventDefault();
-    beginStroke(event.clientX, event.clientY);
-  }
-
-  function handleMouseMove(
-    event: React.MouseEvent<HTMLCanvasElement>,
-  ) {
-    if ("PointerEvent" in window || !drawingRef.current) return;
-
-    event.preventDefault();
-    continueStroke(event.clientX, event.clientY);
-  }
-
-  function handleMouseUp(
-    event: React.MouseEvent<HTMLCanvasElement>,
-  ) {
-    if ("PointerEvent" in window) return;
-
-    event.preventDefault();
-    saveSignature();
+    finishStroke();
   }
 
   return (
@@ -1021,35 +984,19 @@ function SignaturePad({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerEnd}
           onPointerCancel={handlePointerEnd}
-          onPointerLeave={(event) => {
-            if (drawingRef.current) {
-              handlePointerEnd(event);
-            }
-          }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchEnd}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={(event) => {
-            if (drawingRef.current) {
-              handleMouseUp(event);
-            }
-          }}
           className="block h-56 w-full cursor-crosshair select-none rounded-2xl border-2 border-dashed border-[#BDB5A5] bg-white shadow-inner"
           style={{
             touchAction: "none",
             WebkitUserSelect: "none",
             userSelect: "none",
             WebkitTouchCallout: "none",
+            overscrollBehavior: "contain",
           }}
         />
 
-        {!hasSignatureRef.current && (
+        {!hasVisibleSignature && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <span className="rounded-full bg-white/85 px-4 py-2 text-sm font-bold text-gray-400 shadow-sm">
+            <span className="rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-gray-400 shadow-sm">
               وقّع هنا بإصبعك
             </span>
           </div>
@@ -1057,7 +1004,7 @@ function SignaturePad({
       </div>
 
       <p className="mt-2 text-center text-xs text-gray-400">
-        مرّر إصبعك داخل الإطار، ولن تتحرك الصفحة أثناء التوقيع
+        يمكنك رفع إصبعك وإكمال التوقيع بعدة شخطات
       </p>
     </div>
   );
