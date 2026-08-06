@@ -129,27 +129,17 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               نظرتكم من فوق
             </h1>
 
-            <p className="mx-auto mb-8 max-w-xl text-base leading-8 text-[#59655F] md:text-lg lg:mr-0">
-              نوفر أحدث منتجات DJI والدرونات والكاميرات الاحترافية في سلطنة
-              عمان بجودة عالية وأسعار منافسة.
-            </p>
-
             <div className="mx-auto max-w-2xl lg:mr-0">
               <div className="mb-4 text-right">
-                <div className="mb-2 flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white shadow-lg">
                     <Bot className="h-5 w-5" />
                   </span>
 
-                  <h2 className="text-xl font-black text-[#0F3A2B] md:text-2xl">
-                    محتار أي درون أو منتج يناسبك؟
+                  <h2 className="text-2xl font-black text-[#0F3A2B] md:text-3xl">
+                    اسأل زليخة
                   </h2>
                 </div>
-
-                <p className="pr-14 text-sm leading-7 text-[#68736D] md:text-base">
-                  اكتب سؤالك لزليخة، وبتساعدك تختار الأنسب حسب استخدامك
-                  وميزانيتك.
-                </p>
               </div>
 
               <form
