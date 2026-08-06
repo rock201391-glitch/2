@@ -779,7 +779,6 @@ function SignaturePad({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const hasSignatureRef = useRef(false);
-  const activePointerIdRef = useRef<number | null>(null);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const [hasVisibleSignature, setHasVisibleSignature] = useState(false);
 
@@ -787,7 +786,7 @@ function SignaturePad({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const frame = window.requestAnimationFrame(() => {
+    const setupCanvas = () => {
       const rect = canvas.getBoundingClientRect();
 
       if (rect.width === 0 || rect.height === 0) return;
@@ -805,185 +804,181 @@ function SignaturePad({
       context.fillRect(0, 0, rect.width, rect.height);
 
       context.strokeStyle = "#0F3A2B";
-      context.lineWidth = window.innerWidth < 640 ? 3.8 : 3.2;
+      context.lineWidth = window.innerWidth < 640 ? 4 : 3.2;
       context.lineCap = "round";
       context.lineJoin = "round";
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  function getPoint(clientX: number, clientY: number) {
-    const canvas = canvasRef.current;
-
-    if (!canvas) {
-      return { x: 0, y: 0 };
-    }
-
-    const rect = canvas.getBoundingClientRect();
-
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
     };
-  }
 
-  function beginStroke(
-    clientX: number,
-    clientY: number,
-    pointerId?: number,
-  ) {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
+    const getPoint = (clientX: number, clientY: number) => {
+      const rect = canvas.getBoundingClientRect();
 
-    if (!canvas || !context) return;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+      };
+    };
 
-    drawingRef.current = true;
-    activePointerIdRef.current = pointerId ?? null;
+    const beginStroke = (clientX: number, clientY: number) => {
+      const context = canvas.getContext("2d");
+      if (!context) return;
 
-    const point = getPoint(clientX, clientY);
-    lastPointRef.current = point;
+      drawingRef.current = true;
 
-    context.beginPath();
-    context.moveTo(point.x, point.y);
-    context.lineTo(point.x + 0.01, point.y + 0.01);
-    context.stroke();
-
-    hasSignatureRef.current = true;
-    setHasVisibleSignature(true);
-  }
-
-  function continueStroke(clientX: number, clientY: number) {
-    if (!drawingRef.current) return;
-
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-
-    if (!canvas || !context) return;
-
-    const point = getPoint(clientX, clientY);
-    const previous = lastPointRef.current;
-
-    if (!previous) {
+      const point = getPoint(clientX, clientY);
       lastPointRef.current = point;
-      return;
-    }
 
-    const middleX = (previous.x + point.x) / 2;
-    const middleY = (previous.y + point.y) / 2;
+      context.beginPath();
+      context.moveTo(point.x, point.y);
+      context.lineTo(point.x + 0.01, point.y + 0.01);
+      context.stroke();
 
-    context.quadraticCurveTo(
-      previous.x,
-      previous.y,
-      middleX,
-      middleY,
-    );
-    context.stroke();
+      hasSignatureRef.current = true;
+      setHasVisibleSignature(true);
+    };
 
-    lastPointRef.current = point;
-    hasSignatureRef.current = true;
-  }
+    const continueStroke = (clientX: number, clientY: number) => {
+      if (!drawingRef.current) return;
 
-  function finishStroke() {
-    if (!drawingRef.current) return;
+      const context = canvas.getContext("2d");
+      if (!context) return;
 
-    drawingRef.current = false;
-    activePointerIdRef.current = null;
-    lastPointRef.current = null;
+      const point = getPoint(clientX, clientY);
+      const previousPoint = lastPointRef.current;
 
-    const canvas = canvasRef.current;
+      if (!previousPoint) {
+        lastPointRef.current = point;
+        return;
+      }
 
-    if (!canvas || !hasSignatureRef.current) {
-      onChange(null);
-      return;
-    }
+      const middleX = (previousPoint.x + point.x) / 2;
+      const middleY = (previousPoint.y + point.y) / 2;
+
+      context.quadraticCurveTo(
+        previousPoint.x,
+        previousPoint.y,
+        middleX,
+        middleY,
+      );
+      context.stroke();
+
+      lastPointRef.current = point;
+      hasSignatureRef.current = true;
+    };
+
+    const saveCurrentSignature = () => {
+      if (!hasSignatureRef.current) {
+        onChange(null);
+        return;
+      }
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) onChange(blob);
+        },
+        "image/png",
+        1,
+      );
+    };
+
+    const finishStroke = () => {
+      if (!drawingRef.current) return;
+
+      drawingRef.current = false;
+      lastPointRef.current = null;
+
+      /*
+        لا يتم تنظيف اللوحة هنا.
+        كل مرة يرفع العميل إصبعه تُحفظ النسخة الحالية فقط،
+        ثم يستطيع بدء شخطة جديدة فوق نفس التوقيع.
+      */
+      saveCurrentSignature();
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const touch = event.touches[0];
+      if (!touch) return;
+
+      beginStroke(touch.clientX, touch.clientY);
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!drawingRef.current) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const touch = event.touches[0];
+      if (!touch) return;
+
+      continueStroke(touch.clientX, touch.clientY);
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      finishStroke();
+    };
+
+    const handleMouseDown = (event: MouseEvent) => {
+      event.preventDefault();
+      beginStroke(event.clientX, event.clientY);
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!drawingRef.current) return;
+
+      event.preventDefault();
+      continueStroke(event.clientX, event.clientY);
+    };
+
+    const handleMouseUp = (event: MouseEvent) => {
+      event.preventDefault();
+      finishStroke();
+    };
+
+    setupCanvas();
 
     /*
-      نحفظ نسخة التوقيع بعد كل شخطة، لكننا لا نمسح الـ canvas.
-      لذلك يستطيع العميل رفع إصبعه ثم إكمال شخطة ثانية وثالثة.
+      نربط اللمس مباشرة على العنصر مع passive: false.
+      هذا أكثر ثباتًا في Safari على iPhone من الاعتماد على Pointer Events.
     */
-    canvas.toBlob(
-      (blob) => {
-        if (blob) onChange(blob);
-      },
-      "image/png",
-      1,
-    );
-  }
+    canvas.addEventListener("touchstart", handleTouchStart, {
+      passive: false,
+    });
+    canvas.addEventListener("touchmove", handleTouchMove, {
+      passive: false,
+    });
+    canvas.addEventListener("touchend", handleTouchEnd, {
+      passive: false,
+    });
+    canvas.addEventListener("touchcancel", handleTouchEnd, {
+      passive: false,
+    });
 
-  function handlePointerDown(
-    event: React.PointerEvent<HTMLCanvasElement>,
-  ) {
-    event.preventDefault();
-    event.stopPropagation();
+    canvas.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
 
-    const canvas = canvasRef.current;
+    return () => {
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+      canvas.removeEventListener("touchcancel", handleTouchEnd);
 
-    try {
-      canvas?.setPointerCapture(event.pointerId);
-    } catch {
-      // بعض المتصفحات لا تدعم Pointer Capture بالكامل.
-    }
-
-    beginStroke(
-      event.clientX,
-      event.clientY,
-      event.pointerId,
-    );
-  }
-
-  function handlePointerMove(
-    event: React.PointerEvent<HTMLCanvasElement>,
-  ) {
-    if (
-      !drawingRef.current ||
-      (activePointerIdRef.current !== null &&
-        activePointerIdRef.current !== event.pointerId)
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    continueStroke(event.clientX, event.clientY);
-  }
-
-  function handlePointerEnd(
-    event: React.PointerEvent<HTMLCanvasElement>,
-  ) {
-    if (
-      activePointerIdRef.current !== null &&
-      activePointerIdRef.current !== event.pointerId
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const canvas = canvasRef.current;
-
-    try {
-      if (canvas?.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId);
-      }
-    } catch {
-      // تجاهل الخطأ في المتصفحات القديمة.
-    }
-
-    finishStroke();
-  }
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [onChange]);
 
   return (
     <div>
       <div className="relative overflow-hidden rounded-2xl">
         <canvas
           ref={canvasRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerEnd}
-          onPointerCancel={handlePointerEnd}
           className="block h-56 w-full cursor-crosshair select-none rounded-2xl border-2 border-dashed border-[#BDB5A5] bg-white shadow-inner"
           style={{
             touchAction: "none",
@@ -1004,7 +999,7 @@ function SignaturePad({
       </div>
 
       <p className="mt-2 text-center text-xs text-gray-400">
-        يمكنك رفع إصبعك وإكمال التوقيع بعدة شخطات
+        يمكنك رفع إصبعك ثم إكمال التوقيع بعدد غير محدود من الشخطات
       </p>
     </div>
   );
