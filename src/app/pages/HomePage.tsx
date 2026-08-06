@@ -12,7 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { useAIChat } from "../../contexts/AIChatContext";
+import { useAIChat } from "../contexts/AIChatContext";
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
