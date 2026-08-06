@@ -29,6 +29,7 @@ import Footer from "./components/Footer";
 import AdminDashboard from "./pages/AdminDashboard";
 import MergabAI from "./components/ai/MergabAI";
 import { AIChatProvider } from "./contexts/AIChatContext";
+import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 
 const RENTAL_CHECKOUT_KEY = "mergab_rental_checkout";
 
@@ -73,6 +74,7 @@ function currentPageFromPath(pathname: string) {
 
 function ProductRoute() {
   const { productId } = useParams();
+  const { t, direction } = useLanguage();
   const navigate = useNavigate();
   const { products, loading } = useProducts();
 
@@ -82,15 +84,15 @@ function ProductRoute() {
   );
 
   if (loading) {
-    return <div className="min-h-[60vh] flex items-center justify-center font-bold text-[#0F3A2B]">جاري تحميل المنتج...</div>;
+    return <div className="min-h-[60vh] flex items-center justify-center font-bold text-[#0F3A2B]">{t("جاري تحميل المنتج...", "Loading product...")}</div>;
   }
 
   if (!product) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4" dir="rtl">
+      <div className="min-h-[60vh] flex items-center justify-center px-4" dir={direction}>
         <div className="max-w-md w-full rounded-3xl bg-white border p-8 text-center">
-          <h1 className="text-2xl font-black text-[#0F3A2B]">المنتج غير موجود</h1>
-          <button onClick={() => navigate("/shop")} className="mt-6 rounded-full bg-[#0F3A2B] px-8 py-3 font-bold text-white">العودة للمتجر</button>
+          <h1 className="text-2xl font-black text-[#0F3A2B]">{t("المنتج غير موجود", "Product not found")}</h1>
+          <button onClick={() => navigate("/shop")} className="mt-6 rounded-full bg-[#0F3A2B] px-8 py-3 font-bold text-white">{t("العودة للمتجر", "Back to shop")}</button>
         </div>
       </div>
     );
@@ -168,6 +170,7 @@ function RentalCheckoutRoute() {
 
 function AppContent() {
   const navigate = useNavigate();
+  const { direction, language, t } = useLanguage();
   const location = useLocation();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const isAdmin = location.pathname.startsWith("/admin");
@@ -213,7 +216,7 @@ function AppContent() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-[#F8F7F2] transition-colors duration-500 relative" dir="rtl" lang="ar">
+    <div className="min-h-screen bg-[#F8F7F2] transition-colors duration-500 relative" dir={direction} lang={language}>
       <style>{`
         @keyframes splashLogo { 0% { opacity: 0; transform: scale(.75); filter: blur(8px); } 55% { opacity: 1; transform: scale(1.06); filter: blur(0); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
         @keyframes splashGlow { 0% { opacity: 0; transform: scale(.7); } 60% { opacity: .35; transform: scale(1.15); } 100% { opacity: .18; transform: scale(1); } }
@@ -285,8 +288,9 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ProductsProvider>
-      <CartProvider>
+    <LanguageProvider>
+      <ProductsProvider>
+        <CartProvider>
         <ThemeSettingsProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
             <AIChatProvider>
@@ -294,7 +298,8 @@ export default function App() {
             </AIChatProvider>
           </ThemeProvider>
         </ThemeSettingsProvider>
-      </CartProvider>
-    </ProductsProvider>
+        </CartProvider>
+      </ProductsProvider>
+    </LanguageProvider>
   );
 }
