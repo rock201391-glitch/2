@@ -54,6 +54,23 @@ type AIAction =
       label: string;
       prompt: string;
       style?: "primary" | "secondary";
+    }
+  | {
+      type: "request_phone";
+      label: string;
+      purpose: "track_order";
+      style?: "primary" | "secondary";
+    }
+  | {
+      type: "open_product";
+      label: string;
+      path: string;
+      style?: "primary" | "secondary";
+    }
+  | {
+      type: "restart_flow";
+      label: string;
+      style?: "primary" | "secondary";
     };
 
 type Product = {
@@ -2030,6 +2047,40 @@ function compareProducts(first: Product, second: Product) {
   return lines.join("\n");
 }
 
+
+function flowBudget(message: string): BudgetRange | null {
+  const match = message.match(/__BUDGET_(\d+)_(\d+)__/);
+  if (!match) return null;
+  return { min: Number(match[1]), max: Number(match[2]) };
+}
+
+function flowDroneUse(message: string) {
+  if (message.includes("__DRONE_USE_TRAVEL__")) return "سفر خفيف صغير";
+  if (message.includes("__DRONE_USE_CARS__")) return "تصوير سيارات حركة تصوير";
+  if (message.includes("__DRONE_USE_REAL_ESTATE__")) return "تصوير عقارات تصوير ثابت احترافي";
+  if (message.includes("__DRONE_USE_CONTENT__")) return "محتوى سوشيال تصوير عمودي مبتدئ";
+  if (message.includes("__DRONE_USE_FPV__")) return "fpv حركة سرعة احترافي";
+  return "استخدام عام";
+}
+
+function budgetButtons(prefix: string): AIAction[] {
+  const ranges = [
+    ["100–200 ريال", "100_200"],
+    ["200–300 ريال", "200_300"],
+    ["300–400 ريال", "300_400"],
+    ["400–500 ريال", "400_500"],
+    ["500–700 ريال", "500_700"],
+    ["700–1000 ريال", "700_1000"],
+    ["1000–1500 ريال", "1000_1500"],
+  ] as const;
+  return ranges.map(([label, key]) => ({
+    type: "prompt" as const,
+    label,
+    prompt: `${prefix}__BUDGET_${key}__`,
+  }));
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -2118,6 +2169,350 @@ Deno.serve(async (req) => {
     const combinedContext = `${inferContextText(history)} ${message}`;
     const category = inferCategoryFromHistory(message, history);
     const budget = inferBudgetFromHistory(message, history);
+
+    // ═══════ نظام المسارات (Flows) ═══════
+    if (message === "__FLOW_DRONE__") {
+      return jsonResponse({
+        message: "هل هذه أول مرة تستخدم درون؟",
+        actions: [
+          { type: "prompt", label: "نعم، أول مرة", prompt: "__DRONE_BEGINNER_YES__", style: "primary" },
+          { type: "prompt", label: "لا، عندي خبرة", prompt: "__DRONE_BEGINNER_NO__" },
+        ],
+      });
+    }
+
+    if (message === "__DRONE_BEGINNER_YES__" || message === "__DRONE_BEGINNER_NO__") {
+      const beginner = message === "__DRONE_BEGINNER_YES__";
+      return jsonResponse({
+        message: beginner ? "تمام. ما الاستخدام الأساسي للدرون؟" : "ممتاز. ما الاستخدام الذي تبحث عنه؟",
+        actions: [
+          { type: "prompt", label: "سفر", prompt: `__DRONE_USE_TRAVEL__${beginner ? "_BEGINNER" : ""}` },
+          { type: "prompt", label: "تصوير سيارات", prompt: `__DRONE_USE_CARS__${beginner ? "_BEGINNER" : ""}` },
+          { type: "prompt", label: "عقارات", prompt: `__DRONE_USE_REAL_ESTATE__${beginner ? "_BEGINNER" : ""}` },
+          { type: "prompt", label: "محتوى سوشيال", prompt: `__DRONE_USE_CONTENT__${beginner ? "_BEGINNER" : ""}` },
+          { type: "prompt", label: "FPV وحركة", prompt: `__DRONE_USE_FPV__${beginner ? "_BEGINNER" : ""}` },
+          { type: "prompt", label: "استخدام عام", prompt: `__DRONE_USE_GENERAL__${beginner ? "_BEGINNER" : ""}` },
+        ],
+      });
+    }
+
+    if (message.startsWith("__DRONE_USE_") && !message.includes("__BUDGET_")) {
+      return jsonResponse({
+        message: "اختر ميزانيتك:",
+        actions: budgetButtons(message),
+      });
+    }
+
+    {
+      const selectedFlowBudget = flowBudget(message);
+      if (message.startsWith("__DRONE_USE_") && selectedFlowBudget) {
+        const useText = flowDroneUse(message);
+        const beginner = message.includes("_BEGINNER");
+        let candidates = recommendProducts(
+          products,
+          `${useText} ${beginner ? "مبتدئ سهل حساسات" : ""}`,
+          selectedFlowBudget,
+          "drone",
+        );
+        if (beginner) {
+          candidates = candidates.filter((product) => {
+            const knowledge = getCuratedKnowledge(product);
+            return (
+              (knowledge?.beginnerScore || 0) >= 7 &&
+              !includesAny(product.name, ["avata", "افاتا", "fpv"])
+            );
+          });
+        }
+        const selected = candidates.slice(0, 3);
+        if (!selected.length) {
+          return jsonResponse({
+            message: "ما حصلت درون متوفر ضمن هذه الميزانية. اختر ميزانية أعلى أو افتح المتجر.",
+            actions: [
+              { type: "navigate", label: "فتح المتجر", path: "/shop", style: "primary" },
+              { type: "restart_flow", label: "ابدأ من جديد" },
+            ],
+          });
+        }
+        return jsonResponse({
+          message:
+            `هذه أنسب الخيارات لك:\n\n` +
+            selected
+              .map(
+                (product, index) =>
+                  `${index + 1}. ${product.name}\n` +
+                  `السعر: ${formatPrice(product.price)}\n` +
+                  `${getCuratedKnowledge(product)?.summary || "منتج مناسب لاستخدامك"}`,
+              )
+              .join("\n\n"),
+          actions: [
+            ...productActions(selected),
+            { type: "restart_flow", label: "ابدأ من جديد" },
+          ],
+        });
+      }
+    }
+
+    if (message === "__FLOW_CAMERA__") {
+      return jsonResponse({
+        message: "أي نوع كاميرا تبحث عنه؟",
+        actions: [
+          { type: "prompt", label: "كاميرا أكشن", prompt: "__CAMERA_ACTION__" },
+          { type: "prompt", label: "كاميرا جيب", prompt: "__CAMERA_POCKET__" },
+          { type: "prompt", label: "كاميرا 360", prompt: "__CAMERA_360__" },
+          { type: "prompt", label: "لا أعرف", prompt: "__CAMERA_UNKNOWN__" },
+        ],
+      });
+    }
+
+    if (
+      message === "__CAMERA_ACTION__" ||
+      message === "__CAMERA_POCKET__" ||
+      message === "__CAMERA_360__" ||
+      message === "__CAMERA_UNKNOWN__"
+    ) {
+      return jsonResponse({
+        message: "اختر ميزانيتك للكاميرا:",
+        actions: budgetButtons(message),
+      });
+    }
+
+    {
+      const camBudget = flowBudget(message);
+      if (
+        (message.startsWith("__CAMERA_") || message.includes("__CAMERA_")) &&
+        camBudget
+      ) {
+        let query = "كاميرا تصوير محتوى";
+        if (message.includes("__CAMERA_ACTION__")) query = "اكشن action رياضة";
+        if (message.includes("__CAMERA_POCKET__")) query = "pocket جيب بوكيت";
+        if (message.includes("__CAMERA_360__")) query = "360 insta انستا";
+        const selected = recommendProducts(products, query, camBudget, "camera").slice(0, 3);
+        if (!selected.length) {
+          return jsonResponse({
+            message: "ما حصلت كاميرا ضمن هذه الميزانية.",
+            actions: [
+              { type: "navigate", label: "فتح المتجر", path: "/shop", style: "primary" },
+              { type: "restart_flow", label: "ابدأ من جديد" },
+            ],
+          });
+        }
+        return jsonResponse({
+          message:
+            `هذه أنسب الكاميرات:\n\n` +
+            selected
+              .map(
+                (p, i) =>
+                  `${i + 1}. ${p.name}\nالسعر: ${formatPrice(p.price)}\n${getCuratedKnowledge(p)?.summary || ""}`,
+              )
+              .join("\n\n"),
+          actions: [...productActions(selected), { type: "restart_flow", label: "ابدأ من جديد" }],
+        });
+      }
+    }
+
+    if (message === "__FLOW_MICROPHONE__") {
+      return jsonResponse({
+        message: "ما استخدام المايك؟",
+        actions: [
+          { type: "prompt", label: "فلوغات", prompt: "__MIC_USE_VLOG__" },
+          { type: "prompt", label: "مقابلات", prompt: "__MIC_USE_INTERVIEW__" },
+          { type: "prompt", label: "ألعاب وكمبيوتر", prompt: "__MIC_USE_GAMING__" },
+          { type: "prompt", label: "استخدام عام", prompt: "__MIC_USE_GENERAL__" },
+        ],
+      });
+    }
+
+    if (message.startsWith("__MIC_USE_") && !message.includes("__BUDGET_")) {
+      return jsonResponse({
+        message: "اختر ميزانيتك للمايك:",
+        actions: budgetButtons(message),
+      });
+    }
+
+    {
+      const micBudget = flowBudget(message);
+      if (message.startsWith("__MIC_USE_") && micBudget) {
+        const selected = recommendProducts(
+          products,
+          "مايك ميكروفون تسجيل",
+          micBudget,
+          "microphone",
+        ).slice(0, 3);
+        if (!selected.length) {
+          return jsonResponse({
+            message: "ما حصلت مايك ضمن هذه الميزانية.",
+            actions: [
+              { type: "navigate", label: "فتح المتجر", path: "/shop", style: "primary" },
+              { type: "restart_flow", label: "ابدأ من جديد" },
+            ],
+          });
+        }
+        return jsonResponse({
+          message:
+            `هذه أنسب المايكات:\n\n` +
+            selected
+              .map(
+                (p, i) =>
+                  `${i + 1}. ${p.name}\nالسعر: ${formatPrice(p.price)}\n${getCuratedKnowledge(p)?.summary || ""}`,
+              )
+              .join("\n\n"),
+          actions: [...productActions(selected), { type: "restart_flow", label: "ابدأ من جديد" }],
+        });
+      }
+    }
+
+    if (message === "__FLOW_ACCESSORIES__") {
+      return jsonResponse({
+        message: "لأي جهاز تريد الإكسسوار؟",
+        actions: [
+          { type: "prompt", label: "Mini 4 Pro", prompt: "__ACCESSORY_DEVICE_MINI_4__" },
+          { type: "prompt", label: "Mini 5 Pro", prompt: "__ACCESSORY_DEVICE_MINI_5__" },
+          { type: "prompt", label: "Neo 2", prompt: "__ACCESSORY_DEVICE_NEO_2__" },
+          { type: "prompt", label: "Air 3 / Air 3S", prompt: "__ACCESSORY_DEVICE_AIR_3__" },
+          { type: "prompt", label: "Mavic 4", prompt: "__ACCESSORY_DEVICE_MAVIC_4__" },
+          { type: "prompt", label: "Avata 2", prompt: "__ACCESSORY_DEVICE_AVATA_2__" },
+          { type: "prompt", label: "Osmo Pocket", prompt: "__ACCESSORY_DEVICE_POCKET__" },
+          { type: "prompt", label: "Osmo Action", prompt: "__ACCESSORY_DEVICE_ACTION__" },
+        ],
+      });
+    }
+
+    if (message.startsWith("__ACCESSORY_DEVICE_") && !message.includes("__TYPE_")) {
+      return jsonResponse({
+        message: "ما نوع الإكسسوار الذي تبحث عنه؟",
+        actions: [
+          { type: "prompt", label: "بطارية", prompt: `${message}__TYPE_BATTERY__` },
+          { type: "prompt", label: "فلاتر", prompt: `${message}__TYPE_FILTERS__` },
+          { type: "prompt", label: "مراوح", prompt: `${message}__TYPE_PROPELLERS__` },
+          { type: "prompt", label: "شنطة", prompt: `${message}__TYPE_BAG__` },
+          { type: "prompt", label: "ريموت", prompt: `${message}__TYPE_REMOTE__` },
+          { type: "prompt", label: "ذاكرة", prompt: `${message}__TYPE_MEMORY__` },
+          { type: "prompt", label: "كل الملحقات", prompt: `${message}__TYPE_ALL__` },
+        ],
+      });
+    }
+
+    if (message.startsWith("__ACCESSORY_DEVICE_") && message.includes("__TYPE_")) {
+      let device = "";
+      if (message.includes("MINI_4")) device = "mini 4";
+      else if (message.includes("MINI_5")) device = "mini 5";
+      else if (message.includes("NEO_2")) device = "neo 2";
+      else if (message.includes("AIR_3")) device = "air 3";
+      else if (message.includes("MAVIC_4")) device = "mavic 4";
+      else if (message.includes("AVATA_2")) device = "avata 2";
+      else if (message.includes("POCKET")) device = "pocket";
+      else if (message.includes("ACTION")) device = "action";
+
+      let typeQuery = "ملحق";
+      if (message.includes("__TYPE_BATTERY__")) typeQuery = "بطارية";
+      else if (message.includes("__TYPE_FILTERS__")) typeQuery = "فلتر فلاتر";
+      else if (message.includes("__TYPE_PROPELLERS__")) typeQuery = "مراوح";
+      else if (message.includes("__TYPE_BAG__")) typeQuery = "شنطة";
+      else if (message.includes("__TYPE_REMOTE__")) typeQuery = "ريموت";
+      else if (message.includes("__TYPE_MEMORY__")) typeQuery = "ذاكرة مومري";
+      else typeQuery = "ملحق فلاتر بطارية مراوح شنطة";
+
+      const query = `${device} ${typeQuery}`;
+      const candidates = findProductCandidates(products, query, "accessory")
+        .filter((c) => isAccessory(c.product) || c.product)
+        .slice(0, 5)
+        .map((c) => c.product);
+
+      if (!candidates.length) {
+        return jsonResponse({
+          message: "ما حصلت ملحقات مطابقة. تقدر تتصفح المتجر.",
+          actions: [
+            { type: "navigate", label: "فتح المتجر", path: "/shop", style: "primary" },
+            { type: "restart_flow", label: "ابدأ من جديد" },
+          ],
+        });
+      }
+      return jsonResponse({
+        message:
+          `هذه الملحقات المناسبة:\n\n` +
+          candidates
+            .map((p, i) => `${i + 1}. ${p.name} — ${formatPrice(p.price)}`)
+            .join("\n"),
+        actions: [...productActions(candidates), { type: "restart_flow", label: "ابدأ من جديد" }],
+      });
+    }
+
+    if (message === "__FLOW_RENTAL__") {
+      return jsonResponse({
+        message: "ما نوع الاستخدام؟",
+        actions: [
+          { type: "prompt", label: "تصوير عادي", prompt: "__RENTAL_NORMAL__" },
+          { type: "prompt", label: "تصوير احترافي", prompt: "__RENTAL_PRO__" },
+          { type: "prompt", label: "FPV وحركة", prompt: "__RENTAL_FPV__" },
+          { type: "navigate", label: "فتح جميع درونات الإيجار", path: "/rentals", style: "primary" },
+        ],
+      });
+    }
+
+    if (
+      message === "__RENTAL_NORMAL__" ||
+      message === "__RENTAL_PRO__" ||
+      message === "__RENTAL_FPV__"
+    ) {
+      if (!rentals.length) {
+        return jsonResponse({
+          message: "حاليًا ما فيه درونات إيجار مفعلة.",
+          actions: [{ type: "navigate", label: "صفحة التأجير", path: "/rentals", style: "primary" }],
+        });
+      }
+      const list = rentals
+        .slice(0, 6)
+        .map(
+          (d) =>
+            `${d.name}: ${formatPrice(d.daily_price)} لليوم` +
+            (d.deposit_amount ? ` (تأمين ${formatPrice(d.deposit_amount)})` : ""),
+        )
+        .join("\n");
+      return jsonResponse({
+        message: `درونات التأجير المتاحة:\n\n${list}`,
+        actions: [
+          { type: "navigate", label: "فتح صفحة التأجير", path: "/rentals", style: "primary" },
+          { type: "restart_flow", label: "القائمة الرئيسية" },
+        ],
+      });
+    }
+
+    if (message === "__FLOW_WORKSHOP__") {
+      return jsonResponse({
+        message: "اختر نوع المشكلة:",
+        actions: [
+          { type: "prompt", label: "الجيمبال", prompt: "__WORKSHOP_GIMBAL__" },
+          { type: "prompt", label: "المراوح أو الذراع", prompt: "__WORKSHOP_ARM__" },
+          { type: "prompt", label: "لا يقلع", prompt: "__WORKSHOP_TAKEOFF__" },
+          { type: "prompt", label: "سقط أو اصطدم", prompt: "__WORKSHOP_CRASH__" },
+          { type: "prompt", label: "مشكلة أخرى", prompt: "__WORKSHOP_OTHER__" },
+        ],
+      });
+    }
+
+    if (message.startsWith("__WORKSHOP_")) {
+      return jsonResponse({
+        message:
+          "افتح صفحة الورشة وأرسل نوع الدرون وصورة المشكلة، وسيتواصل معك الفريق.",
+        actions: [
+          { type: "navigate", label: "فتح الورشة", path: "/workshop", style: "primary" },
+          { type: "restart_flow", label: "القائمة الرئيسية" },
+        ],
+      });
+    }
+
+    if (message === "__FLOW_AUCTIONS__") {
+      return jsonResponse({
+        message:
+          "تقدر تشوف المزادات الحالية وأعلى مزايدة والوقت المتبقي من صفحة المزادات.",
+        actions: [
+          { type: "navigate", label: "فتح المزادات", path: "/auctions", style: "primary" },
+          { type: "restart_flow", label: "القائمة الرئيسية" },
+        ],
+      });
+    }
+
+    // ═══════ نهاية المسارات ═══════
 
     /**
      * 1) التحية
