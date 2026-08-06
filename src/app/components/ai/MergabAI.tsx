@@ -182,7 +182,7 @@ export default function MergabAI() {
       <button
         type="button"
         onClick={toggleChat}
-        aria-label={t("فتح زليخة", "Open Zulekha")}
+        aria-label={t("فتح نور", "Open Nour")}
         className={`group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] ${isArabic ? "right-4 sm:right-7" : "left-4 sm:left-7"} z-[9990] flex h-[60px] w-[60px] items-center justify-center rounded-[22px] border border-white/15 bg-gradient-to-br from-[#1B5843] via-[#0F3A2B] to-[#061F17] text-white shadow-[0_18px_50px_rgba(15,58,43,.40)] transition duration-300 hover:-translate-y-1 hover:scale-[1.04] active:scale-95 sm:bottom-7 sm:h-[70px] sm:w-[70px] sm:rounded-[25px]`}
       >
         {!isOpen && (
@@ -214,7 +214,7 @@ export default function MergabAI() {
       {isOpen && (
         <section
           dir={direction}
-          aria-label={t("زليخة", "Zulekha")}
+          aria-label={t("نور", "Nour")}
           className={`
             fixed
             bottom-[calc(5.5rem+env(safe-area-inset-bottom))]
@@ -233,7 +233,7 @@ export default function MergabAI() {
             bg-[#F7F9F7]
             shadow-[0_28px_90px_rgba(15,58,43,.28)]
             sm:bottom-28
-                        sm:h-[min(760px,calc(100dvh-7rem))]
+            sm:h-[min(760px,calc(100dvh-7rem))]
             sm:max-h-none
             sm:w-[calc(100vw-1.5rem)]
             sm:max-w-[440px]
@@ -250,7 +250,9 @@ export default function MergabAI() {
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h2 className="truncate text-base font-black">{t("زليخة", "Zulekha")}</h2>
+                  <h2 className="truncate text-base font-black">
+                    نور
+                  </h2>
 
                   <span className="flex items-center gap-1 rounded-full bg-[#2F8B6B]/20 px-2 py-1 text-[10px] font-bold text-[#8FE0BE]">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#65D6A6]" />
@@ -259,7 +261,7 @@ export default function MergabAI() {
                 </div>
 
                 <p className="mt-0.5 truncate text-[11px] text-white/65 sm:text-xs">
-                  {t("مساعدتك الذكية في متجر مرقاب", "Your smart assistant at Mergab Store")}
+                  مستشارة مرقاب الذكية
                 </p>
               </div>
             </div>
@@ -317,7 +319,7 @@ export default function MergabAI() {
                           : "justify-end text-[#39745D]"
                       }`}
                     >
-                      {isUser ? t("أنت", "You") : t("زليخة", "Zulekha")}
+                      {isUser ? "أنت" : "نور"}
                     </div>
 
                     <div
@@ -341,24 +343,24 @@ export default function MergabAI() {
                         {message.actions
                           .filter((action) => action.type !== "auto_open_product")
                           .map((action, index) => (
-                          <button
-                            key={`${message.id}-${index}`}
-                            type="button"
-                            onClick={() => runAction(action)}
-                            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold transition hover:-translate-y-0.5 ${
-                              action.style === "primary"
-                                ? "border-[#0F3A2B] bg-[#0F3A2B] text-white shadow-[0_8px_20px_rgba(15,58,43,.16)]"
-                                : "border-[#D7DED9] bg-white text-[#0F3A2B] hover:border-[#4E9478]"
-                            }`}
-                          >
-                            {(action.type === "navigate" ||
-                              action.type === "open_product" ||
-                              action.type === "auto_open_product") && (
-                              <Navigation className="h-3.5 w-3.5 opacity-70" />
-                            )}
-                            {action.label}
-                          </button>
-                        ))}
+                            <button
+                              key={`${message.id}-${index}`}
+                              type="button"
+                              onClick={() => runAction(action)}
+                              className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold transition hover:-translate-y-0.5 ${
+                                action.style === "primary"
+                                  ? "border-[#0F3A2B] bg-[#0F3A2B] text-white shadow-[0_8px_20px_rgba(15,58,43,.16)]"
+                                  : "border-[#D7DED9] bg-white text-[#0F3A2B] hover:border-[#4E9478]"
+                              }`}
+                            >
+                              {(action.type === "navigate" ||
+                                action.type === "open_product" ||
+                                action.type === "auto_open_product") && (
+                                <Navigation className="h-3.5 w-3.5 opacity-70" />
+                              )}
+                              {action.label}
+                            </button>
+                          ))}
                       </div>
                     )}
                   </div>
@@ -381,7 +383,7 @@ export default function MergabAI() {
                       <span className="h-2 w-2 animate-bounce rounded-full bg-[#1F7A58] [animation-delay:-.15s]" />
                       <span className="h-2 w-2 animate-bounce rounded-full bg-[#1F7A58]" />
                     </span>
-                    {t("زليخة تفكر...", "Zulekha is thinking...")}
+                    نور تفكر...
                   </div>
                 </div>
 
