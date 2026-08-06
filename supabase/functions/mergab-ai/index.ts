@@ -1031,8 +1031,7 @@ function formatProductDetails(product: Product) {
     );
   }
 
-  return lines.join("
-");
+  return lines.join("\n");
 }
 
 function formatRecommendationReason(
