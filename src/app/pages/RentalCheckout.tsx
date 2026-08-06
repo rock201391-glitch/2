@@ -763,64 +763,103 @@ function SignaturePad({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const hasSignatureRef = useRef(false);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+
+  function prepareCanvas(preserve = false) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+
+    if (rect.width === 0 || rect.height === 0) return;
+
+    const previousImage =
+      preserve && hasSignatureRef.current
+        ? canvas.toDataURL("image/png")
+        : null;
+
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+
+    canvas.width = Math.round(rect.width * ratio);
+    canvas.height = Math.round(rect.height * ratio);
+
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.fillStyle = "#FFFFFF";
+    context.fillRect(0, 0, rect.width, rect.height);
+
+    context.strokeStyle = "#0F3A2B";
+    context.lineWidth = window.innerWidth < 640 ? 3.5 : 3;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+
+    if (previousImage) {
+      const image = new Image();
+
+      image.onload = () => {
+        context.drawImage(image, 0, 0, rect.width, rect.height);
+      };
+
+      image.src = previousImage;
+    }
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    prepareCanvas(false);
 
-      canvas.width = Math.floor(rect.width * ratio);
-      canvas.height = Math.floor(rect.height * ratio);
+    const resizeObserver = new ResizeObserver(() => {
+      prepareCanvas(true);
+    });
 
-      const context = canvas.getContext("2d");
-      if (!context) return;
+    resizeObserver.observe(canvas);
 
-      context.scale(ratio, ratio);
-      context.lineWidth = 2.5;
-      context.lineCap = "round";
-      context.lineJoin = "round";
-      context.strokeStyle = "#0F3A2B";
-      context.fillStyle = "#FFFFFF";
-      context.fillRect(0, 0, rect.width, rect.height);
+    return () => {
+      resizeObserver.disconnect();
     };
-
-    resize();
   }, []);
 
-  function pointFromEvent(
-    event: React.PointerEvent<HTMLCanvasElement>,
-  ) {
+  function getPointFromClient(clientX: number, clientY: number) {
     const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
+
+    if (!canvas) {
+      return { x: 0, y: 0 };
+    }
 
     const rect = canvas.getBoundingClientRect();
 
     return {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: clientX - rect.left,
+      y: clientY - rect.top,
     };
   }
 
-  function startDrawing(
-    event: React.PointerEvent<HTMLCanvasElement>,
-  ) {
+  function beginStroke(clientX: number, clientY: number) {
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
 
     if (!canvas || !context) return;
 
-    canvas.setPointerCapture(event.pointerId);
     drawingRef.current = true;
 
-    const point = pointFromEvent(event);
+    const point = getPointFromClient(clientX, clientY);
+    lastPointRef.current = point;
+
     context.beginPath();
     context.moveTo(point.x, point.y);
+
+    // ترسم نقطة حتى لو ضغط الزبون ضغطة خفيفة فقط.
+    context.lineTo(point.x + 0.01, point.y + 0.01);
+    context.stroke();
+
+    hasSignatureRef.current = true;
   }
 
-  function draw(event: React.PointerEvent<HTMLCanvasElement>) {
+  function continueStroke(clientX: number, clientY: number) {
     if (!drawingRef.current) return;
 
     const canvas = canvasRef.current;
@@ -828,44 +867,197 @@ function SignaturePad({
 
     if (!canvas || !context) return;
 
-    const point = pointFromEvent(event);
-    context.lineTo(point.x, point.y);
+    const point = getPointFromClient(clientX, clientY);
+    const lastPoint = lastPointRef.current;
+
+    if (!lastPoint) {
+      lastPointRef.current = point;
+      return;
+    }
+
+    const middleX = (lastPoint.x + point.x) / 2;
+    const middleY = (lastPoint.y + point.y) / 2;
+
+    context.quadraticCurveTo(
+      lastPoint.x,
+      lastPoint.y,
+      middleX,
+      middleY,
+    );
     context.stroke();
+
+    lastPointRef.current = point;
     hasSignatureRef.current = true;
   }
 
-  function stopDrawing(
-    event: React.PointerEvent<HTMLCanvasElement>,
-  ) {
+  function saveSignature() {
     const canvas = canvasRef.current;
 
     drawingRef.current = false;
-
-    if (canvas?.hasPointerCapture(event.pointerId)) {
-      canvas.releasePointerCapture(event.pointerId);
-    }
+    lastPointRef.current = null;
 
     if (!canvas || !hasSignatureRef.current) {
       onChange(null);
       return;
     }
 
-    canvas.toBlob((blob) => onChange(blob), "image/png");
+    canvas.toBlob(
+      (blob) => {
+        onChange(blob);
+      },
+      "image/png",
+      1,
+    );
+  }
+
+  function handlePointerDown(
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) {
+    event.preventDefault();
+
+    const canvas = canvasRef.current;
+
+    try {
+      canvas?.setPointerCapture(event.pointerId);
+    } catch {
+      // بعض متصفحات الجوال لا تدعم Pointer Capture بشكل كامل.
+    }
+
+    beginStroke(event.clientX, event.clientY);
+  }
+
+  function handlePointerMove(
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) {
+    if (!drawingRef.current) return;
+
+    event.preventDefault();
+    continueStroke(event.clientX, event.clientY);
+  }
+
+  function handlePointerEnd(
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) {
+    event.preventDefault();
+
+    const canvas = canvasRef.current;
+
+    try {
+      if (canvas?.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    } catch {
+      // تجاهل الخطأ في المتصفحات القديمة.
+    }
+
+    saveSignature();
+  }
+
+  function handleTouchStart(
+    event: React.TouchEvent<HTMLCanvasElement>,
+  ) {
+    event.preventDefault();
+
+    const touch = event.touches[0];
+
+    if (!touch) return;
+
+    beginStroke(touch.clientX, touch.clientY);
+  }
+
+  function handleTouchMove(
+    event: React.TouchEvent<HTMLCanvasElement>,
+  ) {
+    event.preventDefault();
+
+    const touch = event.touches[0];
+
+    if (!touch) return;
+
+    continueStroke(touch.clientX, touch.clientY);
+  }
+
+  function handleTouchEnd(
+    event: React.TouchEvent<HTMLCanvasElement>,
+  ) {
+    event.preventDefault();
+    saveSignature();
+  }
+
+  function handleMouseDown(
+    event: React.MouseEvent<HTMLCanvasElement>,
+  ) {
+    // Pointer Events تتولى الماوس في المتصفحات الحديثة.
+    if ("PointerEvent" in window) return;
+
+    event.preventDefault();
+    beginStroke(event.clientX, event.clientY);
+  }
+
+  function handleMouseMove(
+    event: React.MouseEvent<HTMLCanvasElement>,
+  ) {
+    if ("PointerEvent" in window || !drawingRef.current) return;
+
+    event.preventDefault();
+    continueStroke(event.clientX, event.clientY);
+  }
+
+  function handleMouseUp(
+    event: React.MouseEvent<HTMLCanvasElement>,
+  ) {
+    if ("PointerEvent" in window) return;
+
+    event.preventDefault();
+    saveSignature();
   }
 
   return (
     <div>
-      <canvas
-        ref={canvasRef}
-        onPointerDown={startDrawing}
-        onPointerMove={draw}
-        onPointerUp={stopDrawing}
-        onPointerCancel={stopDrawing}
-        className="h-56 w-full touch-none rounded-2xl border-2 border-dashed border-[#BDB5A5] bg-white shadow-inner"
-      />
+      <div className="relative overflow-hidden rounded-2xl">
+        <canvas
+          ref={canvasRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          onPointerLeave={(event) => {
+            if (drawingRef.current) {
+              handlePointerEnd(event);
+            }
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={(event) => {
+            if (drawingRef.current) {
+              handleMouseUp(event);
+            }
+          }}
+          className="block h-56 w-full cursor-crosshair select-none rounded-2xl border-2 border-dashed border-[#BDB5A5] bg-white shadow-inner"
+          style={{
+            touchAction: "none",
+            WebkitUserSelect: "none",
+            userSelect: "none",
+            WebkitTouchCallout: "none",
+          }}
+        />
+
+        {!hasSignatureRef.current && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span className="rounded-full bg-white/85 px-4 py-2 text-sm font-bold text-gray-400 shadow-sm">
+              وقّع هنا بإصبعك
+            </span>
+          </div>
+        )}
+      </div>
 
       <p className="mt-2 text-center text-xs text-gray-400">
-        التوقيع داخل الإطار أعلاه
+        مرّر إصبعك داخل الإطار، ولن تتحرك الصفحة أثناء التوقيع
       </p>
     </div>
   );
