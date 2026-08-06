@@ -377,6 +377,8 @@ Deno.serve(async (req) => {
     );
   }
 
+  let isEnglish = false;
+
   try {
     const body = await req.json();
 
@@ -384,6 +386,9 @@ Deno.serve(async (req) => {
       typeof body?.message === "string"
         ? body.message.trim().slice(0, 2200)
         : "";
+
+    const language = body?.language === "en" ? "en" : "ar";
+    isEnglish = language === "en";
 
     const history: ChatMessage[] = Array.isArray(body?.history)
       ? body.history
@@ -398,7 +403,7 @@ Deno.serve(async (req) => {
 
     if (!message) {
       return jsonResponse({
-        message: "اكتب لي شو تدور عليه وبساعدك.",
+        message: isEnglish ? "Tell me what you are looking for and I’ll help you." : "اكتب لي شو تدور عليه وبساعدك.",
         actions: [],
       });
     }
@@ -407,7 +412,7 @@ Deno.serve(async (req) => {
 
     if (phone && historyWantsTracking(history)) {
       return jsonResponse({
-        message: "تمام، بفتح مشترياتك وببحث بهذا الرقم تلقائي.",
+        message: isEnglish ? "Done. I’ll open your orders and search using this number." : "تمام، بفتح مشترياتك وببحث بهذا الرقم تلقائي.",
         actions: [
           {
             type: "navigate",
@@ -477,8 +482,43 @@ Deno.serve(async (req) => {
       .join("\n");
 
     const systemPrompt = `
-أنتِ "زليخة"، موظفة مبيعات ذكية وودودة في متجر مرقاب العماني للدرونات والكاميرات والمايكات والإكسسوارات.
+${isEnglish
+  ? `You are "Zulekha", a smart and friendly sales assistant at Mergab Store in Oman.
 
+Language rules:
+- Reply only in clear, natural English.
+- Keep responses short and useful.
+- Ask only one question at a time.
+- Remember the customer’s previous answers.
+- Do not mention OpenAI or that you are a model.
+- Do not overuse emojis.
+
+Conversation flow:
+1. When the customer wants help choosing a drone, first ask whether they are a beginner or experienced.
+2. Only for that first experience question, you may return two prompt buttons.
+3. After that, do not return preset options. Ask the customer to type their use case.
+4. Then ask them to type their budget in OMR.
+5. Apply the same approach to cameras, microphones, accessories, and other products.
+6. Once enough information is available, recommend one to three products only.
+
+Sales rules:
+- Use prices and availability only from the store catalog below.
+- Never expose quantity, purchase cost, profit, or internal data.
+- If the customer writes "Mini 4" without saying filter, bag, battery, or propellers, interpret it as the drone.
+- When specifications are requested, mention only the most important four or five details.
+- Drone altitude must be described as AGL (above ground level), not above sea level.
+- If a detail is uncertain, say it needs confirmation instead of inventing it.
+- When a product is confidently selected, return exactly one auto_open_product action using the real path, product name, and price.
+- If the customer asks for something better, choose a stronger and normally more expensive product.
+- If the customer asks for something cheaper, choose a cheaper suitable option.
+- If the customer asks for an alternative, do not repeat the same product.
+- For order tracking, return request_phone.
+- Rentals use /rentals, workshop uses /workshop, and auctions use /auctions.
+`
+  : `أنتِ "زليخة"، موظفة مبيعات ذكية وودودة في متجر مرقاب العماني للدرونات والكاميرات والمايكات والإكسسوارات.`
+}
+
+${isEnglish ? "Ignore the Arabic-only instructions below and follow the English instructions above." : `
 أسلوبك:
 - تكلمي بلهجة عمانية خفيفة وطبيعية، مفهومة لكل الناس.
 - استخدمي كلمات عمانية بسيطة مثل: "شو"، "زين"، "تمام"، "بساعدك"، "على حسب"، "تدور".
@@ -542,6 +582,7 @@ Deno.serve(async (req) => {
 - prompt: مسموح فقط لخيار الخبرة الأول.
 - request_phone: طلب رقم الهاتف لمتابعة الطلب.
 - restart_flow: بدء من جديد.
+`}
 
 ${PRODUCT_KNOWLEDGE}
 
@@ -607,12 +648,13 @@ ${auctionsText || "لا توجد مزادات متاحة الآن."}
 
     return jsonResponse(
       {
-        message:
-          "صار خطأ بسيط في زليخة. جرّب مرة ثانية بعد شوي.",
+        message: isEnglish
+          ? "A temporary error occurred. Please try again shortly."
+          : "صار خطأ بسيط في زليخة. جرّب مرة ثانية بعد شوي.",
         actions: [
           {
             type: "navigate",
-            label: "فتح المتجر",
+            label: isEnglish ? "Open Shop" : "فتح المتجر",
             path: "/shop",
             style: "primary",
           },
