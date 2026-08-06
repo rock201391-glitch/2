@@ -54,27 +54,8 @@ const WELCOME_MESSAGE: AIMessage = {
   id: "welcome",
   role: "assistant",
   createdAt: Date.now(),
-  text:
-    "هلا بك، أنا زليخة مساعدتك الذكية في مرقاب. اسأليني عن أي منتج، السعر، المواصفات، المقارنة، الطلبات، التأجير أو الورشة، وبساعدك تختار الشي المناسب لك.",
-  actions: [
-    {
-      type: "prompt",
-      label: "ساعديني أختار",
-      prompt:
-        "ساعديني أختار منتج مناسب من المتجر. اسأليني عن الميزانية والاستخدام ثم رشحي لي أفضل الخيارات المتوفرة.",
-      style: "primary",
-    },
-    {
-      type: "prompt",
-      label: "استفسار عن منتج",
-      prompt: "أريد أسأل عن سعر أو مواصفات منتج.",
-    },
-    {
-      type: "prompt",
-      label: "متابعة طلب",
-      prompt: "أريد أستفسر عن طلبي. اطلب مني رقم الهاتف.",
-    },
-  ],
+  text: "أهلًا، أنا زليخة، مساعدتك الذكية في مرقاب.",
+  actions: [],
 };
 
 const AIChatContext = createContext<AIChatContextValue | null>(null);
