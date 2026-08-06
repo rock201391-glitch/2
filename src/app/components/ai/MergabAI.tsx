@@ -20,33 +20,11 @@ import { useNavigate } from "react-router-dom";
 import { useAIChat, type AIAction } from "../../contexts/AIChatContext";
 
 const QUICK_PROMPTS = [
-  "أنا مبتدئ، أي درون يناسبني؟",
-  "أريد أفضل درون للتصوير",
-  "أريد درون للسفر وخفيف",
-  "ميزانيتي أقل من 200 ريال",
-  "ميزانيتي من 200 إلى 400 ريال",
-  "أريد أطول بطارية",
-  "أريد أفضل كاميرا",
-  "أريد درون سهل الاستخدام",
-  "قارن لي بين منتجين",
-  "كم سعر منتج معين؟",
-  "ما مواصفات منتج معين؟",
-  "هل المنتج متوفر؟",
-  "ما المنتجات الموجودة في المتجر؟",
-  "أريد ملحقات لدروني",
-  "أريد كاميرا أو مايك",
-  "أريد أستأجر درون",
-  "ما الدرونات المتاحة للإيجار؟",
-  "أريد أستفسر عن طلبي",
-  "أريد أستفسر عن حجز إيجار",
-  "أريد أستفسر عن طلب صيانة",
-  "كيف أرسل الدرون للورشة؟",
-  "ما طرق الدفع؟",
-  "ما مدة الشحن؟",
-  "هل يوجد دفع عند الاستلام؟",
-  "أريد أرخص خيار مناسب",
-  "أريد أقوى خيار متوفر",
-  "رشح لي هدية مناسبة",
+  "ساعديني أختار منتج مناسب",
+  "أريد منتج حسب ميزانيتي",
+  "أريد أسأل عن منتج",
+  "أريد مقارنة بين منتجين",
+  "أريد أتابع طلبي",
 ];
 
 export default function MergabAI() {
@@ -106,7 +84,7 @@ export default function MergabAI() {
       <button
         type="button"
         onClick={toggleChat}
-        aria-label="مساعد مرقاب الذكي"
+        aria-label="زليخة"
         className="fixed bottom-5 right-5 z-[9990] flex h-16 w-16 items-center justify-center rounded-full bg-[#0F3A2B] text-white shadow-[0_18px_45px_rgba(15,58,43,.35)] transition hover:scale-105 active:scale-95 sm:bottom-7 sm:right-7"
       >
         {isOpen ? (
@@ -140,10 +118,10 @@ export default function MergabAI() {
 
               <div className="min-w-0">
                 <h2 className="truncate text-base font-black">
-                  مساعد مرقاب الذكي
+                  زليخة
                 </h2>
                 <p className="truncate text-xs text-white/70">
-                  المنتجات، الأسعار، الطلبات والتأجير
+                  مساعدتك الذكية في متجر مرقاب
                 </p>
               </div>
             </div>
@@ -234,7 +212,7 @@ export default function MergabAI() {
             >
               <span className="flex items-center gap-2">
                 <MessageCircleMore className="h-4 w-4" />
-                أسئلة وخدمات سريعة
+                كيف أقدر أساعدك؟
               </span>
               <ChevronDown
                 className={`h-4 w-4 transition ${
@@ -282,7 +260,7 @@ export default function MergabAI() {
                   }
                 }}
                 rows={1}
-                placeholder="اسأل عن منتج، سعر، مواصفات أو طلب..."
+                placeholder="اكتب سؤالك هنا..."
                 className="max-h-28 min-h-12 flex-1 resize-none rounded-2xl border border-[#D8D1C3] bg-[#F8F7F2] px-4 py-3 text-sm font-medium text-[#0F3A2B] outline-none focus:border-[#0F3A2B]"
               />
 
@@ -296,8 +274,7 @@ export default function MergabAI() {
             </form>
 
             <p className="mt-2 text-center text-[10px] leading-4 text-gray-400">
-              الأسعار والتوفر تؤخذ من بيانات المتجر. تأكد من المتطلبات الرسمية
-              قبل تشغيل الدرون.
+              الأسعار والتوفر تؤخذ من بيانات متجر مرقاب.
             </p>
           </div>
         </section>
