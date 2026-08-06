@@ -137,7 +137,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             </h1>
 
             <div className="mx-auto max-w-2xl lg:mx-0">
-              <div className={`mb-4 ${isArabic ? "text-right" : "text-left"}`}>
+              <div className={`mb-3 ${isArabic ? "text-right" : "text-left"}`}>
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white shadow-lg">
                     <Bot className="h-5 w-5" />
@@ -149,6 +149,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 </div>
               </div>
 
+              <p className={`mb-3 text-sm font-medium text-[#6B746F] ${isArabic ? "text-right" : "text-left"}`}>
+                {t(
+                  "اكتب أي سؤال أو اذكر ميزانيتك، ونور بترشح لك أفضل منتج.",
+                  "Ask anything or tell Nour your budget, and she'll recommend the best product."
+                )}
+              </p>
+
               <form
                 onSubmit={submitAIQuestion}
                 className="flex min-h-[82px] items-center gap-3 rounded-[28px] border border-[#C9D4CC] bg-white p-3 shadow-[0_18px_45px_rgba(15,58,43,0.09)] transition focus-within:border-[#0F3A2B]/50"
@@ -158,8 +165,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   onChange={(event) => setAiQuestion(event.target.value)}
                   type="text"
                   placeholder={t(
-                    "اكتب سؤالك لنور...",
-                    "Type your question to Nour...",
+                    "اكتب سؤالك لنور... مثال: ميزانيتي ٣٠٠ ريال وأريد أفضل درون للتصوير",
+                    "Ask Nour... Example: My budget is 300 OMR and I want the best drone for filming",
                   )}
                   className="min-w-0 flex-1 bg-transparent px-4 text-[16px] font-medium text-[#0F3A2B] outline-none placeholder:text-[#9AA39E]"
                 />
