@@ -77,8 +77,18 @@ export default function MergabAI() {
     });
   }, [isOpen, isLoading, messages, phoneMode]);
 
+  function scrollMessagesToBottom() {
+    requestAnimationFrame(() => {
+      listRef.current?.scrollTo({
+        top: listRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    });
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
+
     const text = input.trim();
     if (!text || isLoading) return;
 
@@ -126,26 +136,23 @@ export default function MergabAI() {
 
   return (
     <>
-      {/* زر زليخة المتحرك */}
       <button
         type="button"
         onClick={toggleChat}
         aria-label="فتح زليخة"
-        className="group fixed bottom-5 right-5 z-[9990] flex h-[72px] w-[72px] items-center justify-center rounded-[25px] border border-white/15 bg-gradient-to-br from-[#1B5843] via-[#0F3A2B] to-[#061F17] text-white shadow-[0_22px_65px_rgba(15,58,43,.42)] transition duration-300 hover:-translate-y-1 hover:scale-[1.04] active:scale-95 sm:bottom-7 sm:right-7"
+        className="group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-[9990] flex h-[60px] w-[60px] items-center justify-center rounded-[22px] border border-white/15 bg-gradient-to-br from-[#1B5843] via-[#0F3A2B] to-[#061F17] text-white shadow-[0_18px_50px_rgba(15,58,43,.40)] transition duration-300 hover:-translate-y-1 hover:scale-[1.04] active:scale-95 sm:bottom-7 sm:right-7 sm:h-[70px] sm:w-[70px] sm:rounded-[25px]"
       >
-        {/* نبضات متحركة توضح أن هنا AI */}
         {!isOpen && (
           <>
-            <span className="pointer-events-none absolute inset-0 animate-ping rounded-[25px] border border-[#2F8B6B]/35 [animation-duration:2.4s]" />
-            <span className="pointer-events-none absolute -inset-2 animate-pulse rounded-[30px] bg-[#1F6B50]/10 blur-md [animation-duration:2s]" />
-            <span className="pointer-events-none absolute inset-[7px] rounded-[19px] bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,.18),transparent_48%)]" />
+            <span className="pointer-events-none absolute inset-0 animate-ping rounded-[22px] border border-[#2F8B6B]/35 [animation-duration:2.4s] sm:rounded-[25px]" />
+            <span className="pointer-events-none absolute -inset-2 animate-pulse rounded-[28px] bg-[#1F6B50]/10 blur-md [animation-duration:2s]" />
           </>
         )}
 
         {isOpen ? (
           <X className="relative h-7 w-7" />
         ) : (
-          <Bot className="relative h-8 w-8 transition duration-500 group-hover:rotate-6 group-hover:scale-110" />
+          <Bot className="relative h-7 w-7 transition duration-500 group-hover:rotate-6 group-hover:scale-110 sm:h-8 sm:w-8" />
         )}
 
         {!isOpen && (
@@ -159,28 +166,44 @@ export default function MergabAI() {
             {unreadCount}
           </span>
         )}
-
-        {!isOpen && (
-          <span className="pointer-events-none absolute -left-2 top-1/2 hidden -translate-x-full -translate-y-1/2 whitespace-nowrap rounded-xl bg-[#08271D] px-3 py-2 text-xs font-bold opacity-0 shadow-xl transition duration-200 group-hover:opacity-100 sm:block">
-            اسأل زليخة
-          </span>
-        )}
       </button>
 
       {isOpen && (
         <section
           dir="rtl"
           aria-label="زليخة"
-          className="fixed bottom-24 right-3 z-[9989] flex h-[min(780px,calc(100dvh-7rem))] w-[calc(100vw-1.5rem)] max-w-[440px] flex-col overflow-hidden rounded-[34px] border border-[#D8DED9] bg-[#F7F9F7] shadow-[0_36px_110px_rgba(15,58,43,.30)] sm:bottom-28 sm:right-7"
+          className="
+            fixed
+            bottom-[calc(5.5rem+env(safe-area-inset-bottom))]
+            right-2
+            z-[9989]
+            flex
+            h-[58dvh]
+            max-h-[560px]
+            w-[calc(100vw-1rem)]
+            max-w-[420px]
+            flex-col
+            overflow-hidden
+            rounded-[28px]
+            border
+            border-[#D8DED9]
+            bg-[#F7F9F7]
+            shadow-[0_28px_90px_rgba(15,58,43,.28)]
+            sm:bottom-28
+            sm:right-7
+            sm:h-[min(760px,calc(100dvh-7rem))]
+            sm:max-h-none
+            sm:w-[calc(100vw-1.5rem)]
+            sm:max-w-[440px]
+            sm:rounded-[34px]
+          "
         >
-          {/* الهيدر */}
-          <header className="relative flex flex-shrink-0 items-center justify-between overflow-hidden bg-gradient-to-l from-[#103D2F] to-[#06261C] px-5 py-4 text-white">
+          <header className="relative flex flex-shrink-0 items-center justify-between overflow-hidden bg-gradient-to-l from-[#103D2F] to-[#06261C] px-4 py-3.5 text-white sm:px-5 sm:py-4">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_-10%,rgba(67,163,122,.24),transparent_46%)]" />
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
             <div className="relative flex min-w-0 items-center gap-3">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-white/10 shadow-inner">
-                <Bot className="h-6 w-6 text-white" />
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[15px] border border-white/10 bg-white/10 sm:h-12 sm:w-12 sm:rounded-[18px]">
+                <Bot className="h-5 w-5 text-white sm:h-6 sm:w-6" />
               </div>
 
               <div className="min-w-0">
@@ -193,7 +216,7 @@ export default function MergabAI() {
                   </span>
                 </div>
 
-                <p className="mt-0.5 truncate text-xs text-white/65">
+                <p className="mt-0.5 truncate text-[11px] text-white/65 sm:text-xs">
                   مساعدتك الذكية في متجر مرقاب
                 </p>
               </div>
@@ -208,7 +231,7 @@ export default function MergabAI() {
                   setPhoneInput("");
                 }}
                 title="محادثة جديدة"
-                className="rounded-full p-2.5 transition hover:bg-white/10"
+                className="rounded-full p-2 transition hover:bg-white/10"
               >
                 <Eraser className="h-5 w-5" />
               </button>
@@ -217,17 +240,16 @@ export default function MergabAI() {
                 type="button"
                 onClick={closeChat}
                 title="تصغير"
-                className="rounded-full p-2.5 transition hover:bg-white/10"
+                className="rounded-full p-2 transition hover:bg-white/10"
               >
                 <ChevronDown className="h-5 w-5" />
               </button>
             </div>
           </header>
 
-          {/* الرسائل */}
           <div
             ref={listRef}
-            className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-[radial-gradient(circle_at_50%_0%,rgba(47,139,107,.08),transparent_38%)] px-4 py-5"
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_50%_0%,rgba(47,139,107,.08),transparent_38%)] px-3 py-4 sm:space-y-5 sm:px-4 sm:py-5"
           >
             {messages.map((message, messageIndex) => {
               const isUser = message.role === "user";
@@ -239,22 +261,25 @@ export default function MergabAI() {
                     isUser ? "justify-start" : "justify-end"
                   }`}
                 >
-                  {/* أفاتار الزبون */}
                   {isUser && (
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-[#D6DDD8] bg-white text-[#0F3A2B] shadow-sm">
-                      <UserRound className="h-4.5 w-4.5" />
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-[#D6DDD8] bg-white text-[#0F3A2B] shadow-sm sm:h-9 sm:w-9">
+                      <UserRound className="h-4 w-4" />
                     </div>
                   )}
 
                   <div className="max-w-[82%]">
-                    <div className={`mb-1 flex items-center gap-1.5 px-1 text-[10px] font-bold ${
-                      isUser ? "justify-start text-[#607068]" : "justify-end text-[#39745D]"
-                    }`}>
+                    <div
+                      className={`mb-1 flex px-1 text-[10px] font-bold ${
+                        isUser
+                          ? "justify-start text-[#607068]"
+                          : "justify-end text-[#39745D]"
+                      }`}
+                    >
                       {isUser ? "أنت" : "زليخة"}
                     </div>
 
                     <div
-                      className={`whitespace-pre-wrap rounded-[22px] px-4 py-3 text-sm font-medium leading-7 ${
+                      className={`whitespace-pre-wrap rounded-[20px] px-3.5 py-2.5 text-[15px] font-medium leading-6 sm:rounded-[22px] sm:px-4 sm:py-3 sm:text-sm sm:leading-7 ${
                         isUser
                           ? "rounded-br-md bg-[#0F3A2B] text-white shadow-md"
                           : "rounded-bl-md border border-[#DCE3DE] bg-white text-[#24372F] shadow-[0_8px_24px_rgba(15,58,43,.06)]"
@@ -267,16 +292,16 @@ export default function MergabAI() {
                       <div
                         className={`mt-3 ${
                           messageIndex === 0
-                            ? "grid grid-cols-1 gap-2 sm:grid-cols-3"
+                            ? "grid grid-cols-1 gap-2"
                             : "flex flex-wrap gap-2"
-                        }`}
+                        } sm:${messageIndex === 0 ? "grid-cols-3" : ""}`}
                       >
                         {message.actions.map((action, index) => (
                           <button
                             key={`${message.id}-${index}`}
                             type="button"
                             onClick={() => runAction(action)}
-                            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-xs font-bold transition hover:-translate-y-0.5 ${
+                            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold transition hover:-translate-y-0.5 ${
                               action.style === "primary"
                                 ? "border-[#0F3A2B] bg-[#0F3A2B] text-white shadow-[0_8px_20px_rgba(15,58,43,.16)]"
                                 : "border-[#D7DED9] bg-white text-[#0F3A2B] hover:border-[#4E9478]"
@@ -293,10 +318,9 @@ export default function MergabAI() {
                     )}
                   </div>
 
-                  {/* أفاتار زليخة */}
                   {!isUser && (
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1D664B] to-[#0F3A2B] text-white shadow-md">
-                      <Bot className="h-4.5 w-4.5" />
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1D664B] to-[#0F3A2B] text-white shadow-md sm:h-9 sm:w-9">
+                      <Bot className="h-4 w-4" />
                     </div>
                   )}
                 </div>
@@ -305,11 +329,7 @@ export default function MergabAI() {
 
             {isLoading && (
               <div className="flex items-end justify-end gap-2">
-                <div className="rounded-[22px] rounded-bl-md border border-[#DCE3DE] bg-white px-4 py-3 shadow-sm">
-                  <div className="mb-1 text-right text-[10px] font-bold text-[#39745D]">
-                    زليخة
-                  </div>
-
+                <div className="rounded-[20px] rounded-bl-md border border-[#DCE3DE] bg-white px-3.5 py-2.5 shadow-sm">
                   <div className="flex items-center gap-3 text-sm font-bold text-[#0F3A2B]">
                     <span className="flex gap-1">
                       <span className="h-2 w-2 animate-bounce rounded-full bg-[#1F7A58] [animation-delay:-.3s]" />
@@ -320,21 +340,20 @@ export default function MergabAI() {
                   </div>
                 </div>
 
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1D664B] to-[#0F3A2B] text-white shadow-md">
-                  <Bot className="h-4.5 w-4.5" />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1D664B] to-[#0F3A2B] text-white shadow-md">
+                  <Bot className="h-4 w-4" />
                 </div>
               </div>
             )}
           </div>
 
-          {/* صندوق الكتابة */}
-          <div className="flex-shrink-0 border-t border-[#DDE4DF] bg-white/95 p-3 backdrop-blur-xl">
+          <div className="flex-shrink-0 border-t border-[#DDE4DF] bg-white/95 p-2.5 backdrop-blur-xl sm:p-3">
             {!phoneMode && (
               <>
                 <button
                   type="button"
                   onClick={() => setShowSuggestions((open) => !open)}
-                  className="mb-2 flex w-full items-center justify-between rounded-2xl bg-[#EEF3EF] px-4 py-2.5 text-xs font-black text-[#0F3A2B] transition hover:bg-[#E7EEE9]"
+                  className="mb-2 flex w-full items-center justify-between rounded-2xl bg-[#EEF3EF] px-3.5 py-2 text-xs font-black text-[#0F3A2B] transition hover:bg-[#E7EEE9]"
                 >
                   <span className="flex items-center gap-2">
                     <MessageCircleMore className="h-4 w-4" />
@@ -349,7 +368,7 @@ export default function MergabAI() {
                 </button>
 
                 {showSuggestions && (
-                  <div className="mb-3 rounded-2xl border border-[#DDE4DF] bg-[#F7F9F7] p-2">
+                  <div className="mb-2 max-h-32 overflow-y-auto rounded-2xl border border-[#DDE4DF] bg-[#F7F9F7] p-2">
                     <div className="flex flex-wrap gap-2">
                       {QUICK_PROMPTS.map((prompt) => (
                         <button
@@ -373,17 +392,17 @@ export default function MergabAI() {
                     action.type === "navigate" ||
                     action.type === "open_product",
                 ) && (
-                  <p className="mb-2 text-center text-[11px] text-gray-400">
-                    تقدر تفتح المنتج وتكمل محادثتك مع زليخة بعد ذلك.
+                  <p className="mb-2 text-center text-[10px] text-gray-400">
+                    تقدر تفتح المنتج وتكمل المحادثة بعد ذلك.
                   </p>
                 )}
               </>
             )}
 
             {phoneMode ? (
-              <form onSubmit={submitPhone} className="space-y-3">
-                <div className="rounded-2xl border border-[#DDE4DF] bg-[#EEF3EF] p-4">
-                  <div className="mb-3 flex items-center gap-2 text-[#0F3A2B]">
+              <form onSubmit={submitPhone} className="space-y-2">
+                <div className="rounded-2xl border border-[#DDE4DF] bg-[#EEF3EF] p-3">
+                  <div className="mb-2 flex items-center gap-2 text-[#0F3A2B]">
                     <PackageSearch className="h-5 w-5" />
                     <p className="text-sm font-black">
                       رقم الهاتف المستخدم في الطلب
@@ -397,18 +416,19 @@ export default function MergabAI() {
                     onChange={(event) =>
                       setPhoneInput(normalizePhone(event.target.value))
                     }
+                    onFocus={scrollMessagesToBottom}
                     placeholder="XXXXXXXX"
                     autoFocus
-                    className="w-full rounded-2xl border border-[#D7DED9] bg-white px-4 py-4 text-center text-lg font-black tracking-[.2em] text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:ring-4 focus:ring-[#3B8C6A]/10"
+                    className="w-full rounded-2xl border border-[#D7DED9] bg-white px-4 py-3 text-center text-[16px] font-black tracking-[.2em] text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:ring-4 focus:ring-[#3B8C6A]/10"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={phoneInput.length !== 8}
-                  className="w-full rounded-2xl bg-gradient-to-l from-[#0F3A2B] to-[#1A5B43] py-4 font-black text-white shadow-lg disabled:opacity-40"
+                  className="w-full rounded-2xl bg-gradient-to-l from-[#0F3A2B] to-[#1A5B43] py-3 font-black text-white shadow-lg disabled:opacity-40"
                 >
-                  فتح مشترياتي والبحث تلقائيًا
+                  فتح مشترياتي
                 </button>
 
                 <button
@@ -417,7 +437,7 @@ export default function MergabAI() {
                     setPhoneMode(false);
                     setPhoneInput("");
                   }}
-                  className="w-full rounded-2xl border border-[#D7DED9] py-3 font-bold text-[#0F3A2B]"
+                  className="w-full rounded-2xl border border-[#D7DED9] py-2.5 font-bold text-[#0F3A2B]"
                 >
                   رجوع
                 </button>
@@ -427,6 +447,7 @@ export default function MergabAI() {
                 <textarea
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
+                  onFocus={scrollMessagesToBottom}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.shiftKey) {
                       event.preventDefault();
@@ -435,13 +456,13 @@ export default function MergabAI() {
                   }}
                   rows={1}
                   placeholder="اكتب سؤالك هنا..."
-                  className="max-h-28 min-h-12 flex-1 resize-none rounded-2xl border border-[#D7DED9] bg-[#F7F9F7] px-4 py-3 text-sm font-medium text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:bg-white focus:ring-4 focus:ring-[#3B8C6A]/10"
+                  className="max-h-24 min-h-11 flex-1 resize-none rounded-2xl border border-[#D7DED9] bg-[#F7F9F7] px-4 py-3 text-[16px] font-medium leading-5 text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:bg-white focus:ring-4 focus:ring-[#3B8C6A]/10"
                 />
 
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
-                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1A5B43] to-[#0F3A2B] text-white shadow-md transition hover:-translate-y-0.5 disabled:opacity-40"
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1A5B43] to-[#0F3A2B] text-white shadow-md transition hover:-translate-y-0.5 disabled:opacity-40"
                 >
                   {isLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -452,7 +473,7 @@ export default function MergabAI() {
               </form>
             )}
 
-            <p className="mt-2 text-center text-[10px] leading-4 text-gray-400">
+            <p className="mt-1.5 text-center text-[9px] leading-4 text-gray-400 sm:text-[10px]">
               الأسعار والتوفر تُقرأ مباشرة من متجر مرقاب.
             </p>
           </div>
