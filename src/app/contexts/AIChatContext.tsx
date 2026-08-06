@@ -106,8 +106,8 @@ function createWelcome(language: "ar" | "en"): AIMessage {
     role: "assistant",
     createdAt: Date.now(),
     text: isArabic
-      ? "أهلًا، أنا زليخة. كيف ممكن أساعدك؟"
-      : "Hi, I’m Zulekha. How can I help you?",
+      ? "أهلًا، أنا نور. كيف ممكن أساعدك؟"
+      : "Hi, I’m Nour. How can I help you?",
     actions: [
       {
         type: "prompt",
@@ -354,14 +354,14 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
           setUnreadCount((count) => count + 1);
         }
       } catch (error) {
-        console.error("Zulekha error:", error);
+        console.error("Nour error:", error);
 
         setMessages((current) => [
           ...current,
           createMessage(
             "assistant",
             language === "ar"
-              ? "صار خطأ بسيط في زليخة. جرّب مرة ثانية."
+              ? "صار خطأ بسيط عند نور. جرّب مرة ثانية."
               : "A temporary error occurred. Please try again.",
             [
               {
