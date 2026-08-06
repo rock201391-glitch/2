@@ -38,6 +38,9 @@ interface RentalBooking {
 
 interface RentalsProps {
   onProceedToCheckout: (data: RentalCheckoutData) => void;
+  initialDroneId?: string;
+  onDroneOpen?: (drone: RentalDrone) => void;
+  onDroneClose?: () => void;
 }
 
 const MONTHS = [
@@ -116,6 +119,9 @@ function formatDate(value: string) {
 
 export default function Rentals({
   onProceedToCheckout,
+  initialDroneId,
+  onDroneOpen,
+  onDroneClose,
 }: RentalsProps) {
   const today = useMemo(() => getToday(), []);
 
@@ -139,6 +145,14 @@ export default function Rentals({
     void loadDrones();
   }, []);
 
+  useEffect(() => {
+    if (!initialDroneId || drones.length === 0) return;
+    const drone = drones.find((item) => String(item.id) === String(initialDroneId));
+    if (drone && selectedDrone?.id !== drone.id) {
+      void openBooking(drone, false);
+    }
+  }, [initialDroneId, drones]);
+
   async function loadDrones() {
     setLoading(true);
     setError("");
@@ -160,8 +174,9 @@ export default function Rentals({
     setLoading(false);
   }
 
-  async function openBooking(drone: RentalDrone) {
+  async function openBooking(drone: RentalDrone, syncUrl = true) {
     setSelectedDrone(drone);
+    if (syncUrl) onDroneOpen?.(drone);
     setStartDate("");
     setEndDate("");
     setError("");
@@ -185,6 +200,14 @@ export default function Rentals({
     }
 
     setLoadingDates(false);
+  }
+
+  function closeBooking() {
+    setSelectedDrone(null);
+    setStartDate("");
+    setEndDate("");
+    setError("");
+    onDroneClose?.();
   }
 
   const calendarCells = useMemo(() => {
@@ -411,7 +434,7 @@ export default function Rentals({
 
               <button
                 type="button"
-                onClick={() => setSelectedDrone(null)}
+                onClick={closeBooking}
                 className="rounded-full border border-[#EFECE6] bg-white p-2.5 sm:p-3 text-gray-500 hover:text-[#0F3A2B] hover:bg-gray-50 transition shadow-sm"
               >
                 <X className="h-4 w-4 sm:h-5 sm:w-5" />
