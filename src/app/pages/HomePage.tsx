@@ -20,25 +20,21 @@ interface HomePageProps {
 const serviceCards = [
   {
     title: "تصفح المتجر",
-    description: "درونات، كاميرات، مايكات وإكسسوارات",
     icon: ShoppingBag,
     page: "shop",
   },
   {
     title: "تأجير الدرونات",
-    description: "اختر الدرون وحدد مدة الإيجار المناسبة",
     icon: CalendarDays,
     page: "rentals",
   },
   {
     title: "الدخول إلى المزادات",
-    description: "شارك في المزادات والمنتجات المميزة",
     icon: Gavel,
     page: "auctions",
   },
   {
     title: "الدخول إلى الورشة",
-    description: "صيانة وإصلاح الدرونات والملحقات",
     icon: Wrench,
     page: "workshop",
   },
@@ -186,26 +182,22 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   key={item.page}
                   type="button"
                   onClick={() => onNavigate(item.page)}
-                  className="group relative min-h-[210px] overflow-hidden rounded-[28px] border border-[#D7D0C1] bg-[#FFFDF8] p-4 text-right shadow-[0_14px_36px_rgba(15,58,43,0.08)] transition duration-300 hover:-translate-y-2 hover:border-[#0F3A2B]/35 hover:shadow-[0_22px_50px_rgba(15,58,43,0.14)] active:scale-[0.99] sm:min-h-[230px] sm:p-6"
+                  className="group relative min-h-[190px] overflow-hidden rounded-[28px] border border-[#D7D0C1] bg-[#FFFDF8] p-5 text-right shadow-[0_14px_36px_rgba(15,58,43,0.08)] transition duration-300 hover:-translate-y-2 hover:border-[#0F3A2B]/35 hover:shadow-[0_22px_50px_rgba(15,58,43,0.14)] active:scale-[0.99] sm:min-h-[210px] sm:p-6"
                 >
                   <div className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-[#E8EFEA] blur-2xl" />
 
                   <div className="relative flex h-full flex-col justify-between">
                     <div>
-                      <span className="mb-6 flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#0F3A2B] text-white shadow-md sm:h-14 sm:w-14 sm:rounded-[20px]">
+                      <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#0F3A2B] text-white shadow-md sm:h-14 sm:w-14 sm:rounded-[20px]">
                         <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                       </span>
 
-                      <h3 className="text-base font-black text-[#0F3A2B] sm:text-xl">
+                      <h3 className="text-lg font-black text-[#0F3A2B] sm:text-2xl">
                         {item.title}
                       </h3>
-
-                      <p className="mt-3 text-xs leading-6 text-[#6A746E] sm:text-sm sm:leading-7">
-                        {item.description}
-                      </p>
                     </div>
 
-                    <div className="mt-6 flex items-center justify-between rounded-2xl bg-[#F1F4F1] px-3 py-3 text-xs font-black text-[#0F3A2B] transition group-hover:bg-[#0F3A2B] group-hover:text-white sm:px-4">
+                    <div className="mt-6 flex items-center justify-between rounded-2xl bg-[#E8EFEA] px-4 py-3 text-sm font-black text-[#0F3A2B] transition group-hover:bg-[#0F3A2B] group-hover:text-white sm:px-5">
                       <span>اضغط للدخول</span>
                       <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                     </div>
