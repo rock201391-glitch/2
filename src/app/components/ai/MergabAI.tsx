@@ -19,14 +19,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAIChat, type AIAction } from "../../contexts/AIChatContext";
-
-const QUICK_PROMPTS = [
-  "أنا مبتدئ وأريد درون مناسب",
-  "أريد كاميرا للسفر والفلوقات",
-  "أريد إكسسوار لجهازي",
-  "قارن بين منتجين",
-  "أريد أتابع طلبي",
-];
+import { useLanguage } from "../../contexts/LanguageContext";
 
 function normalizePhone(value: string) {
   const arabic = "٠١٢٣٤٥٦٧٨٩";
@@ -41,6 +34,15 @@ function normalizePhone(value: string) {
 
 export default function MergabAI() {
   const navigate = useNavigate();
+  const { language, isArabic, direction, t } = useLanguage();
+
+  const QUICK_PROMPTS = [
+    t("أنا مبتدئ وأريد درون مناسب", "I’m a beginner and need a suitable drone"),
+    t("أريد كاميرا للسفر والفلوقات", "I need a camera for travel and vlogs"),
+    t("أريد إكسسوار لجهازي", "I need an accessory for my device"),
+    t("قارن بين منتجين", "Compare two products"),
+    t("أريد أتابع طلبي", "I want to track my order"),
+  ];
   const {
     isOpen,
     isLoading,
@@ -180,8 +182,8 @@ export default function MergabAI() {
       <button
         type="button"
         onClick={toggleChat}
-        aria-label="فتح زليخة"
-        className="group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-[9990] flex h-[60px] w-[60px] items-center justify-center rounded-[22px] border border-white/15 bg-gradient-to-br from-[#1B5843] via-[#0F3A2B] to-[#061F17] text-white shadow-[0_18px_50px_rgba(15,58,43,.40)] transition duration-300 hover:-translate-y-1 hover:scale-[1.04] active:scale-95 sm:bottom-7 sm:right-7 sm:h-[70px] sm:w-[70px] sm:rounded-[25px]"
+        aria-label={t("فتح زليخة", "Open Zulekha")}
+        className={`group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] ${isArabic ? "right-4 sm:right-7" : "left-4 sm:left-7"} z-[9990] flex h-[60px] w-[60px] items-center justify-center rounded-[22px] border border-white/15 bg-gradient-to-br from-[#1B5843] via-[#0F3A2B] to-[#061F17] text-white shadow-[0_18px_50px_rgba(15,58,43,.40)] transition duration-300 hover:-translate-y-1 hover:scale-[1.04] active:scale-95 sm:bottom-7 sm:h-[70px] sm:w-[70px] sm:rounded-[25px]`}
       >
         {!isOpen && (
           <>
@@ -211,12 +213,12 @@ export default function MergabAI() {
 
       {isOpen && (
         <section
-          dir="rtl"
-          aria-label="زليخة"
-          className="
+          dir={direction}
+          aria-label={t("زليخة", "Zulekha")}
+          className={`
             fixed
             bottom-[calc(5.5rem+env(safe-area-inset-bottom))]
-            right-2
+            ${isArabic ? "right-2 sm:right-7" : "left-2 sm:left-7"}
             z-[9989]
             flex
             h-[58dvh]
@@ -231,13 +233,12 @@ export default function MergabAI() {
             bg-[#F7F9F7]
             shadow-[0_28px_90px_rgba(15,58,43,.28)]
             sm:bottom-28
-            sm:right-7
-            sm:h-[min(760px,calc(100dvh-7rem))]
+                        sm:h-[min(760px,calc(100dvh-7rem))]
             sm:max-h-none
             sm:w-[calc(100vw-1.5rem)]
             sm:max-w-[440px]
             sm:rounded-[34px]
-          "
+          `}
         >
           <header className="relative flex flex-shrink-0 items-center justify-between overflow-hidden bg-gradient-to-l from-[#103D2F] to-[#06261C] px-4 py-3.5 text-white sm:px-5 sm:py-4">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_-10%,rgba(67,163,122,.24),transparent_46%)]" />
@@ -249,16 +250,16 @@ export default function MergabAI() {
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h2 className="truncate text-base font-black">زليخة</h2>
+                  <h2 className="truncate text-base font-black">{t("زليخة", "Zulekha")}</h2>
 
                   <span className="flex items-center gap-1 rounded-full bg-[#2F8B6B]/20 px-2 py-1 text-[10px] font-bold text-[#8FE0BE]">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#65D6A6]" />
-                    متصلة
+                    {t("متصلة", "Online")}
                   </span>
                 </div>
 
                 <p className="mt-0.5 truncate text-[11px] text-white/65 sm:text-xs">
-                  مساعدتك الذكية في متجر مرقاب
+                  {t("مساعدتك الذكية في متجر مرقاب", "Your smart assistant at Mergab Store")}
                 </p>
               </div>
             </div>
@@ -271,7 +272,7 @@ export default function MergabAI() {
                   setPhoneMode(false);
                   setPhoneInput("");
                 }}
-                title="محادثة جديدة"
+                title={t("محادثة جديدة", "New conversation")}
                 className="rounded-full p-2 transition hover:bg-white/10"
               >
                 <Eraser className="h-5 w-5" />
@@ -280,7 +281,7 @@ export default function MergabAI() {
               <button
                 type="button"
                 onClick={closeChat}
-                title="تصغير"
+                title={t("تصغير", "Minimize")}
                 className="rounded-full p-2 transition hover:bg-white/10"
               >
                 <ChevronDown className="h-5 w-5" />
@@ -316,7 +317,7 @@ export default function MergabAI() {
                           : "justify-end text-[#39745D]"
                       }`}
                     >
-                      {isUser ? "أنت" : "زليخة"}
+                      {isUser ? t("أنت", "You") : t("زليخة", "Zulekha")}
                     </div>
 
                     <div
@@ -380,7 +381,7 @@ export default function MergabAI() {
                       <span className="h-2 w-2 animate-bounce rounded-full bg-[#1F7A58] [animation-delay:-.15s]" />
                       <span className="h-2 w-2 animate-bounce rounded-full bg-[#1F7A58]" />
                     </span>
-                    زليخة تفكر...
+                    {t("زليخة تفكر...", "Zulekha is thinking...")}
                   </div>
                 </div>
 
@@ -401,7 +402,7 @@ export default function MergabAI() {
                 >
                   <span className="flex items-center gap-2">
                     <MessageCircleMore className="h-4 w-4" />
-                    اقتراحات تساعدك تبدأ
+                    {t("اقتراحات تساعدك تبدأ", "Suggestions to get started")}
                   </span>
 
                   <ChevronDown
@@ -437,7 +438,7 @@ export default function MergabAI() {
                     action.type === "open_product",
                 ) && (
                   <p className="mb-2 text-center text-[10px] text-gray-400">
-                    تقدر تفتح المنتج وتكمل المحادثة بعد ذلك.
+                    {t("تقدر تفتح المنتج وتكمل المحادثة بعد ذلك.", "You can open the product and continue the conversation afterward.")}
                   </p>
                 )}
               </>
@@ -449,7 +450,7 @@ export default function MergabAI() {
                   <div className="mb-2 flex items-center gap-2 text-[#0F3A2B]">
                     <PackageSearch className="h-5 w-5" />
                     <p className="text-sm font-black">
-                      رقم الهاتف المستخدم في الطلب
+                      {t("رقم الهاتف المستخدم في الطلب", "Phone number used for the order")}
                     </p>
                   </div>
 
@@ -472,7 +473,7 @@ export default function MergabAI() {
                   disabled={phoneInput.length !== 8}
                   className="w-full rounded-2xl bg-gradient-to-l from-[#0F3A2B] to-[#1A5B43] py-3 font-black text-white shadow-lg disabled:opacity-40"
                 >
-                  فتح مشترياتي
+                  {t("فتح مشترياتي", "Open My Orders")}
                 </button>
 
                 <button
@@ -499,7 +500,7 @@ export default function MergabAI() {
                     }
                   }}
                   rows={1}
-                  placeholder="اكتب سؤالك هنا..."
+                  placeholder={t("اكتب سؤالك هنا...", "Type your question here...")}
                   className="max-h-24 min-h-11 flex-1 resize-none rounded-2xl border border-[#D7DED9] bg-[#F7F9F7] px-4 py-3 text-[16px] font-medium leading-5 text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:bg-white focus:ring-4 focus:ring-[#3B8C6A]/10"
                 />
 
@@ -518,7 +519,7 @@ export default function MergabAI() {
             )}
 
             <p className="mt-1.5 text-center text-[9px] leading-4 text-gray-400 sm:text-[10px]">
-              الأسعار والتوفر تُقرأ مباشرة من متجر مرقاب.
+              {t("الأسعار والتوفر تُقرأ مباشرة من متجر مرقاب.", "Prices and availability are read directly from Mergab Store.")}
             </p>
           </div>
         </section>
