@@ -190,6 +190,28 @@ function formatDate(value: string) {
 
 export default function MyOrders({ onNavigate }: MyOrdersProps) {
   const [phone, setPhone] = useState("");
+
+  // الـ useEffect الخاص بقراءة رقم الهاتف من الـ URL وتنفيذ البحث تلقائياً
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const phoneFromUrl = normalizePhoneNumber(
+      params.get("phone") || ""
+    ).slice(-8);
+
+    const shouldSearch = params.get("search") === "1";
+
+    if (!phoneFromUrl || phoneFromUrl.length !== 8) {
+      return;
+    }
+
+    setPhone(phoneFromUrl);
+
+    if (shouldSearch) {
+      void fetchCustomerItems(phoneFromUrl);
+    }
+  }, []);
+
   const [searchedPhone, setSearchedPhone] = useState("");
   const [items, setItems] = useState<CustomerItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -276,22 +298,6 @@ export default function MyOrders({ onNavigate }: MyOrdersProps) {
     event.preventDefault();
     void fetchCustomerItems(phone);
   }
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const phoneFromUrl = normalizePhoneNumber(
-      searchParams.get("phone") || "",
-    ).slice(-8);
-    const shouldSearch = searchParams.get("search") === "1";
-
-    if (!phoneFromUrl || phoneFromUrl.length !== 8) return;
-
-    setPhone(phoneFromUrl);
-
-    if (shouldSearch) {
-      void fetchCustomerItems(phoneFromUrl);
-    }
-  }, []);
 
   useEffect(() => {
     if (!searchedPhone) return;
