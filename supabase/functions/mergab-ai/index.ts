@@ -45,6 +45,14 @@ type AIAction =
       style?: "primary" | "secondary";
     }
   | {
+      type: "auto_open_product";
+      label: string;
+      path: string;
+      productName: string;
+      productPrice?: string;
+      style?: "primary" | "secondary";
+    }
+  | {
       type: "prompt";
       label: string;
       prompt: string;
@@ -183,6 +191,7 @@ const outputSchema = {
             enum: [
               "navigate",
               "open_product",
+              "auto_open_product",
               "prompt",
               "request_phone",
               "restart_flow",
@@ -190,6 +199,8 @@ const outputSchema = {
           },
           label: { type: "string" },
           path: { type: ["string", "null"] },
+          productName: { type: ["string", "null"] },
+          productPrice: { type: ["string", "null"] },
           prompt: { type: ["string", "null"] },
           purpose: {
             type: ["string", "null"],
@@ -204,6 +215,8 @@ const outputSchema = {
           "type",
           "label",
           "path",
+          "productName",
+          "productPrice",
           "prompt",
           "purpose",
           "style",
@@ -250,6 +263,30 @@ function sanitizeActions(
       action.style === "primary" || action.style === "secondary"
         ? action.style
         : undefined;
+
+    if (type === "auto_open_product") {
+      const path = String(action.path || "");
+      const productName = String(action.productName || "").trim().slice(0, 120);
+      const productPrice = String(action.productPrice || "").trim().slice(0, 50);
+
+      if (
+        path.startsWith("/") &&
+        !path.startsWith("//") &&
+        path.length < 300 &&
+        productName
+      ) {
+        result.push({
+          type,
+          label,
+          path,
+          productName,
+          productPrice: productPrice || undefined,
+          style,
+        });
+      }
+
+      continue;
+    }
 
     if (type === "navigate" || type === "open_product") {
       const path = String(action.path || "");
@@ -485,12 +522,23 @@ Deno.serve(async (req) => {
 10. التأجير يفتح /rentals أو منتج تأجير حقيقي.
 11. الورشة تفتح /workshop.
 12. المزادات تفتح /auctions أو المزاد الحقيقي.
-13. لا تعرضي أزرار prompt إلا في سؤال الخبرة الأول.
-14. أزرار فتح المنتج أو فتح الصفحة مسموحة بعد تقديم النتيجة.
+13. لا تعرضي أزرار prompt إلا في سؤال الخبرة الأول، أو بعد أن يرجع الزبون من صفحة منتج ويسأل هل مناسب له.
+14. إذا توصلتِ إلى منتج محدد ومناسب وواثقة من الاختيار، لا تعرضي زر فتح المنتج.
+15. بدل ذلك أعيدي إجراء واحد فقط من نوع auto_open_product، وسيتم فتح صفحة المنتج تلقائيًا وإغلاق زليخة.
+16. ضعي في auto_open_product:
+    - path: رابط المنتج الحقيقي.
+    - productName: اسم المنتج الحقيقي.
+    - productPrice: السعر الظاهر في الكتالوج.
+17. لا تستخدمي auto_open_product إذا ما زلتِ تحتاجين معلومة من الزبون.
+18. عند قول الزبون "أريد أفضل" بعد رجوعه، اختاري منتجًا أعلى وأقوى وأغلى من السابق إن كان مناسبًا، ثم افتحيه تلقائيًا.
+19. عند قول الزبون "أريد أرخص"، اختاري بديلًا أقل سعرًا قدر الإمكان مع بقاءه مناسبًا، ثم افتحيه تلقائيًا.
+20. عند قول الزبون "أريد بديل"، لا تعيدي نفس المنتج السابق، واختاري منتجًا مختلفًا ثم افتحيه تلقائيًا.
+21. هذه القاعدة تنطبق على الدرونات والكاميرات والمايكات والإكسسوارات وجميع المنتجات.
 
 أنواع الإجراءات:
-- open_product: فتح منتج محدد.
-- navigate: فتح صفحة.
+- auto_open_product: فتح صفحة المنتج تلقائيًا وإغلاق زليخة عندما يكون الاختيار جاهزًا.
+- open_product: زر يدوي، استخدميه فقط إذا طلب الزبون رابطًا أو أراد عدة خيارات.
+- navigate: فتح صفحة عامة.
 - prompt: مسموح فقط لخيار الخبرة الأول.
 - request_phone: طلب رقم الهاتف لمتابعة الطلب.
 - restart_flow: بدء من جديد.
