@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, Upload, Building2, House, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 import {
   Select,
@@ -64,6 +65,7 @@ const formatPrice = (amount: number) => `${amount.toFixed(2)} ر.ع`;
 
 export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   const { items, getTotal, clearCart } = useCart();
+  const { direction, language, t } = useLanguage();
   const checkoutItems = items;
 
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(FALLBACK_SHIPPING);
@@ -383,21 +385,21 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} dir="rtl" lang="ar" className="min-h-screen bg-[#F8F7F2] py-8 px-4 text-[#0F3A2B]">
+    <form onSubmit={handleSubmit} dir={direction} lang={language} className="min-h-screen bg-[#F8F7F2] py-8 px-4 text-[#0F3A2B]">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-center gap-2 cursor-pointer" onClick={onBack}>
           <ChevronRight className="text-[#0F3A2B]" />
           <span className="font-semibold text-[#0F3A2B]">
-            العودة للسلة
+            {t("العودة للسلة", "Back to Cart")}
           </span>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-bold mb-10 text-center text-[#0F3A2B]">إتمام الطلب</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-10 text-center text-[#0F3A2B]">{t("إتمام الطلب", "Checkout")}</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#ECE7DC]">
-              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">معلومات العميل</h2>
+              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">{t("معلومات العميل", "Customer Information")}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
@@ -406,7 +408,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   value={formData.fullName}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
-                  placeholder="الاسم الكامل"
+                  placeholder={t("الاسم الكامل", "Full name")}
                   required
                 />
 
@@ -439,7 +441,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   <SelectTrigger 
                     className="!w-full !h-[50px] !px-4 !py-3 !border !border-[#E5DDCE] !rounded-2xl !bg-[#F6F4EE] !text-[#0F3A2B] !shadow-none !outline-none !ring-0 focus:!border-[#0F3A2B] focus:!ring-0 flex items-center justify-between text-right [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]"
                   >
-                    <SelectValue placeholder="اختر المحافظة" />
+                    <SelectValue placeholder={t("اختر المحافظة", "Select governorate")} />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"
@@ -467,7 +469,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   <SelectTrigger 
                     className="!w-full !h-[50px] !px-4 !py-3 !border !border-[#E5DDCE] !rounded-2xl !bg-[#F6F4EE] !text-[#0F3A2B] !shadow-none !outline-none !ring-0 focus:!border-[#0F3A2B] focus:!ring-0 flex items-center justify-between text-right [&_svg]:size-[18px] [&_svg]:text-[#6E7B74]"
                   >
-                    <SelectValue placeholder="اختر الولاية / المدينة" />
+                    <SelectValue placeholder={t("اختر الولاية / المدينة", "Select city / wilayat")} />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"
@@ -491,7 +493,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   onChange={handleInputChange}
                   className="md:col-span-2 w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl resize-none text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   rows={2}
-                  placeholder="تفاصيل العنوان (اختياري)"
+                  placeholder={t("تفاصيل العنوان (اختياري)", "Address details (optional)")}
                 />
 
                 <textarea
@@ -500,13 +502,13 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                   onChange={handleInputChange}
                   className="md:col-span-2 w-full px-4 py-3 border border-[#E5DDCE] rounded-2xl resize-none text-[#0F3A2B] bg-[#FFFEFC] placeholder:text-gray-400 outline-none focus:border-[#0F3A2B]"
                   rows={3}
-                  placeholder="ملاحظات الطلب (اختياري)"
+                  placeholder={t("ملاحظات الطلب (اختياري)", "Order notes (optional)")}
                 />
               </div>
             </div>
 
             <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#ECE7DC]">
-              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">طرق الشحن</h2>
+              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">{t("طرق الشحن", "Shipping Methods")}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {shippingOptions.map(option => {
@@ -554,12 +556,12 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       </div>
 
                       <div className="flex items-center justify-between gap-3 mb-2 text-[#0F3A2B]">
-                        <span className="text-sm font-medium">رسوم الشحن</span>
+                        <span className="text-sm font-medium">{t("رسوم الشحن", "Shipping Fee")}</span>
                         <span className="font-semibold">{formatPrice(option.price)}</span>
                       </div>
 
                       {option.duration && (
-                        <p className="text-sm text-[#2F4D42]">مدة التوصيل: {option.duration}</p>
+                        <p className="text-sm text-[#2F4D42]">{t("مدة التوصيل:", "Delivery time:")} {option.duration}</p>
                       )}
                     </label>
                   );
@@ -568,7 +570,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
             </div>
 
             <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#ECE7DC]">
-              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">طريقة الدفع</h2>
+              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">{t("طريقة الدفع", "Payment Method")}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div
@@ -579,7 +581,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       : 'border-[#E5DDCE] bg-[#FEFCF7] hover:border-[#CFC5B3]'
                   }`}
                 >
-                  <span className="font-bold text-[15px]">تحويل بنكي</span>
+                  <span className="font-bold text-[15px]">{t("تحويل بنكي", "Bank Transfer")}</span>
                   <span
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                       paymentMethod === 'bank_transfer' ? 'border-[#0F3A2B] bg-[#0F3A2B]' : 'border-[#B0A99A]'
@@ -597,7 +599,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                       : 'border-[#E5DDCE] bg-[#FEFCF7] hover:border-[#CFC5B3]'
                   }`}
                 >
-                  <span className="font-bold text-[15px]">الدفع عند الاستلام</span>
+                  <span className="font-bold text-[15px]">{t("الدفع عند الاستلام", "Cash on Delivery")}</span>
                   <span
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                       paymentMethod === 'cash_on_delivery' ? 'border-[#0F3A2B] bg-[#0F3A2B]' : 'border-[#B0A99A]'
@@ -687,7 +689,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
 
           <div className="lg:col-span-1">
             <div className="bg-white rounded-3xl p-6 sm:p-8 sticky top-24 shadow-sm border border-[#ECE7DC]">
-              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">ملخص الطلب</h2>
+              <h2 className="text-2xl font-bold mb-6 text-[#0F3A2B]">{t("ملخص الطلب", "Order Summary")}</h2>
 
               <div className="space-y-4 mb-6 text-[#0F3A2B]">
                 {checkoutItems.map(item => (
