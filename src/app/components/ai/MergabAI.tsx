@@ -1,4 +1,5 @@
 import {
+  Bot,
   ChevronDown,
   Eraser,
   Loader2,
@@ -31,78 +32,6 @@ function normalizePhone(value: string) {
     .slice(-8);
 }
 
-
-function NoorAvatar({
-  size = 44,
-  className = "",
-}: {
-  size?: number;
-  className?: string;
-}) {
-  return (
-    <span
-      className={`relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#EAF4EF] via-white to-[#CFE4D8] shadow-[0_8px_24px_rgba(15,58,43,.18)] ring-1 ring-[#0F3A2B]/10 ${className}`}
-      style={{ width: size, height: size }}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 100 100" className="h-full w-full">
-        <defs>
-          <linearGradient id="noorHelmet" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="100%" stopColor="#C8DDD2" />
-          </linearGradient>
-          <linearGradient id="noorSuit" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#1D654A" />
-            <stop offset="100%" stopColor="#0B3024" />
-          </linearGradient>
-        </defs>
-
-        <circle cx="50" cy="50" r="48" fill="#F4F8F5" />
-        <path
-          d="M18 48C18 25 31 11 50 11s32 14 32 37v16H18V48Z"
-          fill="url(#noorHelmet)"
-          stroke="#0F3A2B"
-          strokeWidth="3"
-        />
-        <path
-          d="M25 46c0-17 10-28 25-28s25 11 25 28v10H25V46Z"
-          fill="#182D26"
-        />
-        <ellipse cx="50" cy="48" rx="21" ry="23" fill="#F3C7A9" />
-        <path
-          d="M30 41c4-15 14-20 20-20 9 0 18 6 21 18-8-4-14-8-20-13-5 7-11 12-21 15Z"
-          fill="#272522"
-        />
-        <ellipse cx="41" cy="49" rx="3.5" ry="4.5" fill="#10261E" />
-        <ellipse cx="59" cy="49" rx="3.5" ry="4.5" fill="#10261E" />
-        <circle cx="42" cy="48" r="1.2" fill="white" />
-        <circle cx="60" cy="48" r="1.2" fill="white" />
-        <path
-          d="M43 59c4 3 10 3 14 0"
-          fill="none"
-          stroke="#A85B52"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M27 71c4-8 12-13 23-13s19 5 23 13v19H27V71Z"
-          fill="url(#noorSuit)"
-        />
-        <circle cx="50" cy="72" r="8" fill="#EAF4EF" />
-        <path
-          d="M47 67h6v4h4v6h-4v4h-6v-4h-4v-6h4v-4Z"
-          fill="#1D654A"
-        />
-        <path
-          d="M18 44c-5 1-8 7-8 13s3 12 8 13V44Zm64 0c5 1 8 7 8 13s-3 12-8 13V44Z"
-          fill="#0F3A2B"
-        />
-        <circle cx="50" cy="8" r="4" fill="#55B98A" />
-      </svg>
-    </span>
-  );
-}
-
 export default function MergabAI() {
   const navigate = useNavigate();
   const { language, isArabic, direction, t } = useLanguage();
@@ -114,7 +43,6 @@ export default function MergabAI() {
     t("قارن بين منتجين", "Compare two products"),
     t("أريد أتابع طلبي", "I want to track my order"),
   ];
-
   const {
     isOpen,
     isLoading,
@@ -213,7 +141,6 @@ export default function MergabAI() {
       action.type === "open_product" ||
       action.type === "auto_open_product"
     ) {
-      closeChat();
       navigate(action.path);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -245,7 +172,6 @@ export default function MergabAI() {
 
     setPhoneMode(false);
     setPhoneInput("");
-    closeChat();
 
     navigate(`/my-orders?phone=${encodeURIComponent(phone)}&search=1`);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -256,35 +182,30 @@ export default function MergabAI() {
       <button
         type="button"
         onClick={toggleChat}
-        aria-label={t("فتح نور", "Open Noor")}
-        className={`group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] ${
-          isArabic ? "right-4 sm:right-7" : "left-4 sm:left-7"
-        } z-[9990] flex h-[66px] w-[66px] items-center justify-center overflow-visible rounded-[24px] border border-white/40 bg-gradient-to-br from-[#174F3B] via-[#0F3A2B] to-[#071F17] shadow-[0_18px_50px_rgba(15,58,43,.38)] transition duration-300 hover:-translate-y-1 hover:scale-[1.04] active:scale-95 sm:bottom-7 sm:h-[76px] sm:w-[76px] sm:rounded-[28px]`}
+        aria-label={t("فتح نور", "Open Nour")}
+        className={`group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] ${isArabic ? "right-4 sm:right-7" : "left-4 sm:left-7"} z-[9990] flex h-[60px] w-[60px] items-center justify-center rounded-[22px] border border-white/15 bg-gradient-to-br from-[#1B5843] via-[#0F3A2B] to-[#061F17] text-white shadow-[0_18px_50px_rgba(15,58,43,.40)] transition duration-300 hover:-translate-y-1 hover:scale-[1.04] active:scale-95 sm:bottom-7 sm:h-[70px] sm:w-[70px] sm:rounded-[25px]`}
       >
         {!isOpen && (
           <>
-            <span className="pointer-events-none absolute inset-0 animate-ping rounded-[24px] border border-[#4DB487]/25 [animation-duration:2.7s] sm:rounded-[28px]" />
-            <span className="pointer-events-none absolute -inset-3 rounded-[30px] bg-[#2D8A67]/10 blur-xl" />
+            <span className="pointer-events-none absolute inset-0 animate-ping rounded-[22px] border border-[#2F8B6B]/35 [animation-duration:2.4s] sm:rounded-[25px]" />
+            <span className="pointer-events-none absolute -inset-2 animate-pulse rounded-[28px] bg-[#1F6B50]/10 blur-md [animation-duration:2s]" />
           </>
         )}
 
         {isOpen ? (
-          <X className="relative h-7 w-7 text-white" />
+          <X className="relative h-7 w-7" />
         ) : (
-          <NoorAvatar
-            size={52}
-            className="relative transition duration-500 group-hover:scale-105 sm:!h-[58px] sm:!w-[58px]"
-          />
+          <Bot className="relative h-7 w-7 transition duration-500 group-hover:rotate-6 group-hover:scale-110 sm:h-8 sm:w-8" />
         )}
 
         {!isOpen && (
-          <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-white px-1 text-[9px] font-black text-[#0F3A2B] ring-3 ring-[#F8F7F2]">
+          <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#38A276] px-1 text-[10px] font-black text-white ring-4 ring-[#F8F7F2]">
             AI
           </span>
         )}
 
         {!isOpen && unreadCount > 0 && (
-          <span className="absolute -left-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-black text-white ring-4 ring-[#F8F7F2]">
+          <span className="absolute -left-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-black ring-4 ring-[#F8F7F2]">
             {unreadCount}
           </span>
         )}
@@ -293,51 +214,55 @@ export default function MergabAI() {
       {isOpen && (
         <section
           dir={direction}
-          aria-label={t("نور", "Noor")}
+          aria-label={t("نور", "Nour")}
           className={`
             fixed
-            bottom-[calc(5.7rem+env(safe-area-inset-bottom))]
+            bottom-[calc(5.5rem+env(safe-area-inset-bottom))]
             ${isArabic ? "right-2 sm:right-7" : "left-2 sm:left-7"}
             z-[9989]
             flex
-            h-[78dvh]
-            max-h-[760px]
-            min-h-[520px]
+            h-[58dvh]
+            max-h-[560px]
             w-[calc(100vw-1rem)]
-            max-w-[430px]
+            max-w-[420px]
             flex-col
             overflow-hidden
-            rounded-[30px]
+            rounded-[28px]
             border
-            border-[#D7E0DA]
-            bg-[#F9FBF9]
-            shadow-[0_30px_100px_rgba(15,58,43,.30)]
+            border-[#D8DED9]
+            bg-[#F7F9F7]
+            shadow-[0_28px_90px_rgba(15,58,43,.28)]
             sm:bottom-28
-            sm:h-[min(790px,calc(100dvh-7rem))]
+            sm:h-[min(760px,calc(100dvh-7rem))]
             sm:max-h-none
             sm:w-[calc(100vw-1.5rem)]
-            sm:max-w-[460px]
-            sm:rounded-[36px]
+            sm:max-w-[440px]
+            sm:rounded-[34px]
           `}
         >
-          <header className="relative flex flex-shrink-0 items-center justify-between overflow-hidden bg-gradient-to-l from-[#14523D] via-[#0F3A2B] to-[#06251B] px-4 py-4 text-white sm:px-5 sm:py-5">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_-20%,rgba(92,194,148,.24),transparent_48%)]" />
-            <div className="absolute -bottom-20 -left-10 h-36 w-36 rounded-full bg-white/5 blur-2xl" />
+          <header className="relative flex flex-shrink-0 items-center justify-between overflow-hidden bg-gradient-to-l from-[#103D2F] to-[#06261C] px-4 py-3.5 text-white sm:px-5 sm:py-4">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_-10%,rgba(67,163,122,.24),transparent_46%)]" />
 
-            <div className="relative flex min-w-0 items-center gap-3.5">
-              <NoorAvatar size={52} className="ring-2 ring-white/15" />
+            <div className="relative flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[15px] border border-white/10 bg-white/10 sm:h-12 sm:w-12 sm:rounded-[18px]">
+                <Bot className="h-5 w-5 text-white sm:h-6 sm:w-6" />
+              </div>
 
               <div className="min-w-0">
-                <div className="flex items-center gap-2.5">
-                  <h2 className="truncate text-2xl font-black tracking-tight sm:text-3xl">
-                    {t("نور", "Noor")}
+                <div className="flex items-center gap-2">
+                  <h2 className="truncate text-base font-black">
+                    نور
                   </h2>
 
-                  <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-[#A5E4C7] backdrop-blur">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#67D7A7]" />
+                  <span className="flex items-center gap-1 rounded-full bg-[#2F8B6B]/20 px-2 py-1 text-[10px] font-bold text-[#8FE0BE]">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#65D6A6]" />
                     {t("متصلة", "Online")}
                   </span>
                 </div>
+
+                <p className="mt-0.5 truncate text-[11px] text-white/65 sm:text-xs">
+                  مستشارة مرقاب الذكية
+                </p>
               </div>
             </div>
 
@@ -350,7 +275,7 @@ export default function MergabAI() {
                   setPhoneInput("");
                 }}
                 title={t("محادثة جديدة", "New conversation")}
-                className="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-white/10"
+                className="rounded-full p-2 transition hover:bg-white/10"
               >
                 <Eraser className="h-5 w-5" />
               </button>
@@ -359,7 +284,7 @@ export default function MergabAI() {
                 type="button"
                 onClick={closeChat}
                 title={t("تصغير", "Minimize")}
-                className="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-white/10"
+                className="rounded-full p-2 transition hover:bg-white/10"
               >
                 <ChevronDown className="h-5 w-5" />
               </button>
@@ -368,7 +293,7 @@ export default function MergabAI() {
 
           <div
             ref={listRef}
-            className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_50%_0%,rgba(47,139,107,.09),transparent_38%)] px-3.5 py-5 sm:px-5 sm:py-6"
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_50%_0%,rgba(47,139,107,.08),transparent_38%)] px-3 py-4 sm:space-y-5 sm:px-4 sm:py-5"
           >
             {messages.map((message, messageIndex) => {
               const isUser = message.role === "user";
@@ -376,32 +301,32 @@ export default function MergabAI() {
               return (
                 <div
                   key={message.id}
-                  className={`flex items-end gap-2.5 ${
+                  className={`flex items-end gap-2 ${
                     isUser ? "justify-start" : "justify-end"
                   }`}
                 >
                   {isUser && (
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-[#D6DDD8] bg-white text-[#0F3A2B] shadow-sm">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-[#D6DDD8] bg-white text-[#0F3A2B] shadow-sm sm:h-9 sm:w-9">
                       <UserRound className="h-4 w-4" />
                     </div>
                   )}
 
-                  <div className="max-w-[84%]">
+                  <div className="max-w-[82%]">
                     <div
-                      className={`mb-1.5 flex px-1 text-[11px] font-black ${
+                      className={`mb-1 flex px-1 text-[10px] font-bold ${
                         isUser
                           ? "justify-start text-[#607068]"
-                          : "justify-end text-[#2F7257]"
+                          : "justify-end text-[#39745D]"
                       }`}
                     >
-                      {isUser ? t("أنت", "You") : t("نور", "Noor")}
+                      {isUser ? "أنت" : "نور"}
                     </div>
 
                     <div
-                      className={`whitespace-pre-wrap rounded-[22px] px-4 py-3 text-[15px] font-medium leading-7 ${
+                      className={`whitespace-pre-wrap rounded-[20px] px-3.5 py-2.5 text-[15px] font-medium leading-6 sm:rounded-[22px] sm:px-4 sm:py-3 sm:text-sm sm:leading-7 ${
                         isUser
-                          ? "rounded-br-md bg-gradient-to-br from-[#15523E] to-[#0F3A2B] text-white shadow-[0_10px_24px_rgba(15,58,43,.18)]"
-                          : "rounded-bl-md border border-[#DBE4DE] bg-white text-[#23372F] shadow-[0_10px_26px_rgba(15,58,43,.07)]"
+                          ? "rounded-br-md bg-[#0F3A2B] text-white shadow-md"
+                          : "rounded-bl-md border border-[#DCE3DE] bg-white text-[#24372F] shadow-[0_8px_24px_rgba(15,58,43,.06)]"
                       }`}
                     >
                       {message.text}
@@ -411,24 +336,21 @@ export default function MergabAI() {
                       <div
                         className={`mt-3 ${
                           messageIndex === 0
-                            ? "grid grid-cols-1 gap-2.5"
+                            ? "grid grid-cols-1 gap-2"
                             : "flex flex-wrap gap-2"
-                        }`}
+                        } sm:${messageIndex === 0 ? "grid-cols-3" : ""}`}
                       >
                         {message.actions
-                          .filter(
-                            (action) =>
-                              action.type !== "auto_open_product",
-                          )
+                          .filter((action) => action.type !== "auto_open_product")
                           .map((action, index) => (
                             <button
                               key={`${message.id}-${index}`}
                               type="button"
                               onClick={() => runAction(action)}
-                              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[17px] border px-4 py-2.5 text-xs font-black transition hover:-translate-y-0.5 ${
+                              className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold transition hover:-translate-y-0.5 ${
                                 action.style === "primary"
-                                  ? "border-[#0F3A2B] bg-[#0F3A2B] text-white shadow-[0_10px_24px_rgba(15,58,43,.17)]"
-                                  : "border-[#D6DFD9] bg-white text-[#0F3A2B] shadow-sm hover:border-[#4E9478]"
+                                  ? "border-[#0F3A2B] bg-[#0F3A2B] text-white shadow-[0_8px_20px_rgba(15,58,43,.16)]"
+                                  : "border-[#D7DED9] bg-white text-[#0F3A2B] hover:border-[#4E9478]"
                               }`}
                             >
                               {(action.type === "navigate" ||
@@ -436,7 +358,6 @@ export default function MergabAI() {
                                 action.type === "auto_open_product") && (
                                 <Navigation className="h-3.5 w-3.5 opacity-70" />
                               )}
-
                               {action.label}
                             </button>
                           ))}
@@ -445,45 +366,45 @@ export default function MergabAI() {
                   </div>
 
                   {!isUser && (
-                    <NoorAvatar size={36} />
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1D664B] to-[#0F3A2B] text-white shadow-md sm:h-9 sm:w-9">
+                      <Bot className="h-4 w-4" />
+                    </div>
                   )}
                 </div>
               );
             })}
 
             {isLoading && (
-              <div className="flex items-end justify-end gap-2.5">
-                <div className="rounded-[22px] rounded-bl-md border border-[#DBE4DE] bg-white px-4 py-3 shadow-sm">
-                  <div className="flex items-center gap-3 text-sm font-black text-[#0F3A2B]">
+              <div className="flex items-end justify-end gap-2">
+                <div className="rounded-[20px] rounded-bl-md border border-[#DCE3DE] bg-white px-3.5 py-2.5 shadow-sm">
+                  <div className="flex items-center gap-3 text-sm font-bold text-[#0F3A2B]">
                     <span className="flex gap-1">
                       <span className="h-2 w-2 animate-bounce rounded-full bg-[#1F7A58] [animation-delay:-.3s]" />
                       <span className="h-2 w-2 animate-bounce rounded-full bg-[#1F7A58] [animation-delay:-.15s]" />
                       <span className="h-2 w-2 animate-bounce rounded-full bg-[#1F7A58]" />
                     </span>
-
-                    {t("نور تفكر...", "Noor is thinking...")}
+                    نور تفكر...
                   </div>
                 </div>
 
-                <NoorAvatar size={36} />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1D664B] to-[#0F3A2B] text-white shadow-md">
+                  <Bot className="h-4 w-4" />
+                </div>
               </div>
             )}
           </div>
 
-          <div className="flex-shrink-0 border-t border-[#DDE4DF] bg-white/95 p-3 backdrop-blur-xl sm:p-4">
+          <div className="flex-shrink-0 border-t border-[#DDE4DF] bg-white/95 p-2.5 backdrop-blur-xl sm:p-3">
             {!phoneMode && (
               <>
                 <button
                   type="button"
                   onClick={() => setShowSuggestions((open) => !open)}
-                  className="mb-2.5 flex w-full items-center justify-between rounded-[18px] bg-[#EDF4F0] px-4 py-2.5 text-xs font-black text-[#0F3A2B] transition hover:bg-[#E4EEE8]"
+                  className="mb-2 flex w-full items-center justify-between rounded-2xl bg-[#EEF3EF] px-3.5 py-2 text-xs font-black text-[#0F3A2B] transition hover:bg-[#E7EEE9]"
                 >
                   <span className="flex items-center gap-2">
                     <MessageCircleMore className="h-4 w-4" />
-                    {t(
-                      "اقتراحات تساعدك تبدأ",
-                      "Suggestions to get started",
-                    )}
+                    {t("اقتراحات تساعدك تبدأ", "Suggestions to get started")}
                   </span>
 
                   <ChevronDown
@@ -494,7 +415,7 @@ export default function MergabAI() {
                 </button>
 
                 {showSuggestions && (
-                  <div className="mb-3 max-h-36 overflow-y-auto rounded-[20px] border border-[#DDE4DF] bg-[#F7F9F7] p-2.5">
+                  <div className="mb-2 max-h-32 overflow-y-auto rounded-2xl border border-[#DDE4DF] bg-[#F7F9F7] p-2">
                     <div className="flex flex-wrap gap-2">
                       {QUICK_PROMPTS.map((prompt) => (
                         <button
@@ -504,7 +425,7 @@ export default function MergabAI() {
                             setShowSuggestions(false);
                             void sendMessage(prompt);
                           }}
-                          className="rounded-full border border-[#D7DED9] bg-white px-3.5 py-2 text-xs font-bold text-[#0F3A2B] transition hover:border-[#4E9478]"
+                          className="rounded-full border border-[#D7DED9] bg-white px-3 py-2 text-xs font-bold text-[#0F3A2B] transition hover:border-[#4E9478]"
                         >
                           {prompt}
                         </button>
@@ -519,25 +440,19 @@ export default function MergabAI() {
                     action.type === "open_product",
                 ) && (
                   <p className="mb-2 text-center text-[10px] text-gray-400">
-                    {t(
-                      "تقدر تفتح المنتج وتكمل المحادثة بعد ذلك.",
-                      "You can open the product and continue the conversation afterward.",
-                    )}
+                    {t("تقدر تفتح المنتج وتكمل المحادثة بعد ذلك.", "You can open the product and continue the conversation afterward.")}
                   </p>
                 )}
               </>
             )}
 
             {phoneMode ? (
-              <form onSubmit={submitPhone} className="space-y-2.5">
-                <div className="rounded-[20px] border border-[#DDE4DF] bg-[#EEF3EF] p-3">
+              <form onSubmit={submitPhone} className="space-y-2">
+                <div className="rounded-2xl border border-[#DDE4DF] bg-[#EEF3EF] p-3">
                   <div className="mb-2 flex items-center gap-2 text-[#0F3A2B]">
                     <PackageSearch className="h-5 w-5" />
                     <p className="text-sm font-black">
-                      {t(
-                        "رقم الهاتف المستخدم في الطلب",
-                        "Phone number used for the order",
-                      )}
+                      {t("رقم الهاتف المستخدم في الطلب", "Phone number used for the order")}
                     </p>
                   </div>
 
@@ -551,14 +466,14 @@ export default function MergabAI() {
                     onFocus={scrollMessagesToBottom}
                     placeholder="XXXXXXXX"
                     autoFocus
-                    className="w-full rounded-[18px] border border-[#D7DED9] bg-white px-4 py-3 text-center text-[16px] font-black tracking-[.2em] text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:ring-4 focus:ring-[#3B8C6A]/10"
+                    className="w-full rounded-2xl border border-[#D7DED9] bg-white px-4 py-3 text-center text-[16px] font-black tracking-[.2em] text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:ring-4 focus:ring-[#3B8C6A]/10"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={phoneInput.length !== 8}
-                  className="w-full rounded-[18px] bg-gradient-to-l from-[#0F3A2B] to-[#1A5B43] py-3 font-black text-white shadow-lg disabled:opacity-40"
+                  className="w-full rounded-2xl bg-gradient-to-l from-[#0F3A2B] to-[#1A5B43] py-3 font-black text-white shadow-lg disabled:opacity-40"
                 >
                   {t("فتح مشترياتي", "Open My Orders")}
                 </button>
@@ -569,13 +484,13 @@ export default function MergabAI() {
                     setPhoneMode(false);
                     setPhoneInput("");
                   }}
-                  className="w-full rounded-[18px] border border-[#D7DED9] py-2.5 font-bold text-[#0F3A2B]"
+                  className="w-full rounded-2xl border border-[#D7DED9] py-2.5 font-bold text-[#0F3A2B]"
                 >
-                  {t("رجوع", "Back")}
+                  رجوع
                 </button>
               </form>
             ) : (
-              <form onSubmit={submit} className="flex items-end gap-2.5">
+              <form onSubmit={submit} className="flex items-end gap-2">
                 <textarea
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
@@ -587,17 +502,14 @@ export default function MergabAI() {
                     }
                   }}
                   rows={1}
-                  placeholder={t(
-                    "اكتب سؤالك هنا...",
-                    "Type your question here...",
-                  )}
-                  className="max-h-28 min-h-[52px] flex-1 resize-none rounded-[19px] border border-[#D7DED9] bg-[#F7F9F7] px-4 py-3.5 text-[16px] font-medium leading-6 text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:bg-white focus:ring-4 focus:ring-[#3B8C6A]/10"
+                  placeholder={t("اكتب سؤالك هنا...", "Type your question here...")}
+                  className="max-h-24 min-h-11 flex-1 resize-none rounded-2xl border border-[#D7DED9] bg-[#F7F9F7] px-4 py-3 text-[16px] font-medium leading-5 text-[#0F3A2B] outline-none transition focus:border-[#3B8C6A] focus:bg-white focus:ring-4 focus:ring-[#3B8C6A]/10"
                 />
 
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
-                  className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[19px] bg-gradient-to-br from-[#1A5B43] to-[#0F3A2B] text-white shadow-md transition hover:-translate-y-0.5 disabled:opacity-40"
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1A5B43] to-[#0F3A2B] text-white shadow-md transition hover:-translate-y-0.5 disabled:opacity-40"
                 >
                   {isLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -607,6 +519,10 @@ export default function MergabAI() {
                 </button>
               </form>
             )}
+
+            <p className="mt-1.5 text-center text-[9px] leading-4 text-gray-400 sm:text-[10px]">
+              {t("الأسعار والتوفر تُقرأ مباشرة من متجر مرقاب.", "Prices and availability are read directly from Mergab Store.")}
+            </p>
           </div>
         </section>
       )}
