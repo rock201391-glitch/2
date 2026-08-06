@@ -11,7 +11,7 @@ import { supabase } from "../../lib/supabase";
 
 export type AIAction =
   | {
-      type: "navigate";
+      type: "navigate" | "open_product";
       label: string;
       path: string;
       style?: "primary" | "secondary";
@@ -26,12 +26,6 @@ export type AIAction =
       type: "request_phone";
       label: string;
       purpose: "track_order";
-      style?: "primary" | "secondary";
-    }
-  | {
-      type: "open_product";
-      label: string;
-      path: string;
       style?: "primary" | "secondary";
     }
   | {
@@ -61,58 +55,38 @@ interface AIChatContextValue {
   openChat: () => void;
   closeChat: () => void;
   toggleChat: () => void;
-  sendMessage: (text: string) => Promise<void>;
+  sendMessage: (text: string, visibleText?: string) => Promise<void>;
   clearConversation: () => void;
 }
 
-const STORAGE_KEY = "mergab_ai_chat_v1";
+const STORAGE_KEY = "mergab_zulekha_openai_v1";
 
 const WELCOME_MESSAGE: AIMessage = {
   id: "welcome",
   role: "assistant",
   createdAt: Date.now(),
-  text: "أهلًا، أنا زليخة، مساعدتك الذكية في مرقاب. كيف أقدر أساعدك؟",
+  text:
+    "أهلًا، أنا زليخة، مساعدتك الذكية في متجر مرقاب.\n" +
+    "اكتب لي ما تبحث عنه، أو اختر أحد الخيارات وسأسألك أسئلة بسيطة حتى أصل لأفضل منتج مناسب لك.",
   actions: [
     {
       type: "prompt",
-      label: "شراء درون",
-      prompt: "__FLOW_DRONE__",
+      label: "ساعديني أختار درون",
+      prompt:
+        "أريد مساعدتك في اختيار درون مناسب. ابدئي بسؤالي عن خبرتي واستخدامي وميزانيتي، سؤالًا واحدًا في كل مرة.",
       style: "primary",
     },
     {
       type: "prompt",
-      label: "شراء كاميرا",
-      prompt: "__FLOW_CAMERA__",
+      label: "أبحث عن كاميرا",
+      prompt:
+        "أريد كاميرا مناسبة. اسأليني عن نوع التصوير والاستخدام والميزانية، سؤالًا واحدًا في كل مرة.",
     },
     {
       type: "prompt",
-      label: "شراء مايك",
-      prompt: "__FLOW_MICROPHONE__",
-    },
-    {
-      type: "prompt",
-      label: "إكسسوارات",
-      prompt: "__FLOW_ACCESSORIES__",
-    },
-    {
-      type: "request_phone",
-      label: "متابعة الطلب",
-      purpose: "track_order",
-    },
-    {
-      type: "prompt",
-      label: "تأجير درون",
-      prompt: "__FLOW_RENTAL__",
-    },
-    {
-      type: "prompt",
-      label: "الورشة",
-      prompt: "__FLOW_WORKSHOP__",
-    },
-    {
-      type: "prompt",
-      label: "المزادات",
-      prompt: "__FLOW_AUCTIONS__",
+      label: "منتج حسب ميزانيتي",
+      prompt:
+        "أريد منتجًا مناسبًا حسب ميزانيتي. اسأليني أولًا عن نوع المنتج ثم الميزانية والاستخدام.",
     },
   ],
 };
@@ -133,19 +107,21 @@ function createMessage(
   };
 }
 
+function freshWelcome(): AIMessage {
+  return { ...WELCOME_MESSAGE, createdAt: Date.now() };
+}
+
 function loadMessages(): AIMessage[] {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return [WELCOME_MESSAGE];
+    if (!saved) return [freshWelcome()];
 
     const parsed = JSON.parse(saved);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return [WELCOME_MESSAGE];
-    }
+    if (!Array.isArray(parsed) || parsed.length === 0) return [freshWelcome()];
 
     return parsed.slice(-40);
   } catch {
-    return [WELCOME_MESSAGE];
+    return [freshWelcome()];
   }
 }
 
@@ -165,6 +141,7 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const closeChat = useCallback(() => setIsOpen(false), []);
+
   const toggleChat = useCallback(() => {
     setIsOpen((current) => {
       const next = !current;
@@ -174,18 +151,21 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearConversation = useCallback(() => {
-    setMessages([{ ...WELCOME_MESSAGE, createdAt: Date.now() }]);
+    setMessages([freshWelcome()]);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const sendMessage = useCallback(
-    async (rawText: string) => {
+    async (rawText: string, visibleText?: string) => {
       const text = rawText.trim();
       if (!text || isLoading) return;
 
-      const userMessage = createMessage("user", text);
-      const nextMessages = [...messages, userMessage].slice(-20);
+      const userMessage = createMessage(
+        "user",
+        visibleText?.trim() || text,
+      );
 
+      const nextMessages = [...messages, userMessage].slice(-20);
       setMessages(nextMessages);
       setIsLoading(true);
 
@@ -195,54 +175,53 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
           {
             body: {
               message: text,
-              history: nextMessages.slice(-12).map((message) => ({
-                role: message.role,
-                content: message.text,
+              history: nextMessages.slice(-14).map((item) => ({
+                role: item.role,
+                content: item.text,
               })),
-              current_path: window.location.pathname,
+              current_path:
+                window.location.pathname + window.location.search,
             },
           },
         );
 
         if (error) throw error;
 
-        const replyText =
-          data?.message?.trim() ||
-          "ما قدرت أجهز الإجابة الآن. جرّب مرة ثانية أو اكتب سؤالك بطريقة مختلفة.";
-
         const assistantMessage = createMessage(
           "assistant",
-          replyText,
-          Array.isArray(data?.actions) ? data.actions.slice(0, 6) : undefined,
+          data?.message?.trim() ||
+            "ما قدرت أجهز الإجابة الآن. جرّب مرة ثانية.",
+          Array.isArray(data?.actions)
+            ? data.actions.slice(0, 8)
+            : undefined,
         );
 
         setMessages((current) => [...current, assistantMessage].slice(-40));
 
-        if (!isOpen) {
-          setUnreadCount((count) => count + 1);
-        }
+        if (!isOpen) setUnreadCount((count) => count + 1);
       } catch (error) {
-        console.error("Mergab AI error:", error);
+        console.error("Zulekha error:", error);
 
-        const fallback = createMessage(
-          "assistant",
-          "صار خطأ مؤقت في المساعد. تقدر تفتح المتجر أو مشترياتي من الخيارات تحت.",
-          [
-            {
-              type: "navigate",
-              label: "فتح المتجر",
-              path: "/shop",
-              style: "primary",
-            },
-            {
-              type: "navigate",
-              label: "مشترياتي",
-              path: "/my-orders",
-            },
-          ],
-        );
-
-        setMessages((current) => [...current, fallback].slice(-40));
+        setMessages((current) => [
+          ...current,
+          createMessage(
+            "assistant",
+            "صار خطأ مؤقت في زليخة. جرّب مرة ثانية أو افتح المتجر.",
+            [
+              {
+                type: "navigate",
+                label: "فتح المتجر",
+                path: "/shop",
+                style: "primary",
+              },
+              {
+                type: "request_phone",
+                label: "متابعة الطلب",
+                purpose: "track_order",
+              },
+            ],
+          ),
+        ]);
       } finally {
         setIsLoading(false);
       }
