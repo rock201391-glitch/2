@@ -1,17 +1,25 @@
-import { useMemo, useState } from "react";
 import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  Banknote,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
   CreditCard,
-  Banknote,
-  IdCard,
+  Eraser,
   FileCheck2,
+  IdCard,
   Loader2,
   MapPin,
+  PenLine,
   Phone,
+  ShieldCheck,
   UploadCloud,
   User,
-  ChevronDown,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import type { RentalCheckoutData } from "./Rentals";
@@ -49,55 +57,25 @@ const GOVERNORATE_TO_WILAYAT: Record<string, string[]> = {
     "بدبد",
     "الجبل الأخضر",
   ],
-  "شمال الباطنة": [
-    "صحار",
-    "شناص",
-    "لوى",
-    "صحم",
-    "الخابورة",
-    "السويق",
-  ],
-  "جنوب الباطنة": [
-    "الرستاق",
-    "العوابي",
-    "نخل",
-    "وادي المعاول",
-    "بركاء",
-    "المصنعة",
-  ],
-  "جنوب الشرقية": [
-    "صور",
-    "الكامل والوافي",
-    "جعلان بني بوحسن",
-    "جعلان بني بو علي",
-    "مصيرة",
-  ],
-  "شمال الشرقية": [
-    "إبراء",
-    "المضيبي",
-    "بدية",
-    "القابل",
-    "وادي بني خالد",
-    "دماء والطائيين",
-    "سناو",
-  ],
+  "شمال الباطنة": ["صحار", "شناص", "لوى", "صحم", "الخابورة", "السويق"],
+  "جنوب الباطنة": ["الرستاق", "العوابي", "نخل", "وادي المعاول", "بركاء", "المصنعة"],
+  "جنوب الشرقية": ["صور", "الكامل والوافي", "جعلان بني بوحسن", "جعلان بني بو علي", "مصيرة"],
+  "شمال الشرقية": ["إبراء", "المضيبي", "بدية", "القابل", "وادي بني خالد", "دماء والطائيين", "سناو"],
   الظاهرة: ["عبري", "ينقل", "ضنك"],
   الوسطى: ["هيما", "محوت", "الدقم", "الجازر"],
 };
 
 const BLOCKING_STATUSES = ["pending", "confirmed", "active"];
 
+const TERMS_TEXT = `أتعهد أنا صاحب البيانات الموضحة في هذا الطلب بأن جميع البيانات والمرفقات المقدمة صحيحة وتخصني. كما أتعهد بالمحافظة على الدرون وجميع ملحقاته واستعماله بطريقة نظامية وآمنة وللغرض المتفق عليه فقط، وعدم تسليمه أو تأجيره أو تمكين أي شخص آخر من استخدامه دون موافقة متجر مرقاب. وألتزم بإرجاع الدرون وجميع ملحقاته في الموعد المحدد وبنفس الحالة التي استلمتها عليها، وأتحمل مسؤولية أي تلف أو فقدان أو نقص أو تأخير ينتج عن سوء الاستخدام أو الإهمال أو مخالفة التعليمات، كما أوافق على تحمل التكاليف المترتبة على ذلك وفق تقييم المتجر.`;
+
 function normalizePhoneNumber(value: string) {
   const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
   const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
 
   return value
-    .replace(/[٠-٩]/g, (digit) =>
-      String(arabicDigits.indexOf(digit)),
-    )
-    .replace(/[۰-۹]/g, (digit) =>
-      String(persianDigits.indexOf(digit)),
-    )
+    .replace(/[٠-٩]/g, (digit) => String(arabicDigits.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String(persianDigits.indexOf(digit)))
     .replace(/\D/g, "");
 }
 
@@ -106,8 +84,7 @@ function normalizeName(value: string) {
 }
 
 function validFullName(value: string) {
-  const words = normalizeName(value).split(" ").filter(Boolean);
-  return words.length >= 3;
+  return normalizeName(value).split(" ").filter(Boolean).length >= 3;
 }
 
 function parseDate(value: string) {
@@ -139,18 +116,12 @@ function validateImage(file: File | null, label: string) {
   return "";
 }
 
-async function uploadImage(
+async function uploadFile(
   bucket: string,
   folder: string,
-  file: File,
+  file: Blob,
+  extension: string,
 ) {
-  const extension =
-    file.type === "image/png"
-      ? "png"
-      : file.type === "image/webp"
-        ? "webp"
-        : "jpg";
-
   const filePath = `${folder}/${Date.now()}-${Math.random()
     .toString(36)
     .slice(2)}.${extension}`;
@@ -160,15 +131,24 @@ async function uploadImage(
     .upload(filePath, file, {
       cacheControl: "3600",
       upsert: false,
+      contentType:
+        extension === "png"
+          ? "image/png"
+          : extension === "webp"
+            ? "image/webp"
+            : "image/jpeg",
     });
 
   if (error) throw error;
 
-  const { data } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(filePath);
-
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
   return data.publicUrl;
+}
+
+function getFileExtension(file: File) {
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  return "jpg";
 }
 
 export default function RentalCheckout({
@@ -184,60 +164,85 @@ export default function RentalCheckout({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
 
+  const [step, setStep] = useState<"details" | "undertaking">("details");
+  const [signatureBlob, setSignatureBlob] = useState<Blob | null>(null);
+  const [signatureVersion, setSignatureVersion] = useState(0);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successId, setSuccessId] = useState<number | null>(null);
+
+  const [receiptPreview, setReceiptPreview] = useState("");
+  const [idCardPreview, setIdCardPreview] = useState("");
 
   const wilayatOptions = useMemo(
     () => GOVERNORATE_TO_WILAYAT[governorate] || [],
     [governorate],
   );
 
-  function validateForm() {
+  useEffect(() => {
+    if (!receiptFile) {
+      setReceiptPreview("");
+      return;
+    }
+
+    const url = URL.createObjectURL(receiptFile);
+    setReceiptPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [receiptFile]);
+
+  useEffect(() => {
+    if (!idCardFile) {
+      setIdCardPreview("");
+      return;
+    }
+
+    const url = URL.createObjectURL(idCardFile);
+    setIdCardPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [idCardFile]);
+
+  function validateDetails() {
     if (!validFullName(fullName)) {
       return "اكتب الاسم الثلاثي كاملًا، ثلاثة أسماء على الأقل";
     }
 
-    const normalizedPhone = normalizePhoneNumber(phone);
-
-    if (normalizedPhone.length < 8) {
+    if (normalizePhoneNumber(phone).length < 8) {
       return "رقم الهاتف يجب ألا يقل عن 8 أرقام";
     }
 
-    if (!governorate) {
-      return "اختر المحافظة";
-    }
+    if (!governorate) return "اختر المحافظة";
+    if (!wilayat) return "اختر الولاية";
 
-    if (!wilayat) {
-      return "اختر الولاية";
-    }
-
-    const receiptError = validateImage(
-      receiptFile,
-      "إيصال التحويل",
-    );
-
+    const receiptError = validateImage(receiptFile, "إيصال التحويل");
     if (receiptError) return receiptError;
 
-    const idCardError = validateImage(
-      idCardFile,
-      "صورة البطاقة الشخصية",
-    );
-
+    const idCardError = validateImage(idCardFile, "صورة البطاقة الشخصية");
     if (idCardError) return idCardError;
 
     return "";
   }
 
-  async function submitBooking(event: React.FormEvent) {
+  function openUndertaking(event: React.FormEvent) {
     event.preventDefault();
 
-    if (submitting) return;
-
-    const validationError = validateForm();
+    const validationError = validateDetails();
 
     if (validationError) {
       setError(validationError);
+      return;
+    }
+
+    setError("");
+    setStep("undertaking");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function finishBooking() {
+    if (submitting) return;
+
+    if (!signatureBlob) {
+      setError("يجب توقيع التعهد قبل إرسال الطلب");
       return;
     }
 
@@ -245,35 +250,40 @@ export default function RentalCheckout({
     setError("");
 
     try {
-      const { data: conflicts, error: conflictError } =
-        await supabase
-          .from("rental_bookings")
-          .select("id")
-          .eq("rental_drone_id", booking.drone.id)
-          .in("status", BLOCKING_STATUSES)
-          .lte("start_date", booking.endDate)
-          .gte("end_date", booking.startDate);
+      const { data: conflicts, error: conflictError } = await supabase
+        .from("rental_bookings")
+        .select("id")
+        .eq("rental_drone_id", booking.drone.id)
+        .in("status", BLOCKING_STATUSES)
+        .lte("start_date", booking.endDate)
+        .gte("end_date", booking.startDate);
 
       if (conflictError) throw conflictError;
 
       if ((conflicts || []).length > 0) {
-        setError(
-          "هذه المدة أصبحت محجوزة قبل إتمام الطلب، ارجع واختر مدة أخرى",
-        );
+        setError("هذه المدة أصبحت محجوزة قبل إتمام الطلب، ارجع واختر مدة أخرى");
         setSubmitting(false);
         return;
       }
 
-      const [receiptUrl, idCardUrl] = await Promise.all([
-        uploadImage(
+      const [receiptUrl, idCardUrl, signatureUrl] = await Promise.all([
+        uploadFile(
           "rental-receipts",
           "receipts",
           receiptFile as File,
+          getFileExtension(receiptFile as File),
         ),
-        uploadImage(
+        uploadFile(
           "rental-id-cards",
           "id-cards",
           idCardFile as File,
+          getFileExtension(idCardFile as File),
+        ),
+        uploadFile(
+          "rental-signatures",
+          "signatures",
+          signatureBlob,
+          "png",
         ),
       ]);
 
@@ -296,6 +306,10 @@ export default function RentalCheckout({
         status: "pending",
         receipt_url: receiptUrl,
         id_card_url: idCardUrl,
+        signature_url: signatureUrl,
+        terms_text: TERMS_TEXT,
+        terms_accepted: true,
+        terms_accepted_at: new Date().toISOString(),
       };
 
       const { data, error: insertError } = await supabase
@@ -309,9 +323,7 @@ export default function RentalCheckout({
       setSuccessId(Number(data.id));
     } catch (submitError) {
       console.error(submitError);
-      setError(
-        "تعذر إتمام طلب الإيجار. تأكد من الصور وحاول مرة أخرى",
-      );
+      setError("تعذر إتمام طلب الإيجار. تأكد من المرفقات وحاول مرة أخرى");
     } finally {
       setSubmitting(false);
     }
@@ -320,42 +332,25 @@ export default function RentalCheckout({
   if (successId !== null) {
     return (
       <div
-        className="min-h-screen bg-[#FDFBF7] px-4 py-12 text-[#0f3a2b]"
+        className="min-h-screen bg-[#FDFBF7] px-4 py-12 text-[#0F3A2B]"
         dir="rtl"
       >
         <div className="mx-auto max-w-xl rounded-[36px] border border-[#E7E2D3] bg-white p-8 text-center shadow-2xl sm:p-12">
-          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 shadow-inner">
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
             <CheckCircle2 className="h-12 w-12" />
           </div>
 
-          <h1 className="mt-6 text-3xl font-black text-[#0f3a2b]">
-            تم إرسال طلب الإيجار
-          </h1>
+          <h1 className="mt-6 text-3xl font-black">تم إرسال طلب الإيجار</h1>
 
-          <p className="mt-3 leading-7 text-gray-600 text-lg">
-            رقم الحجز <span className="font-bold text-[#0f3a2b]">#{successId}</span>. ظهر الطلب الآن داخل لوحة الإدارة وسنتواصل معك بعد مراجعته.
+          <p className="mt-3 text-lg leading-7 text-gray-600">
+            رقم الحجز <b>#{successId}</b>. ظهر الطلب الآن في لوحة الإدارة
+            مع التعهد والتوقيع وجميع المرفقات.
           </p>
-
-          <div className="mt-8 rounded-3xl bg-[#FAF8F5] p-6 leading-9 border border-[#EFECE6] text-right">
-            <div className="font-black text-[#0f3a2b] text-lg mb-2">{booking.drone.name}</div>
-            <div className="flex justify-between border-b border-gray-200/60 pb-2 text-sm text-gray-600">
-              <span>من تاريخ:</span>
-              <span className="font-bold text-[#0f3a2b]">{formatDate(booking.startDate)}</span>
-            </div>
-            <div className="flex justify-between py-2 text-sm text-gray-600">
-              <span>إلى تاريخ:</span>
-              <span className="font-bold text-[#0f3a2b]">{formatDate(booking.endDate)}</span>
-            </div>
-            <div className="flex justify-between pt-2 border-t border-gray-200/60 text-lg">
-              <span className="font-bold text-gray-700">الإجمالي:</span>
-              <span className="font-black text-[#0f3a2b]">{booking.totalAmount.toFixed(3)} ر.ع</span>
-            </div>
-          </div>
 
           <button
             type="button"
             onClick={onSuccess}
-            className="mt-8 h-14 w-full rounded-2xl bg-[#0f3a2b] font-black text-white shadow-xl shadow-[#0f3a2b]/25 transition hover:bg-[#09251c]"
+            className="mt-8 h-14 w-full rounded-2xl bg-[#0F3A2B] font-black text-white"
           >
             العودة إلى صفحة التأجير
           </button>
@@ -364,39 +359,163 @@ export default function RentalCheckout({
     );
   }
 
+  if (step === "undertaking") {
+    return (
+      <div
+        className="min-h-screen bg-[#FDFBF7] px-4 py-10 text-[#0F3A2B]"
+        dir="rtl"
+      >
+        <div className="mx-auto max-w-5xl">
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => {
+              setStep("details");
+              setError("");
+            }}
+            className="mb-7 flex items-center gap-2 rounded-2xl border bg-white px-5 py-3 font-bold"
+          >
+            <ChevronRight className="h-5 w-5" />
+            العودة لتعديل البيانات
+          </button>
+
+          <div className="rounded-[36px] border border-[#E7E2D3] bg-white p-6 shadow-xl sm:p-9">
+            <div className="mb-8 flex items-center gap-4 border-b pb-6">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white">
+                <ShieldCheck className="h-7 w-7" />
+              </div>
+
+              <div>
+                <h1 className="text-3xl font-black">تعهد استئجار الدرون</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  راجع البيانات، اقرأ التعهد، ثم وقّع في الخانة أسفل الصفحة.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Detail label="الاسم الثلاثي" value={normalizeName(fullName)} />
+              <Detail label="رقم الهاتف" value={normalizePhoneNumber(phone)} />
+              <Detail label="المحافظة" value={governorate} />
+              <Detail label="الولاية" value={wilayat} />
+              <Detail label="الدرون" value={booking.drone.name} />
+              <Detail label="من" value={formatDate(booking.startDate)} />
+              <Detail label="إلى" value={formatDate(booking.endDate)} />
+              <Detail
+                label="الإجمالي"
+                value={`${booking.totalAmount.toFixed(3)} ر.ع`}
+              />
+            </div>
+
+            <div className="mt-7 rounded-3xl border border-[#E7E2D3] bg-[#FAF8F5] p-6">
+              <h2 className="mb-4 text-xl font-black">نص التعهد</h2>
+              <p className="text-justify leading-9 text-gray-700">
+                {TERMS_TEXT}
+              </p>
+            </div>
+
+            <div className="mt-7 grid gap-5 md:grid-cols-2">
+              <PreviewCard
+                title="صورة البطاقة الشخصية"
+                imageUrl={idCardPreview}
+                icon={<IdCard className="h-6 w-6" />}
+              />
+
+              <PreviewCard
+                title="إيصال التحويل"
+                imageUrl={receiptPreview}
+                icon={<Banknote className="h-6 w-6" />}
+              />
+            </div>
+
+            <div className="mt-7 rounded-3xl border border-[#E7E2D3] p-5">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <PenLine className="h-6 w-6" />
+                  <div>
+                    <h2 className="text-xl font-black">توقيع المستأجر</h2>
+                    <p className="text-sm text-gray-500">
+                      وقّع بإصبعك على الهاتف أو باستخدام الماوس.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSignatureBlob(null);
+                    setSignatureVersion((value) => value + 1);
+                    setError("");
+                  }}
+                  className="flex items-center gap-2 rounded-full bg-red-50 px-5 py-2.5 font-bold text-red-700"
+                >
+                  <Eraser className="h-4 w-4" />
+                  مسح التوقيع
+                </button>
+              </div>
+
+              <SignaturePad
+                key={signatureVersion}
+                onChange={setSignatureBlob}
+              />
+            </div>
+
+            {error && (
+              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-center font-bold text-red-700">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => void finishBooking()}
+              className="mt-7 flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-[#0F3A2B] text-lg font-black text-white disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  جاري رفع المرفقات وإرسال الطلب...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-6 w-6" />
+                  أوافق على التعهد وإتمام الطلب
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form
-      onSubmit={submitBooking}
-      className="min-h-screen bg-[#FDFBF7] px-4 py-10 text-[#0f3a2b]"
+      onSubmit={openUndertaking}
+      className="min-h-screen bg-[#FDFBF7] px-4 py-10 text-[#0F3A2B]"
       dir="rtl"
     >
       <div className="mx-auto max-w-6xl">
         <button
           type="button"
           onClick={onBack}
-          className="mb-8 flex items-center gap-2 font-bold text-[#0f3a2b] hover:opacity-80 transition bg-white px-5 py-2.5 rounded-2xl border border-[#E7E2D3] shadow-sm w-fit"
+          className="mb-8 flex w-fit items-center gap-2 rounded-2xl border bg-white px-5 py-2.5 font-bold"
         >
           <ChevronRight className="h-5 w-5" />
           العودة لاختيار التاريخ
         </button>
 
-        <h1 className="mb-10 text-center text-4xl font-black tracking-tight text-[#0f3a2b]">
+        <h1 className="mb-10 text-center text-4xl font-black">
           إتمام حجز الدرون
         </h1>
 
         <div className="grid items-start gap-8 lg:grid-cols-[1fr_380px]">
           <section className="space-y-6">
-            <div className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm">
-              <div className="mb-6 flex items-center gap-3 border-b border-[#F0EBE1] pb-4">
-                <div className="p-2.5 rounded-2xl bg-[#FAF8F5] text-[#0f3a2b] border border-[#EFECE6]">
-                  <User className="h-6 w-6" />
-                </div>
-                <h2 className="text-2xl font-black text-[#0f3a2b]">بيانات المستأجر</h2>
-              </div>
-
+            <Section title="بيانات المستأجر" icon={<User className="h-6 w-6" />}>
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
+                  <label className="mb-2 block text-sm font-bold">
                     الاسم الثلاثي
                   </label>
 
@@ -407,21 +526,21 @@ export default function RentalCheckout({
                       setError("");
                     }}
                     placeholder="مثال: حمد محمد البلوشي"
-                    className="h-14 w-full rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 outline-none focus:border-[#0f3a2b] focus:bg-white transition font-bold text-[#0f3a2b] placeholder:font-normal placeholder:text-gray-400"
+                    className="h-14 w-full rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 font-bold outline-none focus:border-[#0F3A2B]"
                   />
 
-                  <p className="mt-2 text-xs font-medium text-gray-400">
+                  <p className="mt-2 text-xs text-gray-400">
                     يجب كتابة ثلاثة أسماء على الأقل
                   </p>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
+                  <label className="mb-2 block text-sm font-bold">
                     رقم الهاتف
                   </label>
 
                   <div
-                    className="flex h-14 items-center gap-3 rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 focus-within:border-[#0f3a2b] focus-within:bg-white transition"
+                    className="flex h-14 items-center gap-3 rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] px-5 focus-within:border-[#0F3A2B]"
                     dir="ltr"
                   >
                     <Phone className="h-5 w-5 text-gray-400" />
@@ -429,28 +548,19 @@ export default function RentalCheckout({
                     <input
                       value={phone}
                       onChange={(event) => {
-                        setPhone(
-                          normalizePhoneNumber(event.target.value),
-                        );
+                        setPhone(normalizePhoneNumber(event.target.value));
                         setError("");
                       }}
                       placeholder="968XXXXXXXX"
                       inputMode="numeric"
-                      className="h-full w-full bg-transparent outline-none font-bold text-[#0f3a2b] placeholder:font-normal placeholder:text-gray-400 text-left"
+                      className="h-full w-full bg-transparent text-left font-bold outline-none"
                     />
                   </div>
                 </div>
               </div>
-            </div>
+            </Section>
 
-            <div className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm">
-              <div className="mb-6 flex items-center gap-3 border-b border-[#F0EBE1] pb-4">
-                <div className="p-2.5 rounded-2xl bg-[#FAF8F5] text-[#0f3a2b] border border-[#EFECE6]">
-                  <MapPin className="h-6 w-6" />
-                </div>
-                <h2 className="text-2xl font-black text-[#0f3a2b]">موقع الاستلام</h2>
-              </div>
-
+            <Section title="موقع الاستلام" icon={<MapPin className="h-6 w-6" />}>
               <div className="grid gap-5 md:grid-cols-2">
                 <FancySelect
                   label="المحافظة"
@@ -476,16 +586,9 @@ export default function RentalCheckout({
                   }}
                 />
               </div>
-            </div>
+            </Section>
 
-            <div className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm">
-              <div className="mb-6 flex items-center gap-3 border-b border-[#F0EBE1] pb-4">
-                <div className="p-2.5 rounded-2xl bg-[#FAF8F5] text-[#0f3a2b] border border-[#EFECE6]">
-                  <CreditCard className="h-6 w-6" />
-                </div>
-                <h2 className="text-2xl font-black text-[#0f3a2b]">المرفقات</h2>
-              </div>
-
+            <Section title="المرفقات" icon={<CreditCard className="h-6 w-6" />}>
               <div className="grid gap-5 md:grid-cols-2">
                 <FileUpload
                   label="أرفق إيصال التحويل"
@@ -507,84 +610,235 @@ export default function RentalCheckout({
                   }}
                 />
               </div>
-
-              <p className="mt-4 text-xs font-medium text-gray-400">
-                الصيغ المسموحة JPG وPNG وWEBP، والحد الأقصى 5MB لكل صورة.
-              </p>
-            </div>
+            </Section>
 
             {error && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center font-bold text-red-700 shadow-sm">
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center font-bold text-red-700">
                 {error}
               </div>
             )}
           </section>
 
-          <aside className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm lg:sticky lg:top-28 space-y-6">
+          <aside className="space-y-6 rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm lg:sticky lg:top-28">
             {booking.drone.image_url && (
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] flex items-center justify-center">
+              <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-[#FAF8F5] p-3">
                 <img
                   src={booking.drone.image_url}
                   alt={booking.drone.name}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               </div>
             )}
 
-            <h2 className="text-2xl font-black text-[#0f3a2b]">
-              {booking.drone.name}
-            </h2>
+            <h2 className="text-2xl font-black">{booking.drone.name}</h2>
 
-            <div className="space-y-3 rounded-2xl bg-[#FAF8F5] p-5 border border-[#EFECE6] text-sm">
-              <SummaryRow
-                label="من"
-                value={formatDate(booking.startDate)}
-              />
-
-              <SummaryRow
-                label="إلى"
-                value={formatDate(booking.endDate)}
-              />
-
+            <div className="space-y-3 rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] p-5 text-sm">
+              <SummaryRow label="من" value={formatDate(booking.startDate)} />
+              <SummaryRow label="إلى" value={formatDate(booking.endDate)} />
               <SummaryRow
                 label="عدد الأيام"
                 value={`${booking.totalDays} يوم`}
               />
-
               <SummaryRow
                 label="السعر اليومي"
-                value={`${Number(
-                  booking.drone.daily_price,
-                ).toFixed(3)} ر.ع`}
+                value={`${Number(booking.drone.daily_price).toFixed(3)} ر.ع`}
               />
 
-              <div className="flex justify-between gap-3 border-t border-gray-200/80 pt-4 text-lg">
-                <span className="font-bold text-gray-700">الإجمالي</span>
-                <b className="text-xl font-black text-[#0f3a2b]">{booking.totalAmount.toFixed(3)} ر.ع</b>
+              <div className="flex justify-between gap-3 border-t pt-4 text-lg">
+                <span className="font-bold">الإجمالي</span>
+                <b>{booking.totalAmount.toFixed(3)} ر.ع</b>
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={submitting}
-              className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#0f3a2b] font-black text-white shadow-xl shadow-[#0f3a2b]/25 transition hover:bg-[#09251c] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#0F3A2B] font-black text-white"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  جاري إرسال الطلب...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-5 w-5" />
-                  إتمام طلب الإيجار
-                </>
-              )}
+              <ShieldCheck className="h-5 w-5" />
+              مراجعة التعهد
             </button>
           </aside>
         </div>
       </div>
     </form>
+  );
+}
+
+function SignaturePad({
+  onChange,
+}: {
+  onChange: (blob: Blob | null) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawingRef = useRef(false);
+  const hasSignatureRef = useRef(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+
+      canvas.width = Math.floor(rect.width * ratio);
+      canvas.height = Math.floor(rect.height * ratio);
+
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      context.scale(ratio, ratio);
+      context.lineWidth = 2.5;
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.strokeStyle = "#0F3A2B";
+      context.fillStyle = "#FFFFFF";
+      context.fillRect(0, 0, rect.width, rect.height);
+    };
+
+    resize();
+  }, []);
+
+  function pointFromEvent(
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  }
+
+  function startDrawing(
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+
+    if (!canvas || !context) return;
+
+    canvas.setPointerCapture(event.pointerId);
+    drawingRef.current = true;
+
+    const point = pointFromEvent(event);
+    context.beginPath();
+    context.moveTo(point.x, point.y);
+  }
+
+  function draw(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (!drawingRef.current) return;
+
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+
+    if (!canvas || !context) return;
+
+    const point = pointFromEvent(event);
+    context.lineTo(point.x, point.y);
+    context.stroke();
+    hasSignatureRef.current = true;
+  }
+
+  function stopDrawing(
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) {
+    const canvas = canvasRef.current;
+
+    drawingRef.current = false;
+
+    if (canvas?.hasPointerCapture(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+
+    if (!canvas || !hasSignatureRef.current) {
+      onChange(null);
+      return;
+    }
+
+    canvas.toBlob((blob) => onChange(blob), "image/png");
+  }
+
+  return (
+    <div>
+      <canvas
+        ref={canvasRef}
+        onPointerDown={startDrawing}
+        onPointerMove={draw}
+        onPointerUp={stopDrawing}
+        onPointerCancel={stopDrawing}
+        className="h-56 w-full touch-none rounded-2xl border-2 border-dashed border-[#BDB5A5] bg-white shadow-inner"
+      />
+
+      <p className="mt-2 text-center text-xs text-gray-400">
+        التوقيع داخل الإطار أعلاه
+      </p>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-[32px] border border-[#E7E2D3] bg-white p-7 shadow-sm">
+      <div className="mb-6 flex items-center gap-3 border-b border-[#F0EBE1] pb-4">
+        <div className="rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] p-2.5">
+          {icon}
+        </div>
+        <h2 className="text-2xl font-black">{title}</h2>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Detail({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-[#FAF8F5] p-4">
+      <small className="text-gray-500">{label}</small>
+      <p className="mt-1 font-black">{value}</p>
+    </div>
+  );
+}
+
+function PreviewCard({
+  title,
+  imageUrl,
+  icon,
+}: {
+  title: string;
+  imageUrl: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-3xl border border-[#E7E2D3] bg-[#FAF8F5] p-4">
+      <div className="mb-3 flex items-center gap-2 font-black">
+        {icon}
+        {title}
+      </div>
+
+      <img
+        src={imageUrl}
+        alt={title}
+        className="h-64 w-full rounded-2xl bg-white object-contain"
+      />
+    </div>
   );
 }
 
@@ -598,7 +852,7 @@ function SummaryRow({
   return (
     <div className="flex justify-between gap-3 text-gray-600">
       <span>{label}</span>
-      <b className="text-[#0f3a2b] text-left">{value}</b>
+      <b className="text-left text-[#0F3A2B]">{value}</b>
     </div>
   );
 }
@@ -622,9 +876,7 @@ function FancySelect({
 
   return (
     <div className="relative">
-      <label className="mb-2 block text-sm font-bold text-[#0f3a2b]">
-        {label}
-      </label>
+      <label className="mb-2 block text-sm font-bold">{label}</label>
 
       <button
         type="button"
@@ -632,11 +884,11 @@ function FancySelect({
         onClick={() => setOpen((current) => !current)}
         className={`flex h-14 w-full items-center justify-between rounded-2xl border px-5 text-right font-bold transition ${
           open
-            ? "border-[#0f3a2b] bg-white shadow-[0_10px_30px_rgba(15,58,43,0.10)]"
+            ? "border-[#0F3A2B] bg-white shadow-lg"
             : "border-[#EFECE6] bg-[#FAF8F5]"
-        } ${disabled ? "cursor-not-allowed opacity-40" : "hover:border-[#0f3a2b]/50"}`}
+        } ${disabled ? "cursor-not-allowed opacity-40" : ""}`}
       >
-        <span className={value ? "text-[#0f3a2b]" : "text-gray-400"}>
+        <span className={value ? "" : "text-gray-400"}>
           {value || placeholder}
         </span>
 
@@ -653,20 +905,20 @@ function FancySelect({
             type="button"
             aria-label="إغلاق القائمة"
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-40 cursor-default"
+            className="fixed inset-0 z-40"
           />
 
-          <div className="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-[22px] border border-[#E7E2D3] bg-white p-2 shadow-[0_24px_70px_rgba(15,58,43,0.18)]">
+          <div className="absolute z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-[22px] border border-[#E7E2D3] bg-white p-2 shadow-2xl">
             <button
               type="button"
               onClick={() => {
                 onChange("");
                 setOpen(false);
               }}
-              className={`mb-1 flex w-full items-center rounded-xl px-4 py-3 text-right text-sm font-bold transition ${
+              className={`mb-1 w-full rounded-xl px-4 py-3 text-right text-sm font-bold ${
                 !value
-                  ? "bg-[#0f3a2b] text-white"
-                  : "text-[#0f3a2b] hover:bg-[#F8F7F2]"
+                  ? "bg-[#0F3A2B] text-white"
+                  : "hover:bg-[#F8F7F2]"
               }`}
             >
               {placeholder}
@@ -680,10 +932,10 @@ function FancySelect({
                   onChange(option);
                   setOpen(false);
                 }}
-                className={`mb-1 flex w-full items-center rounded-xl px-4 py-3 text-right text-sm font-bold transition last:mb-0 ${
+                className={`mb-1 w-full rounded-xl px-4 py-3 text-right text-sm font-bold ${
                   value === option
-                    ? "bg-[#0f3a2b] text-white"
-                    : "text-[#0f3a2b] hover:bg-[#F8F7F2]"
+                    ? "bg-[#0F3A2B] text-white"
+                    : "hover:bg-[#F8F7F2]"
                 }`}
               >
                 {option}
@@ -710,7 +962,7 @@ function FileUpload({
   const EmptyIcon = icon === "receipt" ? Banknote : IdCard;
 
   return (
-    <label className="group block cursor-pointer rounded-2xl border-2 border-dashed border-[#DED7C5] bg-[#FAF8F5] p-5 transition hover:border-[#0f3a2b] hover:bg-white">
+    <label className="group block cursor-pointer rounded-2xl border-2 border-dashed border-[#DED7C5] bg-[#FAF8F5] p-5 hover:border-[#0F3A2B]">
       <input
         type="file"
         accept="image/jpeg,image/png,image/webp"
@@ -721,19 +973,18 @@ function FileUpload({
       />
 
       <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-[#EFECE6] bg-white shadow-sm transition group-hover:scale-105">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border bg-white">
           {file ? (
             <FileCheck2 className="h-7 w-7 text-emerald-600" />
           ) : (
-            <EmptyIcon className="h-7 w-7 text-[#0f3a2b]" />
+            <EmptyIcon className="h-7 w-7" />
           )}
         </div>
 
         <div className="min-w-0 overflow-hidden">
-          <p className="font-black text-[#0f3a2b]">{label}</p>
-
+          <p className="font-black">{label}</p>
           {file && (
-            <p className="mt-1 truncate text-xs font-medium text-gray-500">
+            <p className="mt-1 truncate text-xs text-gray-500">
               {file.name}
             </p>
           )}
