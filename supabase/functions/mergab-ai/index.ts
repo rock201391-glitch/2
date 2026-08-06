@@ -70,7 +70,7 @@ const PRODUCT_KNOWLEDGE = `
 - DJI Mini 5 Pro: مناسب للسفر والتصوير المتقدم، حساسات متقدمة وتصوير عمودي، ارتفاع تشغيل حتى 500 متر من سطح الأرض حسب القوانين.
 - DJI Air 3S: تصوير احترافي، كاميرتان، بطارية ومدى قويان، مناسب للسفر والإنتاج.
 - DJI Mavic 4 Pro: للمحترفين والإنتاج السينمائي والتصوير عالي المستوى.
-- DJI Avata 2 / Avata 360: تجربة FPV وحركة، ليست الخيار الأول للمبتدئ الذي يريد تصويرًا عاديًا.
+- DJI Avata 2 / Avata 360: تجربة FPV وحركة، وليست الخيار الأول للمبتدئ الذي يريد تصويرًا عاديًا.
 - Osmo Pocket 3 / Pocket 4: فلوقات، سفر، يوتيوب وتصوير يومي بجيمبال.
 - Osmo Action 4 / Action 6: أكشن، خوذة، رياضة، دراجة ومغامرات.
 - Insta360: تصوير 360 ومحتوى إبداعي.
@@ -214,16 +214,36 @@ const outputSchema = {
   required: ["message", "actions"],
 };
 
-function sanitizeActions(actions: unknown): AIAction[] {
+function messageIsExperienceQuestion(message: string) {
+  const normalized = normalizeText(message);
+
+  return (
+    normalized.includes("مبتدئ") &&
+    (
+      normalized.includes("خبره") ||
+      normalized.includes("محترف") ||
+      normalized.includes("اول مره") ||
+      normalized.includes("سبق")
+    )
+  );
+}
+
+function sanitizeActions(
+  actions: unknown,
+  assistantMessage: string,
+): AIAction[] {
   if (!Array.isArray(actions)) return [];
 
   const result: AIAction[] = [];
+  const allowExperienceButtons = messageIsExperienceQuestion(assistantMessage);
 
   for (const raw of actions.slice(0, 6)) {
     if (!raw || typeof raw !== "object") continue;
+
     const action = raw as Record<string, unknown>;
     const type = String(action.type || "");
     const label = String(action.label || "").trim().slice(0, 60);
+
     if (!label) continue;
 
     const style =
@@ -233,6 +253,7 @@ function sanitizeActions(actions: unknown): AIAction[] {
 
     if (type === "navigate" || type === "open_product") {
       const path = String(action.path || "");
+
       if (
         path.startsWith("/") &&
         !path.startsWith("//") &&
@@ -240,12 +261,30 @@ function sanitizeActions(actions: unknown): AIAction[] {
       ) {
         result.push({ type, label, path, style });
       }
+
       continue;
     }
 
     if (type === "prompt") {
+      // نسمح بخيارات جاهزة فقط في سؤال الخبرة الأول.
+      // بقية الأسئلة مثل الاستخدام والميزانية يكتبها الزبون بنفسه.
+      if (!allowExperienceButtons) continue;
+
+      const normalizedLabel = normalizeText(label);
+      const isExperienceChoice =
+        normalizedLabel.includes("مبتدئ") ||
+        normalizedLabel.includes("خبره") ||
+        normalizedLabel.includes("محترف") ||
+        normalizedLabel.includes("اول مره");
+
+      if (!isExperienceChoice) continue;
+
       const prompt = String(action.prompt || "").trim();
-      if (prompt) result.push({ type, label, prompt, style });
+
+      if (prompt) {
+        result.push({ type, label, prompt, style });
+      }
+
       continue;
     }
 
@@ -256,6 +295,7 @@ function sanitizeActions(actions: unknown): AIAction[] {
         purpose: "track_order",
         style,
       });
+
       continue;
     }
 
@@ -273,7 +313,10 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ message: "Method not allowed", actions: [] }, 405);
+    return jsonResponse(
+      { message: "Method not allowed", actions: [] },
+      405,
+    );
   }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -299,6 +342,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
+
     const message =
       typeof body?.message === "string"
         ? body.message.trim().slice(0, 2200)
@@ -317,15 +361,16 @@ Deno.serve(async (req) => {
 
     if (!message) {
       return jsonResponse({
-        message: "اكتب لي ما تبحث عنه وسأساعدك.",
+        message: "اكتب لي شو تدور عليه وبساعدك.",
         actions: [],
       });
     }
 
     const phone = extractPhone(message);
+
     if (phone && historyWantsTracking(history)) {
       return jsonResponse({
-        message: "تمام، سأفتح مشترياتك وأبحث بهذا الرقم تلقائيًا.",
+        message: "تمام، بفتح مشترياتك وببحث بهذا الرقم تلقائي.",
         actions: [
           {
             type: "navigate",
@@ -382,6 +427,7 @@ Deno.serve(async (req) => {
       .map((item: Record<string, unknown>) => {
         const name =
           item.title || item.name || item.product_name || "مزاد";
+
         const price =
           item.current_price ||
           item.highest_bid ||
@@ -397,37 +443,57 @@ Deno.serve(async (req) => {
 أنتِ "زليخة"، موظفة مبيعات ذكية وودودة في متجر مرقاب العماني للدرونات والكاميرات والمايكات والإكسسوارات.
 
 أسلوبك:
-- تكلمي بالعربية الخليجية البسيطة والواضحة.
-- الرد مختصر ومفيد، ولا تحولي الرد إلى صفحة مواصفات طويلة.
-- اسألي سؤالًا واحدًا فقط في كل مرة عندما تحتاجين معلومات.
-- تذكري سياق المحادثة السابقة.
+- تكلمي بلهجة عمانية خفيفة وطبيعية، مفهومة لكل الناس.
+- استخدمي كلمات عمانية بسيطة مثل: "شو"، "زين"، "تمام"، "بساعدك"، "على حسب"، "تدور".
+- لا تبالغي في اللهجة ولا تستخدمي كلمات صعبة أو محلية جدًا.
+- الرد يكون قصير وواضح.
+- اسألي سؤالًا واحدًا فقط في كل مرة.
+- تذكري كلام الزبون السابق.
 - لا تذكري أنك نموذج أو OpenAI.
-- لا تستخدمي إيموجي كثيرًا؛ واحد كحد أقصى عند الحاجة.
+- لا تكثري إيموجي.
+
+طريقة الحوار:
+1. إذا اختار الزبون "أريد درون مناسب"، اسأليه أولًا فقط:
+   "زين، أول مرة تستخدم درون ولا عندك خبرة؟"
+2. في سؤال الخبرة الأول فقط، تقدرين تعرضين خيارين:
+   - مبتدئ / أول مرة
+   - عندي خبرة
+3. بعد ما يحدد خبرته، لا تعرضي أي خيارات جاهزة.
+4. بعدها قولي له يكتب بنفسه استخدامه، مثل:
+   "تمام، اكتب لي شو أكثر استخدام تريده للدرون؟"
+5. بعد ما يكتب الاستخدام، اسأليه يكتب الميزانية بنفسه:
+   "زين، كم ميزانيتك بالريال العماني؟"
+6. لا تعرضي أزرار ميزانيات ولا استخدامات ولا أنواع تصوير بعد سؤال الخبرة.
+7. إذا احتجت معلومة ثانية، اطلبي منه يكتبها بنفسه بدون أزرار.
+8. نفس الطريقة في الكاميرات والمايكات والإكسسوارات:
+   - اسألي عن الاستخدام كتابة.
+   - بعدها الميزانية كتابة.
+   - لا تعرضي خيارات جاهزة.
+9. إذا كان سؤاله واضحًا من البداية، لا تعيدي أسئلة يعرف جوابها من كلامه.
+10. بعد اكتمال المعلومات، رشحي من 1 إلى 3 منتجات فقط.
 
 قواعد البيع:
 1. استخدمي السعر والتوفر من قائمة المنتجات فقط. لا تخترعي سعرًا أو مخزونًا.
-2. لا تذكري quantity أو عدد القطع للعميل؛ اكتفي بـ "متوفر" أو "غير متوفر".
+2. لا تذكري quantity أو عدد القطع؛ اكتفي بـ "متوفر" أو "غير متوفر".
 3. لا تذكري سعر الشراء أو الربح أو أي بيانات داخلية.
-4. إذا كان العميل مبتدئًا ولا تعرفين الميزانية أو الاستخدام، اسألي عنهما سؤالًا واحدًا في كل مرة.
-5. عند اكتمال المعلومات، رشحي من 1 إلى 3 منتجات فقط، واشرحي سببًا قصيرًا لكل منتج.
-6. إذا كتب "Mini 4" دون كلمة ملحق، فالمقصود الدرون، وليس الفلاتر أو البطارية.
-7. إذا طلب مواصفات، اذكري فقط أهم 4 أو 5 نقاط: التصوير، البطارية، المدى، الارتفاع من سطح الأرض، وأهم محتويات الكومبو إن كانت مؤكدة.
-8. ارتفاع الدرون يُذكر من سطح الأرض AGL، وليس عن سطح البحر.
-9. إذا لم تكن المواصفة مؤكدة في البيانات المتاحة، قولي إن التفاصيل تحتاج تأكيدًا بدل اختراعها.
-10. كل زر منتج يجب أن يستخدم الرابط الموجود في الكتالوج.
-11. عند طلب متابعة الطلب: أعيدي action من نوع request_phone.
-12. التأجير: استخدمي صفحة /rentals أو منتج إيجار حقيقي من القائمة.
-13. الورشة: افتحي /workshop.
-14. المزادات: استخدمي المزادات الفعلية أو افتحي /auctions.
-15. تستطيعين إنشاء أزرار prompt لمتابعة الحوار، مثل: "ميزانيتي أقل من 200" أو "تصوير سفر".
-16. اجعلي الزبون يشعر أنك تفهمين احتياجه، لا تعرضي كل المنتجات دفعة واحدة.
+4. إذا كتب "Mini 4" بدون كلمة فلتر أو شنطة أو بطارية أو مراوح، فالمقصود الدرون نفسه.
+5. إذا طلب مواصفات، اذكري أهم 4 أو 5 نقاط فقط.
+6. ارتفاع الدرون يكون من سطح الأرض AGL وليس عن سطح البحر.
+7. إذا المعلومة غير مؤكدة، قولي له تحتاج تأكيد بدل ما تخترعين.
+8. كل زر منتج يستخدم الرابط الحقيقي الموجود في الكتالوج.
+9. عند طلب متابعة الطلب، أعيدي action من نوع request_phone.
+10. التأجير يفتح /rentals أو منتج تأجير حقيقي.
+11. الورشة تفتح /workshop.
+12. المزادات تفتح /auctions أو المزاد الحقيقي.
+13. لا تعرضي أزرار prompt إلا في سؤال الخبرة الأول.
+14. أزرار فتح المنتج أو فتح الصفحة مسموحة بعد تقديم النتيجة.
 
 أنواع الإجراءات:
-- open_product: لفتح منتج محدد.
-- navigate: لفتح صفحة مثل /shop أو /rentals أو /workshop أو /auctions.
-- prompt: زر يرسل إجابة طبيعية تساعد في متابعة الأسئلة.
-- request_phone: لطلب رقم الهاتف ومتابعة الطلب.
-- restart_flow: للبدء من جديد.
+- open_product: فتح منتج محدد.
+- navigate: فتح صفحة.
+- prompt: مسموح فقط لخيار الخبرة الأول.
+- request_phone: طلب رقم الهاتف لمتابعة الطلب.
+- restart_flow: بدء من جديد.
 
 ${PRODUCT_KNOWLEDGE}
 
@@ -469,16 +535,24 @@ ${auctionsText || "لا توجد مزادات متاحة الآن."}
     });
 
     const raw = response.output_text?.trim();
-    if (!raw) throw new Error("OpenAI returned an empty response");
+
+    if (!raw) {
+      throw new Error("OpenAI returned an empty response");
+    }
 
     const parsed = JSON.parse(raw);
 
+    const assistantMessage =
+      typeof parsed.message === "string"
+        ? parsed.message.trim()
+        : "شو تحب أساعدك فيه؟";
+
     return jsonResponse({
-      message:
-        typeof parsed.message === "string"
-          ? parsed.message.trim()
-          : "كيف أقدر أساعدك؟",
-      actions: sanitizeActions(parsed.actions),
+      message: assistantMessage,
+      actions: sanitizeActions(
+        parsed.actions,
+        assistantMessage,
+      ),
     });
   } catch (error) {
     console.error("mergab-ai error:", error);
@@ -486,7 +560,7 @@ ${auctionsText || "لا توجد مزادات متاحة الآن."}
     return jsonResponse(
       {
         message:
-          "صار خطأ مؤقت في زليخة. جرّب مرة ثانية بعد لحظات.",
+          "صار خطأ بسيط في زليخة. جرّب مرة ثانية بعد شوي.",
         actions: [
           {
             type: "navigate",
