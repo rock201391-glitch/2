@@ -53,8 +53,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       number: "01",
       title: t("اختر واطلب", "Choose & Order"),
       description: t(
-        "تصفح المنتجات واختر المناسب لك، أو اكتب سؤالك لزليخة وتساعدك في الاختيار.",
-        "Browse the products and choose what suits you, or ask Zulekha to help you decide.",
+        "تصفح المنتجات أو اسأل نور حتى تساعدك تختار المنتج المناسب.",
+        "Browse the products or ask Nour to help you choose the right product.",
       ),
       icon: ShoppingBag,
     },
@@ -144,7 +144,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   </span>
 
                   <h2 className="text-2xl font-black text-[#0F3A2B] md:text-3xl">
-                    {t("اسأل زليخة", "Ask Zulekha")}
+                    {t("اسأل نور", "Ask Nour")}
                   </h2>
                 </div>
               </div>
@@ -158,8 +158,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   onChange={(event) => setAiQuestion(event.target.value)}
                   type="text"
                   placeholder={t(
-                    "مثال: أنا مبتدئ وميزانيتي 300 ريال، شو تنصحيني؟",
-                    "Example: I’m a beginner with a 300 OMR budget. What do you recommend?",
+                    "اكتب سؤالك لنور...",
+                    "Type your question to Nour...",
                   )}
                   className="min-w-0 flex-1 bg-transparent px-4 text-[16px] font-medium text-[#0F3A2B] outline-none placeholder:text-[#9AA39E]"
                 />
@@ -168,7 +168,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   type="submit"
                   disabled={!aiQuestion.trim()}
                   className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#174B39] active:scale-95 disabled:opacity-40"
-                  aria-label={t("إرسال السؤال", "Send question")}
+                  aria-label={t("إرسال السؤال إلى نور", "Send question to Nour")}
                 >
                   <Send className="h-5 w-5" />
                 </button>
