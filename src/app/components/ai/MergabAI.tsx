@@ -50,6 +50,7 @@ export default function MergabAI() {
     closeChat,
     sendMessage,
     clearConversation,
+    savePendingRecommendation,
   } = useAIChat();
 
   const [input, setInput] = useState("");
@@ -57,6 +58,7 @@ export default function MergabAI() {
   const [phoneMode, setPhoneMode] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
+  const executedAutoActionRef = useRef<Set<string>>(new Set());
 
   const latestAssistantMessage = useMemo(
     () =>
@@ -76,6 +78,41 @@ export default function MergabAI() {
       });
     });
   }, [isOpen, isLoading, messages, phoneMode]);
+
+  useEffect(() => {
+    const latestMessage = messages[messages.length - 1];
+
+    if (!latestMessage || latestMessage.role !== "assistant") return;
+
+    const autoAction = latestMessage.actions?.find(
+      (action) => action.type === "auto_open_product",
+    );
+
+    if (!autoAction || autoAction.type !== "auto_open_product") return;
+    if (executedAutoActionRef.current.has(latestMessage.id)) return;
+
+    executedAutoActionRef.current.add(latestMessage.id);
+
+    savePendingRecommendation({
+      productName: autoAction.productName,
+      productPrice: autoAction.productPrice,
+      path: autoAction.path,
+      createdAt: Date.now(),
+    });
+
+    const timer = window.setTimeout(() => {
+      closeChat();
+      navigate(autoAction.path);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    messages,
+    closeChat,
+    navigate,
+    savePendingRecommendation,
+  ]);
 
   function scrollMessagesToBottom() {
     requestAnimationFrame(() => {
@@ -97,7 +134,11 @@ export default function MergabAI() {
   }
 
   function runAction(action: AIAction) {
-    if (action.type === "navigate" || action.type === "open_product") {
+    if (
+      action.type === "navigate" ||
+      action.type === "open_product" ||
+      action.type === "auto_open_product"
+    ) {
       navigate(action.path);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -296,7 +337,9 @@ export default function MergabAI() {
                             : "flex flex-wrap gap-2"
                         } sm:${messageIndex === 0 ? "grid-cols-3" : ""}`}
                       >
-                        {message.actions.map((action, index) => (
+                        {message.actions
+                          .filter((action) => action.type !== "auto_open_product")
+                          .map((action, index) => (
                           <button
                             key={`${message.id}-${index}`}
                             type="button"
@@ -308,7 +351,8 @@ export default function MergabAI() {
                             }`}
                           >
                             {(action.type === "navigate" ||
-                              action.type === "open_product") && (
+                              action.type === "open_product" ||
+                              action.type === "auto_open_product") && (
                               <Navigation className="h-3.5 w-3.5 opacity-70" />
                             )}
                             {action.label}
