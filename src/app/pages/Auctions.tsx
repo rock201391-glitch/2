@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Clock3,
   Gavel,
@@ -214,6 +215,8 @@ function getAuctionStatus(auction: Auction) {
 
 export default function Auctions() {
   const { addItem } = useCart();
+  const navigate = useNavigate();
+  const { auctionId } = useParams();
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAuction, setSelectedAuction] =
@@ -246,6 +249,18 @@ export default function Auctions() {
       void supabase.removeChannel(channel);
     };
   }, []);
+
+  useEffect(() => {
+    if (!auctionId || auctions.length === 0) return;
+
+    const auction = auctions.find(
+      (item) => String(item.id) === String(auctionId),
+    );
+
+    if (auction && selectedAuction?.id !== auction.id) {
+      openAuction(auction, false);
+    }
+  }, [auctionId, auctions]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -288,7 +303,9 @@ export default function Auctions() {
     setLoading(false);
   }
 
-  function openAuction(auction: Auction) {
+  function openAuction(auction: Auction, syncUrl = true) {
+    if (syncUrl) navigate(`/auctions/${auction.id}`);
+
     const minimumAmount =
       Number(auction.current_price || auction.starting_price || 0) +
       Number(auction.minimum_bid || 0);
@@ -308,6 +325,7 @@ export default function Auctions() {
     if (submittingBid) return;
 
     setSelectedAuction(null);
+    navigate("/auctions");
     setBidForm(initialBidForm);
     setMessage("");
   }
