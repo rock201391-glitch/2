@@ -21,6 +21,23 @@ export type AIAction =
       label: string;
       prompt: string;
       style?: "primary" | "secondary";
+    }
+  | {
+      type: "request_phone";
+      label: string;
+      purpose: "track_order";
+      style?: "primary" | "secondary";
+    }
+  | {
+      type: "open_product";
+      label: string;
+      path: string;
+      style?: "primary" | "secondary";
+    }
+  | {
+      type: "restart_flow";
+      label: string;
+      style?: "primary" | "secondary";
     };
 
 export interface AIMessage {
@@ -54,8 +71,50 @@ const WELCOME_MESSAGE: AIMessage = {
   id: "welcome",
   role: "assistant",
   createdAt: Date.now(),
-  text: "أهلًا، أنا زليخة، مساعدتك الذكية في مرقاب.",
-  actions: [],
+  text: "أهلًا، أنا زليخة، مساعدتك الذكية في مرقاب. كيف أقدر أساعدك؟",
+  actions: [
+    {
+      type: "prompt",
+      label: "شراء درون",
+      prompt: "__FLOW_DRONE__",
+      style: "primary",
+    },
+    {
+      type: "prompt",
+      label: "شراء كاميرا",
+      prompt: "__FLOW_CAMERA__",
+    },
+    {
+      type: "prompt",
+      label: "شراء مايك",
+      prompt: "__FLOW_MICROPHONE__",
+    },
+    {
+      type: "prompt",
+      label: "إكسسوارات",
+      prompt: "__FLOW_ACCESSORIES__",
+    },
+    {
+      type: "request_phone",
+      label: "متابعة الطلب",
+      purpose: "track_order",
+    },
+    {
+      type: "prompt",
+      label: "تأجير درون",
+      prompt: "__FLOW_RENTAL__",
+    },
+    {
+      type: "prompt",
+      label: "الورشة",
+      prompt: "__FLOW_WORKSHOP__",
+    },
+    {
+      type: "prompt",
+      label: "المزادات",
+      prompt: "__FLOW_AUCTIONS__",
+    },
+  ],
 };
 
 const AIChatContext = createContext<AIChatContextValue | null>(null);
