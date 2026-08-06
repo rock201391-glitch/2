@@ -73,13 +73,14 @@ function buildTermsText(
   droneName: string,
   startDate: string,
   endDate: string,
+  totalDays: number,
 ) {
   return `أنا الموقع أدناه/ ${customerName}، أقر وأنا بكامل أهليتي المعتبرة بأن جميع البيانات والمستندات والمرفقات المقدمة ضمن طلب استئجار الدرون صحيحة وتخصني، وأتحمل كامل المسؤولية عن صحتها.
 
-وأتعهد باستلام واستخدام الدرون (${droneName}) وجميع ملحقاته خلال مدة الإيجار من ${formatDate(
+وأتعهد باستلام واستخدام الدرون (${droneName}) وجميع ملحقاته خلال مدة الإيجار ${formatRentalPeriod(
     startDate,
-  )} إلى ${formatDate(
     endDate,
+    totalDays,
   )} استخدامًا مشروعًا وآمنًا، ووفق الغرض المتفق عليه وتعليمات التشغيل والسلامة والأنظمة المعمول بها في سلطنة عُمان.
 
 كما أتعهد بالمحافظة على الدرون وملحقاته وعدم تسليمه أو تأجيره أو إعارته أو تمكين أي شخص آخر من تشغيله أو التصرف فيه دون موافقة خطية أو صريحة من متجر مرقاب، وعدم استخدامه في الأماكن المحظورة أو في أي نشاط مخالف للقانون أو للأنظمة والتعليمات الرسمية.
@@ -118,6 +119,18 @@ function formatDate(value: string) {
     month: "long",
     day: "numeric",
   });
+}
+
+function formatRentalPeriod(
+  startDate: string,
+  endDate: string,
+  totalDays: number,
+) {
+  if (totalDays === 1 || startDate === endDate) {
+    return `يوم واحد بتاريخ ${formatDate(startDate)}`;
+  }
+
+  return `من ${formatDate(startDate)} إلى ${formatDate(endDate)}`;
 }
 
 function validateImage(file: File | null, label: string) {
@@ -207,12 +220,14 @@ export default function RentalCheckout({
         booking.drone.name,
         booking.startDate,
         booking.endDate,
+        booking.totalDays,
       ),
     [
       fullName,
       booking.drone.name,
       booking.startDate,
       booking.endDate,
+      booking.totalDays,
     ],
   );
 
@@ -435,8 +450,24 @@ export default function RentalCheckout({
               <Detail label="المحافظة" value={governorate} />
               <Detail label="الولاية" value={wilayat} />
               <Detail label="الدرون" value={booking.drone.name} />
-              <Detail label="من" value={formatDate(booking.startDate)} />
-              <Detail label="إلى" value={formatDate(booking.endDate)} />
+              <Detail
+                label="مدة الإيجار"
+                value={
+                  booking.totalDays === 1
+                    ? formatDate(booking.startDate)
+                    : `${formatDate(booking.startDate)} إلى ${formatDate(
+                        booking.endDate,
+                      )}`
+                }
+              />
+              <Detail
+                label="عدد الأيام"
+                value={
+                  booking.totalDays === 1
+                    ? "يوم واحد"
+                    : `${booking.totalDays} أيام`
+                }
+              />
               <Detail
                 label="الإجمالي"
                 value={`${booking.totalAmount.toFixed(3)} ر.ع`}
@@ -444,17 +475,17 @@ export default function RentalCheckout({
             </div>
 
             <div className="mt-7 overflow-hidden rounded-3xl border border-[#E7D8D3] bg-white">
-              <div className="flex items-center gap-3 border-b border-red-100 bg-red-50 px-6 py-4">
-                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-red-100 text-red-700">
+              <div className="flex items-center gap-4 border-b border-red-100 bg-gradient-to-l from-red-50 to-white px-6 py-5">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-red-200 bg-white text-red-700 shadow-sm">
                   <AlertTriangle className="h-6 w-6" />
                 </div>
 
                 <div>
                   <h2 className="text-xl font-black text-red-800">
-                    تعهد وإقرار قانوني ملزم
+                    تعهد وإقرار قانوني
                   </h2>
-                  <p className="mt-1 text-sm font-semibold text-red-700">
-                    يرجى قراءة جميع البنود بعناية قبل التوقيع وإتمام الطلب.
+                  <p className="mt-1 text-sm font-semibold text-red-700/90">
+                    يرجى مراجعة جميع البنود والبيانات قبل التوقيع.
                   </p>
                 </div>
               </div>
@@ -471,18 +502,6 @@ export default function RentalCheckout({
                   {undertakingText}
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-700" />
-
-                    <p className="text-sm font-bold leading-7 text-red-800">
-                      تنبيه مهم: بتوقيعك في الخانة أدناه والضغط على
-                      «أوافق على التعهد وإتمام الطلب»، فإنك تقر بمراجعة
-                      جميع البيانات والصور والبنود، وتوافق على تحمل
-                      المسؤولية عن الدرون وملحقاته طوال مدة الإيجار.
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -552,7 +571,7 @@ export default function RentalCheckout({
               ) : (
                 <>
                   <CheckCircle2 className="h-6 w-6" />
-                  أوافق على التعهد وإتمام الطلب
+                  الموافقة وإتمام الطلب
                 </>
               )}
             </button>
