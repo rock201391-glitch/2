@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { supabase } from "../../lib/supabase";
+import { useLanguage } from "./LanguageContext";
 
 export type AIAction =
   | {
@@ -75,38 +76,13 @@ interface AIChatContextValue {
   savePendingRecommendation: (recommendation: PendingRecommendation) => void;
 }
 
-const STORAGE_KEY = "mergab_zulekha_openai_v3";
 const PENDING_RECOMMENDATION_KEY = "mergab_zulekha_pending_recommendation";
 
-const WELCOME_MESSAGE: AIMessage = {
-  id: "welcome",
-  role: "assistant",
-  createdAt: Date.now(),
-  text: "أهلًا، أنا زليخة. كيف ممكن أساعدك؟",
-  actions: [
-    {
-      type: "prompt",
-      label: "أريد درون مناسب",
-      prompt:
-        "أريد مساعدتك في اختيار درون مناسب. اسأليني أولًا عن خبرتي، وبعدها خليني أكتب استخدامي وميزانيتي بنفسي.",
-      style: "primary",
-    },
-    {
-      type: "prompt",
-      label: "أبحث عن كاميرا",
-      prompt:
-        "أريد كاميرا مناسبة. خليني أكتب استخدامي وميزانيتي بنفسي، سؤالًا واحدًا في كل مرة.",
-    },
-    {
-      type: "prompt",
-      label: "منتج حسب ميزانيتي",
-      prompt:
-        "أريد منتجًا مناسبًا حسب ميزانيتي. اسأليني أولًا عن نوع المنتج وبعدها خليني أكتب الميزانية والاستخدام بنفسي.",
-    },
-  ],
-};
-
 const AIChatContext = createContext<AIChatContextValue | null>(null);
+
+function storageKey(language: "ar" | "en") {
+  return `mergab_zulekha_openai_v4_${language}`;
+}
 
 function createMessage(
   role: AIMessage["role"],
@@ -122,23 +98,56 @@ function createMessage(
   };
 }
 
-function freshWelcome(): AIMessage {
-  return { ...WELCOME_MESSAGE, createdAt: Date.now() };
+function createWelcome(language: "ar" | "en"): AIMessage {
+  const isArabic = language === "ar";
+
+  return {
+    id: `welcome-${language}`,
+    role: "assistant",
+    createdAt: Date.now(),
+    text: isArabic
+      ? "أهلًا، أنا زليخة. كيف ممكن أساعدك؟"
+      : "Hi, I’m Zulekha. How can I help you?",
+    actions: [
+      {
+        type: "prompt",
+        label: isArabic ? "أريد درون مناسب" : "Help me choose a drone",
+        prompt: isArabic
+          ? "أريد مساعدتك في اختيار درون مناسب. اسأليني أولًا عن خبرتي، وبعدها خليني أكتب استخدامي وميزانيتي بنفسي."
+          : "Help me choose a suitable drone. First ask about my experience, then let me type my use case and budget.",
+        style: "primary",
+      },
+      {
+        type: "prompt",
+        label: isArabic ? "أبحث عن كاميرا" : "I’m looking for a camera",
+        prompt: isArabic
+          ? "أريد كاميرا مناسبة. خليني أكتب استخدامي وميزانيتي بنفسي، سؤالًا واحدًا في كل مرة."
+          : "Help me choose a suitable camera. Ask one question at a time and let me type my use case and budget.",
+      },
+      {
+        type: "prompt",
+        label: isArabic ? "منتج حسب ميزانيتي" : "Find a product for my budget",
+        prompt: isArabic
+          ? "أريد منتجًا مناسبًا حسب ميزانيتي. اسأليني أولًا عن نوع المنتج وبعدها خليني أكتب الميزانية والاستخدام بنفسي."
+          : "Help me find a product within my budget. First ask what type of product I need, then let me type my budget and use case.",
+      },
+    ],
+  };
 }
 
-function loadMessages(): AIMessage[] {
+function loadMessages(language: "ar" | "en"): AIMessage[] {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return [freshWelcome()];
+    const saved = localStorage.getItem(storageKey(language));
+    if (!saved) return [createWelcome(language)];
 
     const parsed = JSON.parse(saved);
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      return [freshWelcome()];
+      return [createWelcome(language)];
     }
 
     return parsed.slice(-40);
   } catch {
-    return [freshWelcome()];
+    return [createWelcome(language)];
   }
 }
 
@@ -165,55 +174,74 @@ function readPendingRecommendation(): PendingRecommendation | null {
 
 function createRecommendationFollowup(
   recommendation: PendingRecommendation,
+  language: "ar" | "en",
 ): AIMessage {
+  const isArabic = language === "ar";
   const priceText = recommendation.productPrice
-    ? ` بسعر ${recommendation.productPrice}`
+    ? isArabic
+      ? ` بسعر ${recommendation.productPrice}`
+      : ` for ${recommendation.productPrice}`
     : "";
 
   return createMessage(
     "assistant",
-    `شو رأيك في ${recommendation.productName}${priceText}؟ هل مناسب لك؟`,
+    isArabic
+      ? `شو رأيك في ${recommendation.productName}${priceText}؟ هل مناسب لك؟`
+      : `What do you think of ${recommendation.productName}${priceText}? Does it suit you?`,
     [
       {
         type: "prompt",
-        label: "نعم، مناسب",
-        prompt: `نعم، المنتج ${recommendation.productName} مناسب لي.`,
+        label: isArabic ? "نعم، مناسب" : "Yes, it suits me",
+        prompt: isArabic
+          ? `نعم، المنتج ${recommendation.productName} مناسب لي.`
+          : `Yes, ${recommendation.productName} suits me.`,
         style: "primary",
       },
       {
         type: "prompt",
-        label: "أريد شيء أفضل",
-        prompt:
-          `المنتج الحالي هو ${recommendation.productName}. ` +
-          "أريد خيارًا أفضل وأقوى حتى لو كان أغلى. رشحي لي المنتج التالي مباشرة.",
+        label: isArabic ? "أريد شيء أفضل" : "I want something better",
+        prompt: isArabic
+          ? `المنتج الحالي هو ${recommendation.productName}. أريد خيارًا أفضل وأقوى حتى لو كان أغلى. رشحي لي المنتج التالي مباشرة.`
+          : `The current product is ${recommendation.productName}. I want a better and more powerful option even if it costs more. Recommend the next product directly.`,
       },
       {
         type: "prompt",
-        label: "أريد أرخص",
-        prompt:
-          `المنتج الحالي هو ${recommendation.productName}. ` +
-          "أريد خيارًا أرخص ويكون قريب من احتياجي. رشحي لي المنتج التالي مباشرة.",
+        label: isArabic ? "أريد أرخص" : "I want a cheaper option",
+        prompt: isArabic
+          ? `المنتج الحالي هو ${recommendation.productName}. أريد خيارًا أرخص ويكون قريب من احتياجي. رشحي لي المنتج التالي مباشرة.`
+          : `The current product is ${recommendation.productName}. I want a cheaper option that still closely matches my needs. Recommend the next product directly.`,
       },
       {
         type: "prompt",
-        label: "أريد بديل",
-        prompt:
-          `المنتج الحالي هو ${recommendation.productName}. ` +
-          "أريد بديلًا مختلفًا بنفس المستوى تقريبًا. رشحي لي المنتج التالي مباشرة.",
+        label: isArabic ? "أريد بديل" : "Show me an alternative",
+        prompt: isArabic
+          ? `المنتج الحالي هو ${recommendation.productName}. أريد بديلًا مختلفًا بنفس المستوى تقريبًا. رشحي لي المنتج التالي مباشرة.`
+          : `The current product is ${recommendation.productName}. I want a different alternative at roughly the same level. Recommend the next product directly.`,
       },
     ],
   );
 }
 
 export function AIChatProvider({ children }: { children: ReactNode }) {
+  const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<AIMessage[]>(loadMessages);
+  const [messages, setMessages] = useState<AIMessage[]>(() =>
+    loadMessages(language),
+  );
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-40)));
-  }, [messages]);
+    setMessages(loadMessages(language));
+    setUnreadCount(0);
+  }, [language]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      storageKey(language),
+      JSON.stringify(messages.slice(-40)),
+    );
+  }, [messages, language]);
 
   const injectPendingFollowup = useCallback(() => {
     const pending = readPendingRecommendation();
@@ -226,18 +254,17 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
 
       if (
         last?.role === "assistant" &&
-        last.text.includes(pending.productName) &&
-        last.text.includes("هل مناسب لك")
+        last.text.includes(pending.productName)
       ) {
         return current;
       }
 
       return [
         ...current,
-        createRecommendationFollowup(pending),
+        createRecommendationFollowup(pending, language),
       ].slice(-40);
     });
-  }, []);
+  }, [language]);
 
   const openChat = useCallback(() => {
     setIsOpen(true);
@@ -261,10 +288,10 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
   }, [injectPendingFollowup]);
 
   const clearConversation = useCallback(() => {
-    setMessages([freshWelcome()]);
-    localStorage.removeItem(STORAGE_KEY);
+    setMessages([createWelcome(language)]);
+    localStorage.removeItem(storageKey(language));
     localStorage.removeItem(PENDING_RECOMMENDATION_KEY);
-  }, []);
+  }, [language]);
 
   const savePendingRecommendation = useCallback(
     (recommendation: PendingRecommendation) => {
@@ -297,6 +324,7 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
           {
             body: {
               message: text,
+              language,
               history: nextMessages.slice(-14).map((item) => ({
                 role: item.role,
                 content: item.text,
@@ -312,7 +340,9 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
         const assistantMessage = createMessage(
           "assistant",
           data?.message?.trim() ||
-            "ما قدرت أجهز الإجابة الحين. جرّب مرة ثانية.",
+            (language === "ar"
+              ? "ما قدرت أجهز الإجابة الحين. جرّب مرة ثانية."
+              : "I couldn’t prepare the answer right now. Please try again."),
           Array.isArray(data?.actions)
             ? data.actions.slice(0, 8)
             : undefined,
@@ -330,11 +360,13 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
           ...current,
           createMessage(
             "assistant",
-            "صار خطأ بسيط في زليخة. جرّب مرة ثانية.",
+            language === "ar"
+              ? "صار خطأ بسيط في زليخة. جرّب مرة ثانية."
+              : "A temporary error occurred. Please try again.",
             [
               {
                 type: "navigate",
-                label: "فتح المتجر",
+                label: language === "ar" ? "فتح المتجر" : "Open shop",
                 path: "/shop",
                 style: "primary",
               },
@@ -345,7 +377,7 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [isLoading, isOpen, messages],
+    [isLoading, isOpen, messages, language],
   );
 
   const value = useMemo<AIChatContextValue>(
