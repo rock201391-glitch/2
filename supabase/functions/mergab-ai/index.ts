@@ -124,8 +124,6 @@ const CURATED_KNOWLEDGE: Record<string, CuratedKnowledge> = {
       camera: "كاميرا 48MP وتصوير فيديو حتى 4K/100fps",
       flightTime: "حتى 34 دقيقة بالبطارية العادية أو 45 دقيقة ببطارية Plus",
       transmission: "نظام O4، حتى 20 كم وفق معيار FCC في بيئة مفتوحة",
-      maxTakeoffAltitude:
-        "أقصى ارتفاع إقلاع 4000 متر بالبطارية العادية؛ حد الطيران التشغيلي يخضع للقوانين وإعدادات التطبيق",
       weight: "أقل من 249 جرام بالبطارية العادية",
       sensors: "استشعار عوائق شامل الاتجاهات",
       usage: "مناسب للمبتدئ والسفر والتصوير الاحترافي الخفيف",
@@ -165,7 +163,6 @@ const CURATED_KNOWLEDGE: Record<string, CuratedKnowledge> = {
       flightTime: "حتى نحو 23 دقيقة",
       transmission:
         "نظام O4، حتى 13 كم وفق FCC أو 10 كم وفق CE في بيئة مفتوحة",
-      maxTakeoffAltitude: "أقصى ارتفاع إقلاع 5000 متر",
       weight: "حوالي 377 جرام",
       sensors: "تموضع بصري سفلي وخلفي، وليست حساسات شاملة مثل Mini 4 Pro",
       usage: "مناسب لتصوير FPV والحركة؛ يحتاج تعود أكثر من الدرونات التقليدية",
@@ -719,6 +716,32 @@ function inferContextText(history: ChatMessage[]) {
     .join(" ");
 }
 
+function lastAssistantAskedForPhone(history: ChatMessage[]) {
+  const lastAssistant = [...history]
+    .reverse()
+    .find((message) => message.role === "assistant");
+
+  if (!lastAssistant) return false;
+
+  return includesAny(lastAssistant.content, [
+    "اكتب رقم الهاتف",
+    "اكتب رقمك",
+    "رقم الهاتف المستخدم",
+    "ابحث في طلبات المتجر",
+  ]);
+}
+
+function getPreviouslyMentionedProductIds(
+  products: Product[],
+  history: ChatMessage[],
+) {
+  return new Set(
+    extractProductsFromHistory(products, history).map(
+      (product) => product.id,
+    ),
+  );
+}
+
 function inferBudgetFromHistory(
   currentMessage: string,
   history: ChatMessage[],
@@ -910,24 +933,28 @@ function productActions(products: Product[]): AIAction[] {
   }));
 }
 
-function alternativeActions(): AIAction[] {
+function alternativeActions(
+  currentProduct?: Product,
+): AIAction[] {
+  const productName = currentProduct?.name || "المنتج السابق";
+
   return [
     {
       type: "prompt",
       label: "أرخص",
-      prompt: "أريد خيار أرخص من المقترح.",
+      prompt: `أريد خيارًا أرخص من ${productName}، ولا تعرض ${productName} مرة ثانية.`,
       style: "secondary",
     },
     {
       type: "prompt",
       label: "أقوى",
-      prompt: "أريد خيار أقوى من المقترح.",
+      prompt: `أريد خيارًا أقوى من ${productName}، ولا تعرض ${productName} مرة ثانية.`,
       style: "secondary",
     },
     {
       type: "prompt",
       label: "خيار ثاني",
-      prompt: "أعطني خيارًا ثانيًا مختلفًا.",
+      prompt: `أعطني منتجًا ثانيًا مختلفًا عن ${productName}، ولا تعرض ${productName} مرة ثانية.`,
       style: "secondary",
     },
   ];
@@ -952,47 +979,60 @@ function formatBudget(range: BudgetRange) {
 function formatProductDetails(product: Product) {
   const knowledge = getCuratedKnowledge(product);
   const lines = [
-    `المنتج: ${product.name}`,
+    `${product.name}`,
     `السعر: ${formatPrice(product.price)}`,
     `الحالة: ${
       product.quantity > 0
-        ? `متوفر (${product.quantity} قطعة)`
+        ? "متوفر"
         : "غير متوفر حاليًا"
     }`,
   ];
 
-  if (knowledge?.summary) {
-    lines.push(`نبذة: ${knowledge.summary}`);
+  /**
+   * نخلي الرد مختصرًا:
+   * التصوير + البطارية + المدى فقط للدرونات.
+   * لا نعرض Max Takeoff Altitude لأنه ارتفاع مكان الإقلاع
+   * عن سطح البحر، وليس ارتفاع الدرون فوق نقطة الإقلاع.
+   */
+  if (knowledge?.specs?.camera) {
+    lines.push(`التصوير: ${knowledge.specs.camera}`);
   }
 
-  if (product.description?.trim()) {
-    lines.push(`وصف المتجر: ${product.description.trim()}`);
+  if (knowledge?.specs?.flightTime) {
+    lines.push(`البطارية: ${knowledge.specs.flightTime}`);
   }
 
-  if (knowledge?.specs) {
-    const specs = knowledge.specs;
-
-    if (specs.camera) lines.push(`التصوير: ${specs.camera}`);
-    if (specs.flightTime) lines.push(`البطارية: ${specs.flightTime}`);
-    if (specs.transmission) lines.push(`المدى: ${specs.transmission}`);
-    if (specs.maxTakeoffAltitude) {
-      lines.push(`ارتفاع الإقلاع: ${specs.maxTakeoffAltitude}`);
-    }
-    if (specs.weight) lines.push(`الوزن: ${specs.weight}`);
-    if (specs.sensors) lines.push(`الحساسات: ${specs.sensors}`);
-    if (specs.usage) lines.push(`مناسب لـ: ${specs.usage}`);
-    if (specs.comboContents) {
-      lines.push(`محتويات النسخة: ${specs.comboContents}`);
-    }
+  if (knowledge?.specs?.transmission) {
+    lines.push(`المدى: ${knowledge.specs.transmission}`);
   }
 
-  if (!product.description?.trim() && !knowledge) {
+  /**
+   * للمنتجات غير الموجودة في قاعدة المعرفة،
+   * نعرض وصف المتجر بشكل مختصر بدل كلام طويل.
+   */
+  if (
+    !knowledge &&
+    product.description?.trim()
+  ) {
+    const shortDescription =
+      product.description.trim().length > 160
+        ? `${product.description.trim().slice(0, 160)}...`
+        : product.description.trim();
+
+    lines.push(`نبذة: ${shortDescription}`);
+  }
+
+  if (
+    !knowledge &&
+    !product.description?.trim()
+  ) {
     lines.push(
-      "لا توجد مواصفات مكتوبة لهذا المنتج في قاعدة البيانات. أضفها من لوحة الإدارة حتى تعرضها زليخة بدقة.",
+      "لا يوجد وصف مختصر مضاف لهذا المنتج حاليًا.",
     );
   }
 
-  return lines.join("\n");
+  return lines.join("
+");
 }
 
 function formatRecommendationReason(
@@ -1265,8 +1305,7 @@ Deno.serve(async (req) => {
      */
     if (includesAny(normalizedMessage, INTENT_WORDS.greeting)) {
       return jsonResponse({
-        message:
-          "هلا، أنا زليخة. قولي شو المنتج اللي تبحث عنه واستخدامك وميزانيتك، أو اسأليني مباشرة عن السعر والمواصفات.",
+        message: "أهلًا، أنا زليخة، مساعدتك الذكية في مرقاب.",
         actions: [
           {
             type: "prompt",
@@ -1287,9 +1326,20 @@ Deno.serve(async (req) => {
 
     /**
      * 2) متابعة الطلبات
+     *
+     * يدعم حالتين:
+     * - العميل يكتب "متابعة طلب".
+     * - زليخة تطلب الرقم، ثم يرسل العميل الرقم وحده.
      */
-    if (includesAny(normalizedMessage, INTENT_WORDS.order)) {
-      const phone = extractPhone(message);
+    const submittedPhone = extractPhone(message);
+    const shouldSearchOrders =
+      includesAny(normalizedMessage, INTENT_WORDS.order) ||
+      (submittedPhone !== null &&
+        (lastAssistantAskedForPhone(history) ||
+          normalizeDigits(message).replace(/\D/g, "").length >= 8));
+
+    if (shouldSearchOrders) {
+      const phone = submittedPhone;
 
       if (!phone) {
         return jsonResponse({
@@ -1548,7 +1598,7 @@ Deno.serve(async (req) => {
             path: productPath(contextualProduct),
             style: "primary",
           },
-          ...alternativeActions(),
+          ...alternativeActions(contextualProduct),
         ].slice(0, 6),
       });
     }
@@ -1629,7 +1679,7 @@ Deno.serve(async (req) => {
             path: productPath(product),
             style: "primary",
           },
-          ...alternativeActions(),
+          ...alternativeActions(product),
         ].slice(0, 6),
       });
     }
@@ -1708,12 +1758,45 @@ Deno.serve(async (req) => {
         });
       }
 
-      const recommendations = recommendProducts(
+      let recommendations = recommendProducts(
         products,
         combinedContext,
         budget,
         category,
       );
+
+      /**
+       * إذا العميل طلب خيارًا ثانيًا/أرخص/أقوى،
+       * نستبعد المنتجات التي ظهرت في المحادثة السابقة
+       * حتى لا نكرر نفس المنتج.
+       */
+      const requestsAlternative =
+        includesAny(normalizedMessage, [
+          "خيار ثاني",
+          "منتج ثاني",
+          "غيره",
+          "غير هذا",
+          "مختلف",
+          ...INTENT_WORDS.cheaper,
+          ...INTENT_WORDS.stronger,
+        ]);
+
+      if (requestsAlternative) {
+        const previousProductIds =
+          getPreviouslyMentionedProductIds(
+            products,
+            history,
+          );
+
+        const filtered = recommendations.filter(
+          (product) =>
+            !previousProductIds.has(product.id),
+        );
+
+        if (filtered.length > 0) {
+          recommendations = filtered;
+        }
+      }
 
       if (!recommendations.length) {
         return jsonResponse({
@@ -1751,7 +1834,7 @@ Deno.serve(async (req) => {
         }:\n\n${lines.join("\n\n")}`,
         actions: [
           ...productActions(recommendations),
-          ...alternativeActions(),
+          ...alternativeActions(recommendations[0]),
         ].slice(0, 6),
       });
     }
