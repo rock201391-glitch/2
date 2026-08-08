@@ -325,7 +325,8 @@ export function AIChatProvider({ children }: { children: ReactNode }) {
             body: {
               message: text,
               language,
-              history: nextMessages.slice(-14).map((item) => ({
+              // تم التعديل هنا لتقليل السجل إلى آخر 6 رسائل
+              history: nextMessages.slice(-6).map((item) => ({
                 role: item.role,
                 content: item.text,
               })),
