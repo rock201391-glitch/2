@@ -174,29 +174,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   <Send className="h-5 w-5" />
                 </button>
               </form>
-
-              {/* Stats Section directly under Nour bar */}
-              <div className="mt-6 flex items-center justify-around rounded-2xl bg-[#EFE9DD] px-4 py-4 border border-[#E2DAC8]">
-                <div className="text-center">
-                  <div className="text-2xl font-black text-[#0F3A2B] sm:text-3xl">
-                    300+
-                  </div>
-                  <div className="mt-1 text-xs font-bold text-[#4E5A54] sm:text-sm">
-                    {t("عميل راضي", "Happy Customers")}
-                  </div>
-                </div>
-
-                <div className="h-8 w-[1px] bg-[#D5CCBA]" />
-
-                <div className="text-center">
-                  <div className="text-2xl font-black text-[#0F3A2B] sm:text-3xl">
-                    300+
-                  </div>
-                  <div className="mt-1 text-xs font-bold text-[#4E5A54] sm:text-sm">
-                    {t("درون تم بيعه", "Drones Sold")}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
