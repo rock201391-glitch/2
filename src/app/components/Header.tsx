@@ -39,6 +39,13 @@ export default function Header({
     { label: t("مشترياتي", "My Orders"), id: "my-orders" },
   ];
 
+  const mobilePrimaryNav = [
+    { label: t("الرئيسية", "Home"), id: "home" },
+    { label: t("المتجر", "Shop"), id: "shop" },
+    { label: t("المزادات", "Auctions"), id: "auctions" },
+    { label: t("مشترياتي", "My Orders"), id: "my-orders" },
+  ];
+
   const cartCount = items.reduce(
     (sum, item) => sum + (item.quantity || 0),
     0,
@@ -146,6 +153,31 @@ export default function Header({
             )}
           </button>
         </div>
+
+        <nav
+          aria-label={t("التنقل السريع", "Quick navigation")}
+          className="mt-3 grid grid-cols-4 gap-1.5 rounded-[20px] border border-[#DCD6C8] bg-white/80 p-1.5 shadow-sm backdrop-blur md:hidden"
+        >
+          {mobilePrimaryNav.map((item) => {
+            const active = item.id === currentPage;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => navigate(item.id)}
+                className={`min-w-0 rounded-[15px] px-1.5 py-2.5 text-[11px] font-black leading-tight transition-all duration-200 sm:text-xs ${
+                  active
+                    ? "bg-[#0F3A2B] text-white shadow-md"
+                    : "text-[#0F3A2B] hover:bg-[#EEF3EF]"
+                }`}
+                aria-current={active ? "page" : undefined}
+              >
+                <span className="block truncate">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
 
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-[9999] md:hidden">
