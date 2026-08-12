@@ -92,18 +92,18 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const Arrow = isArabic ? ChevronLeft : ChevronRight;
 
   return (
-    <div dir={direction} className="min-h-screen bg-[#F8F5ED] text-[#0F3A2B]">
+    <div dir={direction} className="min-h-screen bg-[#F5F2EA] text-[#0F3A2B]">
       {/* Hero Section */}
       <section
         className="relative w-full overflow-hidden px-4 pb-12 pt-10 md:pb-16 md:pt-16"
         style={{
           background:
-            "linear-gradient(180deg, #FAF7F0 0%, #F5F1E8 68%, #F0EEE5 100%)",
+            "linear-gradient(180deg, #F8F5EE 0%, #F3EFE4 68%, #EDE7DB 100%)",
         }}
       >
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-24 top-12 h-72 w-72 rounded-full bg-[#DCE7DF]/60 blur-3xl" />
-          <div className="absolute -left-24 bottom-0 h-80 w-80 rounded-full bg-[#E8E3D5]/70 blur-3xl" />
+          <div className="absolute -right-24 top-12 h-72 w-72 rounded-full bg-[#D6E2DA]/50 blur-3xl" />
+          <div className="absolute -left-24 bottom-0 h-80 w-80 rounded-full bg-[#E5DFD3]/60 blur-3xl" />
         </div>
 
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-2">
@@ -113,9 +113,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               className="relative h-[300px] w-full max-w-xl overflow-hidden rounded-[32px] border sm:h-[420px] lg:h-[460px]"
               style={{
                 background:
-                  "linear-gradient(135deg,#FFFDF7 0%,#F8F5EA 50%,#EDE7D8 100%)",
-                borderColor: "#D8CFB8",
-                boxShadow: "0 24px 60px rgba(15,58,43,0.12)",
+                  "linear-gradient(135deg,#FFFDF9 0%,#F6F2E8 50%,#E9E2D2 100%)",
+                borderColor: "#D2C9B4",
+                boxShadow: "0 24px 60px rgba(15,58,43,0.10)",
               }}
             >
               <video
@@ -142,7 +142,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             <div className="mx-auto max-w-xl lg:mx-0">
               <div className={`mb-2.5 ${isArabic ? "text-right" : "text-left"}`}>
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white shadow-md">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white shadow-sm">
                     <Bot className="h-5 w-5" />
                   </span>
 
@@ -152,7 +152,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 </div>
               </div>
 
-              <p className={`mb-3.5 text-sm font-medium text-[#5A635E] ${isArabic ? "text-right" : "text-left"}`}>
+              <p className={`mb-3.5 text-sm font-medium text-[#4E5A54] ${isArabic ? "text-right" : "text-left"}`}>
                 {t(
                   "اكتب أي سؤال أو اذكر ميزانيتك، ونور بترشح لك أفضل منتج.",
                   "Ask anything or tell Nour your budget, and she'll recommend the best product."
@@ -161,7 +161,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
               <form
                 onSubmit={submitAIQuestion}
-                className="flex items-center gap-3 rounded-[24px] border border-[#C9D4CC] bg-white p-2.5 shadow-[0_12px_35px_rgba(15,58,43,0.08)] transition focus-within:border-[#0F3A2B]"
+                className="flex items-center gap-3 rounded-[24px] border border-[#CCD6D0] bg-[#FFFDF9] p-2.5 shadow-[0_12px_35px_rgba(15,58,43,0.06)] transition focus-within:border-[#0F3A2B]"
               >
                 <input
                   value={aiQuestion}
@@ -171,25 +171,46 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     "اكتب سؤالك لنور... مثال: ايش الدرون اللي تنصحني فيه؟",
                     "Ask Nour... Example: Which drone do you recommend for me?"
                   )}
-                  className="min-w-0 flex-1 bg-transparent px-4 py-3.5 text-[15px] font-medium text-[#0F3A2B] outline-none placeholder:text-[#9AA39E]"
+                  className="min-w-0 flex-1 bg-transparent px-4 py-3.5 text-[15px] font-medium text-[#0F3A2B] outline-none placeholder:text-[#8D9893]"
                 />
 
                 <button
                   type="submit"
                   disabled={!aiQuestion.trim()}
-                  className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white shadow-md transition hover:bg-[#174B39] active:scale-95 disabled:opacity-40"
+                  className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-2xl bg-[#0F3A2B] text-white shadow-sm transition hover:bg-[#174B39] active:scale-95 disabled:opacity-40"
                   aria-label={t("إرسال السؤال إلى نور", "Send question to Nour")}
                 >
                   <Send className="h-5 w-5" />
                 </button>
               </form>
+
+              {/* Stats Section moved right under the AI Search Bar */}
+              <div className="mt-6 grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-black text-[#0F3A2B] sm:text-3xl">
+                    300+
+                  </div>
+                  <div className="mt-1 text-xs font-bold text-[#5A635E] sm:text-sm">
+                    {t("عميل راضي", "Happy Customers")}
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-2xl font-black text-[#0F3A2B] sm:text-3xl">
+                    300+
+                  </div>
+                  <div className="mt-1 text-xs font-bold text-[#5A635E] sm:text-sm">
+                    {t("درون تم بيعه", "Drones Sold")}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Services Section */}
-      <section className="bg-[#F8F5ED] px-4 py-12 md:py-16">
+      <section className="bg-[#F5F2EA] px-4 py-12 md:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 text-center">
             <h2 className="text-2xl font-black text-[#0F3A2B] md:text-4xl">
@@ -206,13 +227,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   key={item.page}
                   type="button"
                   onClick={() => onNavigate(item.page)}
-                  className={`group relative min-h-[170px] overflow-hidden rounded-[24px] border border-[#E2DBCC] bg-white p-5 shadow-[0_8px_25px_rgba(15,58,43,0.05)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0F3A2B]/30 hover:shadow-[0_12px_30px_rgba(15,58,43,0.08)] sm:min-h-[190px] sm:p-6 ${
+                  className={`group relative min-h-[170px] overflow-hidden rounded-[24px] border border-[#DDD6C6] bg-[#FFFDF9] p-5 shadow-[0_8px_25px_rgba(15,58,43,0.04)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0F3A2B]/30 hover:shadow-[0_12px_30px_rgba(15,58,43,0.07)] sm:min-h-[190px] sm:p-6 ${
                     isArabic ? "text-right" : "text-left"
                   }`}
                 >
                   <div className="relative flex h-full flex-col justify-between">
                     <div>
-                      <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-[16px] bg-[#EAF2ED] text-[#0F3A2B] transition group-hover:bg-[#0F3A2B] group-hover:text-white sm:h-12 sm:w-12">
+                      <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-[16px] bg-[#E7EFEB] text-[#0F3A2B] transition group-hover:bg-[#0F3A2B] group-hover:text-white sm:h-12 sm:w-12">
                         <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                       </span>
 
@@ -221,7 +242,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                       </h3>
                     </div>
 
-                    <div className="mt-5 flex items-center justify-between rounded-xl bg-[#F6F8F5] px-3.5 py-2.5 text-xs font-bold text-[#0F3A2B] transition group-hover:bg-[#0F3A2B] group-hover:text-white sm:text-sm">
+                    <div className="mt-5 flex items-center justify-between rounded-xl bg-[#F4F6F3] px-3.5 py-2.5 text-xs font-bold text-[#0F3A2B] transition group-hover:bg-[#0F3A2B] group-hover:text-white sm:text-sm">
                       <span>{t("اضغط للدخول", "Tap to open")}</span>
                       <Arrow className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
                     </div>
@@ -233,36 +254,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-[#F1EDE3] px-4 py-8 md:py-10">
-        <div className="mx-auto max-w-4xl">
-          <div className="grid grid-cols-2 gap-4 sm:gap-6">
-            <div className="rounded-[20px] border border-[#E5E0D3] bg-white px-4 py-5 text-center shadow-sm">
-              <div className="text-2xl font-black text-[#0F3A2B] sm:text-4xl">
-                300+
-              </div>
-              <div className="mt-1.5 text-xs font-bold text-[#5A635E] sm:text-sm">
-                {t("عميل راضي", "Happy Customers")}
-              </div>
-            </div>
-
-            <div className="rounded-[20px] border border-[#E5E0D3] bg-white px-4 py-5 text-center shadow-sm">
-              <div className="text-2xl font-black text-[#0F3A2B] sm:text-4xl">
-                300+
-              </div>
-              <div className="mt-1.5 text-xs font-bold text-[#5A635E] sm:text-sm">
-                {t("درون تم بيعه", "Drones Sold")}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Order Steps Section */}
-      <section className="bg-[#F8F5ED] px-4 py-12 md:py-20">
+      <section className="bg-[#EFEADB] px-4 py-12 md:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 text-center">
-            <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#E2DBCC] bg-white px-3.5 py-1.5 text-xs font-bold text-[#0F3A2B] shadow-sm">
+            <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#D5CEBC] bg-[#FFFDF9] px-3.5 py-1.5 text-xs font-bold text-[#0F3A2B] shadow-sm">
               <CircleCheck className="h-3.5 w-3.5 text-[#0F3A2B]" />
               {t("تجربة طلب سهلة", "Easy Ordering")}
             </span>
@@ -279,13 +275,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               return (
                 <div
                   key={step.number}
-                  className="relative overflow-hidden rounded-[24px] border border-[#E2DBCC] bg-white p-6 text-center shadow-[0_6px_20px_rgba(15,58,43,0.04)] sm:p-8"
+                  className="relative overflow-hidden rounded-[24px] border border-[#DDD6C6] bg-[#FFFDF9] p-6 text-center shadow-[0_6px_20px_rgba(15,58,43,0.03)] sm:p-8"
                 >
-                  <div className="relative mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#EAF2ED] text-[#0F3A2B] shadow-sm">
+                  <div className="relative mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#E7EFEB] text-[#0F3A2B] shadow-sm">
                     <Icon className="h-6 w-6" />
                   </div>
 
-                  <span className="mb-2 inline-block text-[11px] font-black tracking-[0.15em] text-[#3D735C]">
+                  <span className="mb-2 inline-block text-[11px] font-black tracking-[0.15em] text-[#346650]">
                     {t("الخطوة", "STEP")} {step.number}
                   </span>
 
@@ -293,7 +289,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     {step.title}
                   </h3>
 
-                  <p className="mx-auto mt-3 max-w-sm text-xs leading-6 text-[#5A635E] sm:text-sm sm:leading-7">
+                  <p className="mx-auto mt-3 max-w-sm text-xs leading-6 text-[#525E58] sm:text-sm sm:leading-7">
                     {step.description}
                   </p>
                 </div>
