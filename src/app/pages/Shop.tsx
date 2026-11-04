@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useCart } from '../contexts/CartContext';
-import { useProducts } from '../contexts/ProductsContext';
+import { useProducts, getDiscountPercent } from '../contexts/ProductsContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 
@@ -411,6 +411,8 @@ export default function Shop({ onProductClick }: ShopProps) {
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {sortedFilteredProducts.map((product) => {
               const isAdded = addedProducts.has(product.id);
+              const discountPercent = getDiscountPercent(product);
+              const hasDiscount = discountPercent > 0;
               return (
                 <div
                   key={product.id}
@@ -433,6 +435,12 @@ export default function Shop({ onProductClick }: ShopProps) {
                       </div>
                     )}
 
+                    {hasDiscount && (
+                      <span className="absolute top-3 right-3 rounded-full bg-[#B91C1C] text-white text-xs font-bold px-3 py-1 shadow-sm" dir="ltr">
+                        -{discountPercent}%
+                      </span>
+                    )}
+
                     {product.quantity === 0 && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <span className="bg-white text-gray-800 text-xs font-bold px-3 py-1 rounded-full">
@@ -453,12 +461,16 @@ export default function Shop({ onProductClick }: ShopProps) {
                       {product.name}
                     </h3>
                     <div className="mt-auto pt-3 flex items-center justify-between">
-                      <span
-                        className="text-lg font-bold"
-                        style={{ color: '#F8F7F2' }}
-                      >
-                        {product.price} <span className="text-xs font-medium">{t('ر.ع', 'OMR')}</span>
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        {hasDiscount && (
+                          <span className="text-xs text-[#D1D5DB] line-through" dir="ltr">
+                            {product.original_price} {t('ر.ع', 'OMR')}
+                          </span>
+                        )}
+                        <span className="text-lg font-bold" style={{ color: '#F8F7F2' }} dir="ltr">
+                          {product.price} <span className="text-xs font-medium">{t('ر.ع', 'OMR')}</span>
+                        </span>
+                      </div>
                       <button
                         onClick={(e) => handleAddToCart(e, product)}
                         disabled={product.quantity === 0}
