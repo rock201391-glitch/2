@@ -10,6 +10,7 @@ import {
   Wrench,
   CalendarDays,
   Languages,
+  Gift,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCart } from "../contexts/CartContext";
@@ -74,6 +75,18 @@ export default function Header({
       dir={direction}
       className="sticky top-0 z-40 border-b border-[#FBF7EF] bg-[#F7F4ED]"
     >
+      {/* شريط العيد الوطني - مناسب للجوال والكمبيوتر */}
+      <div className="relative overflow-hidden bg-[#0F3A2B] text-white">
+        <div className="absolute inset-y-0 right-0 w-1.5 bg-[#C92935]" aria-hidden="true" />
+        <div className="absolute inset-y-0 left-0 w-1.5 bg-white" aria-hidden="true" />
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-3 gap-y-1 px-5 py-2.5 text-center text-xs font-bold sm:text-sm">
+          <Gift className="h-4 w-4 shrink-0 text-white" aria-hidden="true" />
+          <span>{t("احتفل بالعيد الوطني العُماني مع عروض مرقاب", "Celebrate Oman National Day with Mergab offers")}</span>
+          <button type="button" onClick={() => navigate("shop")} className="rounded-full border border-white/50 bg-white/10 px-3 py-1 text-[11px] font-black transition hover:bg-white hover:text-[#0F3A2B] sm:text-xs">
+            {t("تسوق الآن", "Shop now")}
+          </button>
+        </div>
+      </div>
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
