@@ -87,20 +87,40 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       dir={direction}
       className="min-h-screen bg-[#F5F2EA] text-[#0F3A2B]"
     >
-      {/* NATIONAL DAY ANNOUNCEMENT */}
-      <div className="relative overflow-hidden bg-[#0F3A2B] px-4 py-3 text-center text-white">
+      {/* NATIONAL DAY ANNOUNCEMENT — moving right to left */}
+      <style>{`
+        @keyframes mergabNationalDayScroll {
+          from { transform: translateX(100vw); }
+          to { transform: translateX(-100%); }
+        }
+        .mergab-national-day-marquee {
+          animation: mergabNationalDayScroll 16s linear infinite;
+          will-change: transform;
+        }
+        @media (max-width: 640px) {
+          .mergab-national-day-marquee { animation-duration: 12s; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .mergab-national-day-marquee { animation: none; transform: none; }
+        }
+      `}</style>
+      <div className="relative overflow-hidden bg-[#0F3A2B] py-3 text-white" dir="ltr">
         <div className="absolute inset-x-0 top-0 flex h-1" aria-hidden="true">
-          <span className="w-1/3 bg-[#D32730]" />
-          <span className="w-1/3 bg-white" />
           <span className="w-1/3 bg-[#178447]" />
+          <span className="w-1/3 bg-white" />
+          <span className="w-1/3 bg-[#D32730]" />
         </div>
-        <p className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold sm:text-sm">
-          <Sparkles className="h-4 w-4 text-[#E6F2E8]" />
-          {t("احتفل بالعيد الوطني العُماني مع مرقاب", "Celebrate Oman's National Day with Mergab")}
-          <button type="button" onClick={() => onNavigate("shop")} className="rounded-full border border-white/40 px-3 py-1 transition hover:bg-white hover:text-[#0F3A2B]">
+        <div className="mergab-national-day-marquee flex w-max items-center gap-3 whitespace-nowrap px-4 text-xs font-bold sm:text-sm" dir={direction}>
+          <Sparkles className="h-4 w-4 shrink-0 text-[#E6F2E8]" />
+          <span>{t("احتفل بالعيد الوطني العُماني مع مرقاب", "Celebrate Oman's National Day with Mergab")}</span>
+          <button
+            type="button"
+            onClick={() => onNavigate("shop")}
+            className="shrink-0 rounded-full border border-white/40 px-3 py-1 transition hover:bg-white hover:text-[#0F3A2B]"
+          >
             {t("تسوق الآن", "Shop Now")}
           </button>
-        </p>
+        </div>
       </div>
 
       {/* NATIONAL DAY FEATURE */}
