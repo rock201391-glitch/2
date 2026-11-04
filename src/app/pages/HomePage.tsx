@@ -5,6 +5,9 @@ import {
   ChevronRight,
   CircleCheck,
   Gavel,
+  Gift,
+  Sparkles,
+  Tag,
   PackageCheck,
   Send,
   ShoppingBag,
@@ -84,6 +87,65 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       dir={direction}
       className="min-h-screen bg-[#F5F2EA] text-[#0F3A2B]"
     >
+      {/* NATIONAL DAY ANNOUNCEMENT */}
+      <div className="relative overflow-hidden bg-[#0F3A2B] px-4 py-3 text-center text-white">
+        <div className="absolute inset-x-0 top-0 flex h-1" aria-hidden="true">
+          <span className="w-1/3 bg-[#D32730]" />
+          <span className="w-1/3 bg-white" />
+          <span className="w-1/3 bg-[#178447]" />
+        </div>
+        <p className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold sm:text-sm">
+          <Sparkles className="h-4 w-4 text-[#E6F2E8]" />
+          {t("احتفل بالعيد الوطني العُماني مع مرقاب", "Celebrate Oman's National Day with Mergab")}
+          <button type="button" onClick={() => onNavigate("shop")} className="rounded-full border border-white/40 px-3 py-1 transition hover:bg-white hover:text-[#0F3A2B]">
+            {t("تسوق الآن", "Shop Now")}
+          </button>
+        </p>
+      </div>
+
+      {/* NATIONAL DAY FEATURE */}
+      <section className="relative overflow-hidden bg-[#F0EDE3] px-4 py-10 sm:py-14">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[#D32730]/[0.07] blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-12 h-64 w-64 rounded-full bg-[#178447]/[0.10] blur-3xl" />
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[30px] border border-[#D7D9CB] bg-[#FFFCF6] shadow-[0_18px_60px_rgba(15,58,43,0.09)]">
+          <div className="flex h-1.5 w-full" aria-hidden="true">
+            <span className="w-1/3 bg-[#D32730]" />
+            <span className="w-1/3 bg-[#F5F2EA]" />
+            <span className="w-1/3 bg-[#178447]" />
+          </div>
+          <div className="grid items-center gap-8 p-7 sm:p-10 lg:grid-cols-[1.3fr_0.7fr] lg:p-14">
+            <div className={isArabic ? "text-right" : "text-left"}>
+              <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#E7EFEB] px-4 py-2 text-xs font-extrabold text-[#0F3A2B] sm:text-sm">
+                <Gift className="h-4 w-4" />
+                {t("احتفالات العيد الوطني العُماني", "Oman National Day Celebrations")}
+              </span>
+              <h2 className="mb-4 text-3xl font-black leading-[1.4] text-[#0F3A2B] sm:text-5xl">
+                {t("فرحة الوطن، وعروض مرقاب", "Celebrate Oman with Mergab")}
+              </h2>
+              <p className="mb-7 max-w-2xl text-sm font-medium leading-8 text-[#53645A] sm:text-base">
+                {t("اكتشف منتجات الدرون والتصوير في متجر مرقاب، وتابع عروضنا الخاصة بمناسبة العيد الوطني.", "Explore drones and filming gear at Mergab, and discover our National Day offers.")}
+              </p>
+              <button type="button" onClick={() => onNavigate("shop")} className="inline-flex items-center justify-center gap-3 rounded-2xl bg-[#0F3A2B] px-7 py-4 text-sm font-black text-white shadow-[0_10px_25px_rgba(15,58,43,0.15)] transition hover:-translate-y-0.5 hover:bg-[#17533C] sm:text-base">
+                <ShoppingBag className="h-5 w-5" />
+                {t("تسوق عروض العيد الوطني", "Shop National Day Offers")}
+                <ChevronLeft className={`h-4 w-4 ${isArabic ? "" : "rotate-180"}`} />
+              </button>
+            </div>
+            <div className="relative flex min-h-[190px] items-center justify-center rounded-[24px] bg-[#E7EFEB] p-8 sm:min-h-[240px]">
+              <div className="absolute left-5 top-5 h-12 w-12 rounded-full border border-[#0F3A2B]/15" />
+              <div className="absolute bottom-6 right-6 h-20 w-20 rounded-full border border-[#0F3A2B]/15" />
+              <div className="relative text-center">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[24px] bg-[#0F3A2B] text-white shadow-lg">
+                  <Tag className="h-9 w-9" />
+                </div>
+                <p className="text-xl font-black text-[#0F3A2B] sm:text-2xl">{t("عروض وطنية", "National Offers")}</p>
+                <p className="mt-2 text-sm font-medium text-[#53645A]">{t("من مرقاب إلى عُمان", "From Mergab to Oman")}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* HERO */}
       <section className="relative w-full overflow-hidden px-4 pb-12 pt-10 md:pb-16 md:pt-16 bg-[#F5F2EA]">
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-2">
