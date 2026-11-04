@@ -71,43 +71,6 @@ export default function Header({
 
   return (
     <>
-      {/* شريط واحد متحرك للعيد الوطني - يعمل على الجوال والكمبيوتر */}
-      <style>{`
-        @keyframes mergabNationalDayScroll {
-          from { transform: translateX(100vw); }
-          to { transform: translateX(-100%); }
-        }
-        .mergab-national-day-scroll {
-          display: inline-flex;
-          width: max-content;
-          white-space: nowrap;
-          animation: mergabNationalDayScroll 14s linear infinite;
-          will-change: transform;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .mergab-national-day-scroll {
-            animation: none;
-            transform: none;
-          }
-        }
-      `}</style>
-      <div
-        dir="ltr"
-        className="relative z-50 w-full overflow-hidden border-b-[3px] border-[#C72C39] bg-[#0F3A2B] py-3 text-white"
-        aria-label={t("عروض العيد الوطني العُماني", "Oman National Day offers")}
-      >
-        <div className="mergab-national-day-scroll items-center gap-3 px-3 text-sm font-bold sm:text-base" dir={direction}>
-          <span>{t("احتفل بالعيد الوطني العُماني مع عروض مرقاب", "Celebrate Oman National Day with Mergab offers")}</span>
-          <button
-            type="button"
-            onClick={() => navigate("shop")}
-            className="shrink-0 rounded-full border border-white/60 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white hover:text-[#0F3A2B] sm:text-sm"
-          >
-            {t("تسوق الآن", "Shop now")}
-          </button>
-        </div>
-      </div>
-
       <header
         dir={direction}
         className="sticky top-0 z-40 border-b border-[#FBF7EF] bg-[#F7F4ED]"
