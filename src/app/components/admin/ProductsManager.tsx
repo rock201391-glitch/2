@@ -15,6 +15,8 @@ interface Product {
   // الأسعار الجديدة
   purchase_price: number | null;
   selling_price: number | null;
+  discount_enabled: boolean;
+  original_price: number | null;
 
   image_url: string | null;
   quantity: number;
@@ -33,6 +35,8 @@ interface ProductFormData {
   description: string;
   purchase_price: string;
   selling_price: string;
+  discount_enabled: boolean;
+  original_price: string;
   image_url: string;
   quantity: string;
   category_id: string;
@@ -48,6 +52,8 @@ const emptyForm: ProductFormData = {
   description: "",
   purchase_price: "0",
   selling_price: "0",
+  discount_enabled: false,
+  original_price: "",
   image_url: "",
   quantity: "0",
   category_id: "",
@@ -144,6 +150,8 @@ export default function ProductsManager() {
       // نستخدم price القديم تلقائياً
       selling_price: String(product.selling_price ?? product.price ?? 0),
 
+      discount_enabled: product.discount_enabled ?? false,
+      original_price: product.original_price == null ? "" : String(product.original_price),
       image_url: product.image_url || "",
       quantity: String(product.quantity || 0),
 
@@ -273,6 +281,11 @@ export default function ProductsManager() {
       const sellingPrice =
         parseFloat(form.selling_price) || 0;
 
+      const originalPrice = form.discount_enabled ? Number(form.original_price) : null;
+      if (form.discount_enabled && (form.original_price.trim() === "" || !Number.isFinite(originalPrice) || originalPrice! <= sellingPrice)) {
+        throw new Error("السعر قبل الخصم يجب أن يكون أكبر من سعر البيع الحالي");
+      }
+
       if (purchasePrice < 0 || sellingPrice < 0) {
         throw new Error(
           "سعر الشراء وسعر البيع لا يمكن أن يكونا أقل من صفر"
@@ -292,6 +305,8 @@ export default function ProductsManager() {
 
         purchase_price: purchasePrice,
         selling_price: sellingPrice,
+        discount_enabled: form.discount_enabled,
+        original_price: originalPrice,
 
         // مهم:
         // نخلي price مساوي لسعر البيع
@@ -446,6 +461,10 @@ export default function ProductsManager() {
                 </th>
 
                 <th className="p-4 text-sm font-bold">
+                  الخصم
+                </th>
+
+                <th className="p-4 text-sm font-bold">
                   ربح القطعة
                 </th>
 
@@ -515,6 +534,15 @@ export default function ProductsManager() {
 
                     <td className="p-4 font-black text-[#0F3A2B]">
                       {sellingPrice.toFixed(3)} ر.ع
+                    </td>
+
+                    <td className="p-4 text-sm">
+                      {product.discount_enabled && product.original_price != null && Number(product.original_price) > sellingPrice ? (
+                        <div>
+                          <span className="line-through text-gray-400">{Number(product.original_price).toFixed(3)} ر.ع</span>
+                          <span className="mr-2 font-bold text-green-700">-{Math.round((1 - sellingPrice / Number(product.original_price)) * 100)}%</span>
+                        </div>
+                      ) : "—"}
                     </td>
 
                     <td className="p-4">
@@ -696,6 +724,44 @@ export default function ProductsManager() {
                     className="w-full rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] px-4 py-3 text-[#0F3A2B] outline-none transition-all focus:border-[#0F3A2B]"
                   />
                 </div>
+              </div>
+
+              {/* خصم اختياري لكل منتج */}
+              <div className="rounded-2xl border border-[#D8D2C5] bg-[#F8F7F2] p-4">
+                <label className="flex cursor-pointer items-center gap-3 text-sm font-bold">
+                  <input
+                    type="checkbox"
+                    checked={form.discount_enabled}
+                    onChange={(e) => setForm((current) => ({ ...current, discount_enabled: e.target.checked }))}
+                    className="h-5 w-5 accent-[#0F3A2B]"
+                  />
+                  تفعيل خصم على المنتج
+                </label>
+                {form.discount_enabled && (
+                  <div className="mt-4 space-y-3">
+                    <label className="block text-sm font-bold">السعر قبل الخصم (ر.ع)</label>
+                    <input
+                      type="number"
+                      min="0.001"
+                      step="0.001"
+                      required
+                      value={form.original_price}
+                      onChange={(e) => setForm((current) => ({ ...current, original_price: e.target.value }))}
+                      placeholder="مثلاً 420"
+                      className="w-full rounded-2xl border border-[#D8D2C5] bg-white px-4 py-3 outline-none focus:border-[#0F3A2B]"
+                    />
+                    <p className="text-xs text-gray-500">سعر البيع أعلاه هو السعر الجديد الذي سيدفعه العميل.</p>
+                    {Number(form.original_price) > Number(form.selling_price) && (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-gray-400 line-through">{Number(form.original_price).toFixed(3)} ر.ع</span>
+                        <strong className="text-[#0F3A2B]">{Number(form.selling_price).toFixed(3)} ر.ع</strong>
+                        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-800">
+                          خصم {Math.round((1 - Number(form.selling_price) / Number(form.original_price)) * 100)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* عرض الربح أثناء الكتابة */}
